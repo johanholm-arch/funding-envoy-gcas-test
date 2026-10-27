@@ -88,6 +88,11 @@ export async function seed(): Promise<{ tenantId: string; counts: Record<string,
     }
     const cautious = await json<{ version?: number }>("halden/autonomy-cautious.json");
     if (cautious) await tx.query("insert into config_versions (tenant_id, kind, version, status, body, note) values ($1,'autonomy',$2,'draft',$3,'Cautious profile (recommend everywhere)')", [tenantId, 2, JSON.stringify({ ...cautious, version: 2 })]);
+    const caseFiles = (await readdir(path.join(ROOT, "halden/testset")).catch(() => [] as string[])).filter((f) => /^tc-\d+\.json$/.test(f)).sort();
+    const cases = [];
+    for (const f of caseFiles) cases.push(await json(`halden/testset/${f}`));
+    if (cases.length) await publish(tx, tenantId, "testset", 1, { cases });
+    counts.testCases = cases.length;
     await publish(tx, tenantId, "brand", 1, tenant.brand);
     await publish(tx, tenantId, "words", 1, tenant.words);
     const policy = await text("halden/policy.md");

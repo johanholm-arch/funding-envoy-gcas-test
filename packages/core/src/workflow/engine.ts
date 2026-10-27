@@ -132,7 +132,7 @@ export function validateWorkflow(wf: WorkflowDef): WorkflowIssue[] {
       if (!ids.has(o.next) && !TERMINAL.has(o.next)) issues.push({ severity: "error", stage: s.id, message: `Outcome "${o.label}" goes to "${o.next}", which does not exist.` });
       if (o.locked && !o.actorRoles.length) issues.push({ severity: "error", stage: s.id, message: `"${o.label}" is a locked action but names no person role.` });
     }
-    if (onlyLockedForward(s) && s.assistant.maxLevel > MAX_LEVEL_AT_LOCKED_STAGE) issues.push({ severity: "error", stage: s.id, message: `${s.name} can only move forward through a person-only action; the assistant's maximum level there is ${MAX_LEVEL_AT_LOCKED_STAGE} (Recommend).` });
+    if (onlyLockedForward(s) && s.assistant.maxLevel > MAX_LEVEL_AT_LOCKED_STAGE) issues.push({ severity: "error", stage: s.id, message: `${s.name} exists for a person-only decision (funding or payment release); the assistant's maximum level there is ${MAX_LEVEL_AT_LOCKED_STAGE} (Recommend).` });
     if (s.assistant.level > s.assistant.maxLevel) issues.push({ severity: "error", stage: s.id, message: `${s.name}: assistant level ${s.assistant.level} exceeds its maximum ${s.assistant.maxLevel}.` });
     if (!s.sopRefs.length) issues.push({ severity: "warning", stage: s.id, message: `${s.name} is not tied to any SOP clause.` });
   }

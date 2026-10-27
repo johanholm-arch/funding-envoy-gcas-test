@@ -40,7 +40,7 @@ content/halden  The demo tenant: SOP, policy, catalogue, rulebook, workflow,
 | Pack | A versioned bundle of rules, clause requirements, disclosure mappings and calendar entries for a country or code. |
 | Stage | A workflow step with an owner role, time allowed, the assistant's autonomy level and outcomes. |
 | Autonomy level | 0 Off, 1 Observe, 2 Recommend, 3 Act with confirmation, 4 Autonomous within the rulebook. |
-| Locked action | One of the five actions only a named person may take. Where every way forward from a stage is a locked action (committee decision, payment release), the assistant is capped at level 2; elsewhere it may work at its level but never take the locked outcome itself. |
+| Locked action | One of the five actions only a named person may take. At stages whose purpose is a person-only decision (the funding decision, releasing a payment) the assistant is capped at level 2. At stages where a locked action is only the exit (a signature, submitting a disclosure) it may work at its level, drafting and assembling, but never takes the locked outcome itself. |
 
 ## Severity
 

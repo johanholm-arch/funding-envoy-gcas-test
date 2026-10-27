@@ -2,16 +2,15 @@ import type { AutonomyLevel, AutonomyPolicy, StageDef, WorkflowDef } from "./typ
 import { evaluate, type Facts } from "./conditions.ts";
 import { MAX_LEVEL_AT_LOCKED_STAGE } from "./gates.ts";
 
-const BACKWARD = new Set(["decline", "request-info", "withdraw", "defer", "return"]);
-
 /**
- * A stage whose every way forward is a locked action (committee decision, payment release) is capped at Recommend:
- * the assistant can prepare, never proceed. A stage with locked and unlocked outcomes (agreement: draft and send,
- * then a person signs) keeps its level; the locked outcome itself still requires a named person.
+ * Stages whose purpose is a person-only decision (the funding decision, releasing a payment) are capped at
+ * Recommend: the assistant prepares the pack or the payment request and never proceeds. At stages where a
+ * locked action is only the exit (a signature, submitting a disclosure), the assistant may work at its level
+ * (draft, send, assemble the file) but the locked outcome itself still requires a named person.
  */
+const CAPPING_ACTIONS = new Set(["decide-funding", "release-payment"]);
 export function onlyLockedForward(stage: StageDef): boolean {
-  const forward = stage.outcomes.filter((o) => !BACKWARD.has(o.id));
-  return forward.length > 0 && forward.every((o) => o.locked);
+  return stage.outcomes.some((o) => o.locked && CAPPING_ACTIONS.has(o.locked));
 }
 
 /** Effective assistant level at a stage: workflow default, then policy overrides, capped by the stage max and the locked-stage cap. */

@@ -218,7 +218,7 @@ describe("workflow and gates", () => {
   it("caps the assistant at Recommend where a locked action lives", () => {
     const committee = { ...wf.stages[2]!, assistant: { level: 4 as const, maxLevel: 4 as const, does: "" } };
     expect(effectiveLevel(committee, undefined, {})).toBe(2);
-    expect(validateWorkflow({ ...wf, stages: [wf.stages[0]!, wf.stages[1]!, committee] }).some((i) => i.message.includes("person-only action"))).toBe(true);
+    expect(validateWorkflow({ ...wf, stages: [wf.stages[0]!, wf.stages[1]!, committee] }).some((i) => i.message.includes("person-only decision"))).toBe(true);
     expect(effectiveLevel(wf.stages[0]!, { version: 1, profile: "cautious", overrides: [], confidenceFloor: 0.7 }, {})).toBe(2);
   });
 

@@ -8,7 +8,7 @@ import { buildFacts, composeRulebook, evaluate, evaluateRules, summarize } from 
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../content");
 
-interface TestCase {
+export interface TestCase {
   id: string; title: string; purpose: string; organizationId: string; subtype: string; country: string; today: string; phase?: "draft" | "submit" | "review" | "pre-payment";
   fields: Record<string, unknown>; budget: BudgetLine[]; documents: string[]; documentText?: Record<string, string>; attestations: string[];
   coi: Record<string, "yes" | "no">; screening: "clear" | "possible-match" | "match"; openRequestsAmount?: number;
@@ -25,22 +25,39 @@ export interface CaseResult {
 
 const load = async <T>(rel: string) => JSON.parse(await readFile(path.join(ROOT, rel), "utf8")) as T;
 
-export async function runTestset(): Promise<{ results: CaseResult[]; passed: number; total: number; ruleCoverage: Record<string, { pass: number; fail: number; other: number }> }> {
+export interface TestsetInputs {
+  catalogue: Catalogue; rulebook: Rulebook; packs: Pack[]; organizations: Organization[]; productNames: string[]; cases: TestCase[];
+}
+
+export interface TestsetReport { results: CaseResult[]; passed: number; total: number; ruleCoverage: Record<string, { pass: number; fail: number; other: number }> }
+
+export async function runTestset(): Promise<TestsetReport> {
   const catalogue = await load<Catalogue>("halden/catalogue.json");
   const rulebook = await load<Rulebook>("halden/rulebook.json");
   const packs = await Promise.all((await readdir(path.join(ROOT, "packs"))).filter((f) => f.endsWith(".json")).map((f) => load<Pack>(`packs/${f}`)));
   const tenant = await load<{ products?: ({ name: string } | string)[] }>("halden/tenant.json");
-  const orgs = await load<Organization[]>("halden/organizations.json");
+  const organizations = await load<Organization[]>("halden/organizations.json");
+  const files = (await readdir(path.join(ROOT, "halden/testset"))).filter((f) => /^tc-\d+\.json$/.test(f)).sort();
+  const cases = await Promise.all(files.map((f) => load<TestCase>(`halden/testset/${f}`)));
+  return evaluateCases({ catalogue, rulebook, packs, organizations, cases, productNames: (tenant.products ?? []).map((p) => (typeof p === "string" ? p : p.name)) });
+}
+
+export async function loadTestCases(): Promise<TestCase[]> {
+  const files = (await readdir(path.join(ROOT, "halden/testset"))).filter((f) => /^tc-\d+\.json$/.test(f)).sort();
+  return Promise.all(files.map((f) => load<TestCase>(`halden/testset/${f}`)));
+}
+
+/** Pure evaluation of test cases against a catalogue, rulebook and packs (published or draft). */
+export function evaluateCases(inp: TestsetInputs): TestsetReport {
+  const { catalogue, rulebook, packs, organizations: orgs, cases } = inp;
   const composed = composeRulebook(rulebook, packs);
   const triage = (composed.parameters.triage as { ruleId: string; group: string }[] | undefined) ?? [];
   const routing = new Set(triage.map((t) => t.ruleId));
-  const files = (await readdir(path.join(ROOT, "halden/testset"))).filter((f) => /^tc-\d+\.json$/.test(f)).sort();
   const results: CaseResult[] = [];
   const coverage: Record<string, { pass: number; fail: number; other: number }> = {};
   const person: Actor = { type: "person", id: "requestor", name: "Test Requestor", roles: ["requestor"] };
 
-  for (const f of files) {
-    const tc = await load<TestCase>(`halden/testset/${f}`);
+  for (const tc of cases) {
     const base = orgs.find((o) => o.id === tc.organizationId);
     if (!base) throw new Error(`${tc.id}: unknown organization ${tc.organizationId}`);
     // Screening re-runs at submission and before payment, so each case sees it as run on its own date.
@@ -65,7 +82,7 @@ export async function runTestset(): Promise<{ results: CaseResult[]; passed: num
     const ctx = {
       request: state, organization: org, catalogue, subtype: sub, documents, today: tc.today, openRequestsAmount: tc.openRequestsAmount ?? 0,
       parameters: composed.parameters, agreement: tc.agreement,
-      productNames: (tenant.products ?? []).map((p) => (typeof p === "string" ? p : p.name)),
+      productNames: inp.productNames,
     };
     const checks = evaluateRules(composed.rules.filter((r) => !routing.has(r.id)), ctx, { phase: tc.phase, includeOutOfScope: true });
     const byId = new Map(checks.map((c) => [c.ruleId, c]));
