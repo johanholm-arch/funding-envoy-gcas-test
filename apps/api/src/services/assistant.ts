@@ -2,7 +2,7 @@
 // request's state, the catalogue and the rule results. The provider only reads text.
 import type { Actor, AiTrace, CheckResult, FieldValue, RequestState, Rule } from "@fe/core";
 import { buildFacts, effectiveLevel, formatMoney, gateProposal, summarize, transition, budgetTotal, toNumber, LOCKED_ACTIONS } from "@fe/core";
-import { createProvider, readDocument, retrieve, scopeCheck, DECLINE_TEXT, type AssistantProvider, type FieldProposal } from "@fe/agent";
+import { alsoCovers, createProvider, readDocument, retrieve, scopeCheck, DECLINE_TEXT, type AssistantProvider, type FieldProposal } from "@fe/agent";
 import { many, one, type Tx } from "@fe/db";
 import { actorOf, asUser, HttpError, type SessionUser } from "../auth.ts";
 import { tenantConfig } from "../config.ts";
@@ -11,6 +11,7 @@ import {
   addMessage, fieldsFor, finalRef, loadRequest, nextDraftRef, record, requiredProgress, runChecks, saveState, setField, today, view, type Loaded,
 } from "./requests.ts";
 import { autoAdvance } from "./workflow.ts";
+import { rescreen } from "./screening.ts";
 
 let providerPromise: Promise<AssistantProvider> | undefined;
 export function provider(): Promise<AssistantProvider> {
@@ -142,6 +143,7 @@ export async function startRequest(u: SessionUser, input: { text?: string; count
       [u.tenantId, ref, u.orgId, u.id, state.country, first.id, state, cfg.versions]);
     await tx.query("update requests set state = jsonb_set(state, '{id}', to_jsonb($1::text)) where id = $1", [row!.id]);
     await record(tx, { tenantId: u.tenantId!, actor: actorOf(u), entity: { type: "request", id: row!.id }, action: "request.started", data: { requestId: row!.id, ref, versions: cfg.versions } });
+    await rescreen(tx, u.tenantId!, u.orgId!, "intake", row!.id);
     const fe = await assistantActor(tx, u.tenantId!);
     const l = await loadRequest(tx, row!.id);
     if (!input.text) {
@@ -244,7 +246,7 @@ export async function onUpload(u: SessionUser, requestId: string, files: { name:
     assertOwnDraftOrInfo(u, l);
     const fe = await assistantActor(tx, l.row.tenant_id);
     const known = uniqueDocTypes(l);
-    const read: { id: string; name: string; type: string; pages: string[]; classifiedBy: string; confidence: number }[] = [];
+    const read: { id: string; name: string; type: string; pages: string[]; classifiedBy: string; confidence: number; covers: { type: string; page: number }[] }[] = [];
     let budgetLines: RequestState["budget"] | undefined;
     const warnings: string[] = [];
     for (const f of files) {
@@ -259,13 +261,14 @@ export async function onUpload(u: SessionUser, requestId: string, files: { name:
         await logAi(tx, l, fe, "assistant.classified-document", c.trace, { documentId: docId, name: f.name, type, confidence, reason: c.reason }, "applied");
       }
       const dated = /(\d{4})/.exec(f.name)?.[1];
+      const covers = alsoCovers(r.pages, type!, known.map((k) => k.type));
       await tx.query(
-        `insert into documents (id, tenant_id, org_id, request_id, type, name, mime, size, sha256, storage_key, page_count, pages_text, dated, classified_by, uploaded_by)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
-        [docId, l.row.tenant_id, l.row.org_id, l.row.id, type, f.name, f.mime, f.buf.length, stored.sha256, stored.key, r.pages.length, JSON.stringify(r.pages), dated && Number(dated) > 1990 && Number(dated) < 2100 ? `${dated}-12-31` : null, by, u.id]);
+        `insert into documents (id, tenant_id, org_id, request_id, type, name, mime, size, sha256, storage_key, page_count, pages_text, dated, classified_by, uploaded_by, covers)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+        [docId, l.row.tenant_id, l.row.org_id, l.row.id, type, f.name, f.mime, f.buf.length, stored.sha256, stored.key, r.pages.length, JSON.stringify(r.pages), dated && Number(dated) > 1990 && Number(dated) < 2100 ? `${dated}-12-31` : null, by, u.id, covers.map((c) => c.type)]);
       await record(tx, { tenantId: l.row.tenant_id, actor: actorOf(u), entity: { type: "request", id: l.row.id }, action: "document.uploaded", data: { requestId: l.row.id, documentId: docId, name: f.name, sha256: stored.sha256, type, pages: r.pages.length } });
       if (r.budget?.length && (type === "budget" || !budgetLines)) budgetLines = r.budget.map((b) => ({ ...b, source: { ...b.source!, documentId: docId } }));
-      read.push({ id: docId, name: f.name, type: type!, pages: r.pages, classifiedBy: by, confidence });
+      read.push({ id: docId, name: f.name, type: type!, pages: r.pages, classifiedBy: by, confidence, covers });
     }
     // Extract proposals from everything readable.
     const fields = fieldsFor(l.cfg, l.subtype);
@@ -281,7 +284,7 @@ export async function onUpload(u: SessionUser, requestId: string, files: { name:
     if (budgetLines) l.state = { ...l.state, budget: budgetLines };
     await logAi(tx, l, fe, "assistant.extracted", ext.trace, { documentIds: read.map((d) => d.id), proposed: applied, conflicts: ext.conflicts.map((c) => c.key), budgetLines: budgetLines?.length ?? 0 }, "proposed");
 
-    l.docs = [...l.docs, ...read.map((d) => ({ id: d.id, type: d.type, name: d.name, sha256: "", pagesText: d.pages }))];
+    l.docs = [...l.docs, ...read.flatMap((d) => [{ id: d.id, type: d.type, name: d.name, sha256: "", pagesText: d.pages }, ...d.covers.map((c) => ({ id: d.id, type: c.type, name: d.name, sha256: "", pagesText: d.pages }))])];
     l.ctx.documents = l.docs;
     if (!l.state.typeConfirmed) {
       await classify(tx, l, fe, String(l.state.fields.title?.value ?? read.map((d) => d.name).join(" ")), ext.proposals);
@@ -290,7 +293,7 @@ export async function onUpload(u: SessionUser, requestId: string, files: { name:
     l.ctx.subtype = l.subtype;
     const checks = await recheckAndSave(tx, l);
     const progress = requiredProgress(l);
-    const docList = read.map((d) => `${d.name} (${labelFor(l, d.type)}${d.classifiedBy === "assistant" ? ", classified by me" : ""})`).join("; ");
+    const docList = read.map((d) => `${d.name} (${labelFor(l, d.type)}${d.classifiedBy === "assistant" ? ", classified by me" : ""}${d.covers.length ? `; it also contains the ${d.covers.map((c) => `${labelFor(l, c.type).toLowerCase()} on page ${c.page}`).join(" and the ")}, so I've counted it for that too` : ""})`).join("; ");
     const lead = [
       `I read ${read.length === 1 ? "it" : `all ${read.length}`}: ${docList}.`,
       applied ? `I filled in ${applied} value${applied === 1 ? "" : "s"}${progress.total ? `; ${progress.answered} of the ${progress.total} things this request needs are now in` : ""}. Each shows where it came from, and stays marked as proposed until you confirm it.` : "I didn't find values I could fill in.",
@@ -484,7 +487,10 @@ export async function attest(u: SessionUser, requestId: string, attId: string, t
 /** Exactly what will be written to the system of record, for the requestor to read before submitting. */
 export async function preview(u: SessionUser, requestId: string) {
   return asUser(u, async (tx) => {
-    const l = await loadRequest(tx, requestId);
+    const l0 = await loadRequest(tx, requestId);
+    const stale = l0.org.screening.some((s) => s.checkedAt.slice(0, 10) !== today());
+    if (stale && ["draft", "info-requested"].includes(l0.state.status)) await rescreen(tx, l0.row.tenant_id, l0.row.org_id, "submission", requestId);
+    const l = stale ? await loadRequest(tx, requestId) : l0;
     const checks = runChecks(l, "submit");
     const s = summarize(checks);
     const unacked = checks.filter((c) => c.status === "fail" && c.severity === "warn" && !c.acknowledged);
@@ -506,6 +512,8 @@ export async function preview(u: SessionUser, requestId: string) {
 
 export async function submit(u: SessionUser, requestId: string) {
   const out = await asUser(u, async (tx) => {
+    const l0 = await loadRequest(tx, requestId);
+    await rescreen(tx, l0.row.tenant_id, l0.row.org_id, "submission", requestId);
     const l = await loadRequest(tx, requestId);
     assertOwnDraftOrInfo(u, l);
     const me = actorOf(u);

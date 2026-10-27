@@ -41,10 +41,14 @@ export async function loadOrganization(tx: Tx, orgId: string): Promise<Organizat
 }
 
 export async function loadDocs(tx: Tx, requestId: string, orgId: string): Promise<EvalDocument[]> {
-  const rows = await many<{ id: string; type: string; name: string; sha256: string; page_count: number | null; pages_text: string[] | null; dated: string | null; classified_by: string | null; tenant_id: string | null }>(tx,
-    `select id, type, name, sha256, page_count, pages_text, dated, classified_by, tenant_id from documents
+  const rows = await many<{ id: string; type: string; name: string; sha256: string; page_count: number | null; pages_text: string[] | null; dated: string | null; classified_by: string | null; tenant_id: string | null; covers: string[] }>(tx,
+    `select id, type, name, sha256, page_count, pages_text, dated, classified_by, tenant_id, covers from documents
      where request_id = $1 or (tenant_id is null and org_id = $2 and request_id is null) order by created_at`, [requestId, orgId]);
-  return rows.map((d) => ({ id: d.id, type: d.type, name: d.name, sha256: d.sha256, pages: d.page_count ?? undefined, pagesText: d.pages_text ?? undefined, dated: d.dated ?? undefined, classifiedBy: (d.classified_by as "assistant" | "requestor" | undefined) ?? undefined, fromPassport: d.tenant_id === null }));
+  return rows.flatMap((d) => {
+    const base = { id: d.id, name: d.name, sha256: d.sha256, pages: d.page_count ?? undefined, pagesText: d.pages_text ?? undefined, dated: d.dated ?? undefined, classifiedBy: (d.classified_by as "assistant" | "requestor" | undefined) ?? undefined, fromPassport: d.tenant_id === null };
+    // A document that also covers another requirement is evaluated once per type it satisfies.
+    return [{ ...base, type: d.type }, ...(d.covers ?? []).map((t) => ({ ...base, type: t, alsoCovers: true }))];
+  });
 }
 
 /** Sum of other open or approved requests for this organization in the activity's calendar year (revenue cap). */
@@ -166,12 +170,24 @@ export function view(l: Loaded, checks = l.state.checks): RequestView {
     checks,
     summary: summarize(checks),
     progress: requiredProgress(l),
-    documents: l.docs.map((d) => ({ ...d, pagesText: undefined })),
+    documents: dedupeDocs(l.docs),
     versions: l.state.versions,
     stage: { id: l.state.stage, name: stage?.name ?? l.state.stage, enteredAt: l.row.stage_entered_at.toISOString() },
     catalogue: { subtypes: l.cfg.catalogue.subtypes.map((s) => ({ id: s.id, name: s.name, family: s.family })), attestations: l.cfg.catalogue.attestations, coiQuestions: l.cfg.catalogue.coiQuestions },
     documentRequirements: l.subtype?.documents ?? [],
   };
+}
+
+/** One entry per file, listing any other requirements it also satisfies. */
+export function dedupeDocs(docs: Loaded["docs"]): (Omit<Loaded["docs"][number], "pagesText"> & { covers: string[] })[] {
+  const byId = new Map<string, Omit<Loaded["docs"][number], "pagesText"> & { covers: string[] }>();
+  for (const d of docs) {
+    const { pagesText: _p, ...rest } = d;
+    const cur = byId.get(d.id);
+    if (!cur) byId.set(d.id, { ...rest, covers: [] });
+    else cur.covers.push(d.type);
+  }
+  return [...byId.values()];
 }
 
 export async function addMessage(tx: Tx, l: { row: { id: string; tenant_id: string } }, author: Actor, body: string, data: Record<string, unknown> = {}, channel: "requestor" | "internal" = "requestor") {

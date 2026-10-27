@@ -29,7 +29,7 @@ export async function buildServer(opts: { logger?: boolean } = {}): Promise<Fast
     const status = (err as { statusCode?: number }).statusCode;
     if (status && status < 500) return reply.status(status).send({ error: err.message, code: "error" });
     app.log.error(err);
-    return reply.status(500).send({ error: "Something went wrong on our side. It has been logged.", code: "internal" });
+    return reply.status(500).send({ error: "Something went wrong on our side. It has been logged.", code: "internal", ...(process.env.NODE_ENV === "production" ? {} : { detail: (err as Error).message }) });
   });
 
   app.get("/api/health", async () => ({ ok: true }));

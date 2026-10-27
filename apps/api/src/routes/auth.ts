@@ -27,7 +27,8 @@ export async function authRoutes(app: FastifyInstance) {
       if (!u) throw new HttpError(404, "Unknown person.");
       let tenantId = u.tenant_id;
       if (u.kind !== "internal") {
-        const t = body.tenantSlug ? await one<{ id: string }>(tx, "select id from tenants where slug = $1", [body.tenantSlug]) : await one<{ id: string }>(tx, "select id from tenants order by created_at limit 1");
+        const slug = body.tenantSlug ?? process.env.FE_DEFAULT_TENANT ?? "halden";
+        const t = await one<{ id: string }>(tx, "select id from tenants where slug = $1", [slug]);
         tenantId = t?.id ?? null;
       }
       return { userId: u.id, tenantId };

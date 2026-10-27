@@ -125,11 +125,22 @@ const DOC_RULES: [string, RegExp, RegExp][] = [
   ["w9", /\bw-?9\b/i, /request for taxpayer identification/i],
   ["nonprofit-proof", /(determination|501c3|501\(c\)|nonprofit|non-profit|exempt)/i, /\b(determination letter|501\(c\)\(3\)|exempt from federal income tax)\b/i],
   ["financial-statement", /(financial|annual.?report|accounts|statement)/i, /\b(statement of activities|total revenue|gross revenue|balance sheet)\b/i],
-  ["accreditation-statement", /accredit/i, /\b(accreditation statement|is accredited by)\b/i],
+  ["accreditation-statement", /accredit/i, /\b(accreditation statement|is accredited by|accredited by the [A-Z]{3,})/i],
   ["coi-policy", /(conflict|coi)/i, /\bconflict of interest policy\b/i],
   ["charity-registration", /(charity|registration|association|prefecture|journal.?officiel)/i, /\b(registered charity|charity commission|association loi 1901|journal officiel)\b/i],
   ["bylaws", /(bylaw|by-law|constitution|statuts)/i, /\b(by-?laws|constitution)\b/i],
 ];
+
+/** Other requirement types a document's text also satisfies, with the page where the evidence is. */
+export function alsoCovers(pages: string[], mainType: string, allowed: string[]): { type: string; page: number }[] {
+  const out: { type: string; page: number }[] = [];
+  for (const [type, , bodyRe] of DOC_RULES) {
+    if (type === mainType || !allowed.includes(type) || ["budget", "request-letter", "prospectus"].includes(type)) continue;
+    const page = pages.findIndex((p) => bodyRe.test(p));
+    if (page >= 0) out.push({ type, page: page + 1 });
+  }
+  return out;
+}
 
 export class DemoProvider implements AssistantProvider {
   readonly name = "demo" as const;
