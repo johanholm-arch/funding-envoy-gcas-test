@@ -7,6 +7,8 @@
     "start": "tsx src/main.ts",
     "seed": "tsx src/seed.ts",
     "testset": "tsx src/testset.ts",
+    "scenario": "tsx src/scenario.ts",
+    "demo:reset": "tsx src/seed.ts && tsx src/scenario.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.json --noEmit"
   },

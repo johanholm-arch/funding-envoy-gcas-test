@@ -120,11 +120,11 @@ export function extractLabelled(docs: ExtractInput["documents"], fields: FieldDe
 
 const DOC_RULES: [string, RegExp, RegExp][] = [
   ["budget", /budget/i, /\b(line|description).*(amount)\b/i],
-  ["request-letter", /(request.?letter|letter.?of.?request|cover.?letter|\bletter\b)/i, /\b(dear|we are writing|request(ing)? (support|funding))\b/i],
+  ["request-letter", /(request.?letter|letter.?of.?request|cover.?letter|\bletter\b|lettre.?de.?demande)/i, /\b(dear|we are writing|request(ing)? (support|funding)|madame, monsieur|sollicite)/i],
   ["prospectus", /(prospectus|agenda|programme|program|brochure)/i, /\b(agenda|faculty|learning objectives|accredited provider)\b/i],
   ["w9", /\bw-?9\b/i, /request for taxpayer identification/i],
   ["nonprofit-proof", /(determination|501c3|501\(c\)|nonprofit|non-profit|exempt)/i, /\b(determination letter|501\(c\)\(3\)|exempt from federal income tax)\b/i],
-  ["financial-statement", /(financial|annual.?report|accounts|statement)/i, /\b(statement of activities|total revenue|gross revenue|balance sheet)\b/i],
+  ["financial-statement", /(financial|annual.?report|accounts|statement|comptes)/i, /\b(statement of activities|total revenue|gross revenue|balance sheet)\b/i],
   ["accreditation-statement", /accredit/i, /\b(accreditation statement|is accredited by|accredited by the [A-Z]{3,})/i],
   ["coi-policy", /(conflict|coi)/i, /\bconflict of interest policy\b/i],
   ["charity-registration", /(charity|registration|association|prefecture|journal.?officiel)/i, /\b(registered charity|charity commission|association loi 1901|journal officiel)\b/i],

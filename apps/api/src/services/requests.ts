@@ -196,14 +196,19 @@ export async function addMessage(tx: Tx, l: { row: { id: string; tenant_id: stri
     [l.row.tenant_id, l.row.id, author, channel, body, data]);
 }
 
+async function nextNumber(tx: Tx, tenantId: string, scope: string, start: number): Promise<number> {
+  const r = await one<{ n: string }>(tx, `insert into ref_counters (tenant_id, scope, n) values ($1, $2, $3)
+    on conflict (tenant_id, scope) do update set n = ref_counters.n + 1 returning n`, [tenantId, scope, start]);
+  return Number(r!.n);
+}
+
 export async function nextDraftRef(tx: Tx, tenantId: string): Promise<string> {
-  const r = await one<{ n: number }>(tx, "select count(*)::int + 1 as n from requests where tenant_id = $1", [tenantId]);
-  return `D-${String(r!.n + 400).padStart(4, "0")}`;
+  return `D-${String(await nextNumber(tx, tenantId, "draft", 401)).padStart(4, "0")}`;
 }
 
 const SUFFIX: Record<string, string> = { education: "IME", charitable: "CHA" };
 export async function finalRef(tx: Tx, tenantId: string, family?: string): Promise<string> {
-  const year = new Date().getUTCFullYear();
-  const r = await one<{ n: number }>(tx, "select count(*)::int as n from requests where tenant_id = $1 and ref not like 'D-%'", [tenantId]);
-  return `${year}-${String(1640 + (r?.n ?? 0) + 1).padStart(5, "0")}-${SUFFIX[family ?? ""] ?? "OTH"}`;
+  const year = today().slice(0, 4);
+  const n = await nextNumber(tx, tenantId, year, 1641);
+  return `${year}-${String(n).padStart(5, "0")}-${SUFFIX[family ?? ""] ?? "OTH"}`;
 }
