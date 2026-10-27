@@ -10,6 +10,6 @@ need_settings() {
   source "$SETTINGS"
 }
 image_tag() { echo "$(git rev-parse --short HEAD 2>/dev/null || echo build)-$(date +%Y%m%d%H%M%S)"; }
-app_url() { echo "https://$(az containerapp show -n "$APP" -g "$RG" --query properties.configuration.ingress.fqdn -o tsv)"; }
+app_url() { echo "https://$(az containerapp show -n "$APP" -g "$RG" --query properties.configuration.ingress.fqdn -o tsv --only-show-errors)"; }
 # Random letters and digits. (head closes the pipe early, which is expected, so its status is ignored.)
 rand() { LC_ALL=C tr -dc "$1" </dev/urandom 2>/dev/null | head -c "$2" || true; }

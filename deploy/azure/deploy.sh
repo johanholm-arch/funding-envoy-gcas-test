@@ -103,18 +103,18 @@ fi
 TAG=$(image_tag)
 az acr build --registry "$ACR" --image "fundingenvoy:$TAG" --file Dockerfile . --only-show-errors >/dev/null \
   || fail "The build in Azure failed. See 'If something goes wrong' in deploy/azure/GUIDE.md."
-ACR_USER=$(az acr credential show --name "$ACR" --query username -o tsv)
-ACR_PW=$(az acr credential show --name "$ACR" --query "passwords[0].value" -o tsv)
+ACR_USER=$(az acr credential show --name "$ACR" --query username -o tsv --only-show-errors)
+ACR_PW=$(az acr credential show --name "$ACR" --query "passwords[0].value" -o tsv --only-show-errors)
 note "Built image fundingenvoy:$TAG."
 
 say "Step 6 of 7: the app's home in Azure"
-if ! az containerapp env show --name "$ENVNAME" --resource-group "$RG" >/dev/null 2>&1; then
+if ! az containerapp env show --name "$ENVNAME" --resource-group "$RG" --only-show-errors >/dev/null 2>&1; then
   az containerapp env create --name "$ENVNAME" --resource-group "$RG" --location "$REGION" --only-show-errors >/dev/null
 fi
 az containerapp env storage set --name "$ENVNAME" --resource-group "$RG" --storage-name fedata \
   --azure-file-account-name "$SA" --azure-file-account-key "$SA_KEY" --azure-file-share-name fundingenvoy-data \
   --access-mode ReadWrite --only-show-errors >/dev/null
-ENV_ID=$(az containerapp env show --name "$ENVNAME" --resource-group "$RG" --query id -o tsv)
+ENV_ID=$(az containerapp env show --name "$ENVNAME" --resource-group "$RG" --query id -o tsv --only-show-errors)
 
 say "Step 7 of 7: starting FundingEnvoy (the first start loads the demo; allow 3 to 5 minutes)"
 YAML=$(mktemp --suffix .yaml)
@@ -203,7 +203,7 @@ cat <<YAML_EOF
         storageName: fedata
 YAML_EOF
 } > "$YAML"
-if az containerapp show --name "$APP" --resource-group "$RG" >/dev/null 2>&1; then
+if az containerapp show --name "$APP" --resource-group "$RG" --only-show-errors >/dev/null 2>&1; then
   az containerapp update --name "$APP" --resource-group "$RG" --yaml "$YAML" --only-show-errors >/dev/null
 else
   az containerapp create --name "$APP" --resource-group "$RG" --yaml "$YAML" --only-show-errors >/dev/null
