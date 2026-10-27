@@ -1,5 +1,5 @@
 import type { Facts } from "./conditions.ts";
-import type { Catalogue, DocumentRef, Organization, RequestState, Subtype } from "./types.ts";
+import type { AgreementSnapshot, Catalogue, DocumentRef, Organization, RequestState, Subtype } from "./types.ts";
 import { toNumber } from "./money.ts";
 
 /** A document as the rule engine sees it: reference plus optional extracted text per page and a date. */
@@ -8,12 +8,6 @@ export interface EvalDocument extends DocumentRef {
   dated?: string; // ISO date the document is dated / issued
 }
 
-export interface AgreementSnapshot {
-  templateId: string;
-  signatures: { party: string; name: string; at: string }[];
-  certifiedAt?: string;
-  clauseIds: string[];
-}
 
 export interface EvalContext {
   request: RequestState;

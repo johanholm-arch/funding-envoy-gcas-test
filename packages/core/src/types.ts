@@ -441,6 +441,29 @@ export interface RequestState {
   submittedAt?: IsoDateTime;
   decidedAt?: IsoDateTime;
   closedAt?: IsoDateTime;
+  reviewingGroup?: { id: string; label: string; by: "assistant" | "person"; confidence?: number; rule?: string };
+  judgements?: Record<string, { decision: string; note?: string; by: Actor; at: IsoDateTime }>; // reviewer decisions on "judge" items
+  infoRequests?: InfoRequest[];
+  decision?: { outcome: "approve" | "approve-with-conditions" | "decline" | "defer"; amount?: number; conditions?: string; rationale: string; by: Actor; at: IsoDateTime };
+  agreement?: AgreementSnapshot;
+  reviewSummary?: { generatedAt: IsoDateTime; rulebookVersion: number; markdown: string };
+}
+
+export interface InfoRequest {
+  id: string;
+  by: Actor;
+  at: IsoDateTime;
+  status: "open" | "answered" | "closed";
+  questions: { id: string; text: string; answer?: string; answeredAt?: IsoDateTime; documentIds?: string[] }[];
+  dueAt?: IsoDate;
+  whatChanged?: string; // note written for the coordinator when the requestor finishes
+}
+
+export interface AgreementSnapshot {
+  templateId: string;
+  signatures: { party: string; name: string; at: string }[];
+  certifiedAt?: string;
+  clauseIds: string[];
 }
 
 // ─── Audit ───────────────────────────────────────────────────────────────────
