@@ -1,0 +1,176 @@
+{
+  "id": "efpia",
+  "name": "EFPIA Code (Europe)",
+  "version": 1,
+  "effectiveFrom": "2026-11-01",
+  "jurisdiction": "EU",
+  "codeFamily": "EFPIA",
+  "rules": [
+    {
+      "id": "EFPIA-01",
+      "statement": "The grant or donation will be disclosed against the recipient organization",
+      "basis": {
+        "layer": "code",
+        "ref": "EFPIA Disclosure",
+        "citation": "EFPIA Code of Practice: transfers of value to HCOs disclosed within six months of the end of the calendar year, public for at least three years; records kept for at least five years.",
+        "url": "https://www.efpia.eu/media/uzqpperi/efpia-code-of-practice-2026.pdf",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). efpia.eu not attempted separately; research report values."
+      },
+      "scope": {
+        "fact": "country",
+        "op": "in",
+        "value": [
+          "GB",
+          "FR"
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "This support will be published as a donation or grant to {{org.type}} in the disclosure for the year it is paid.",
+        "fail": "This support will be published as a donation or grant in the disclosure for the year it is paid."
+      },
+      "source": "pack:efpia"
+    },
+    {
+      "id": "EFPIA-02",
+      "statement": "The purpose is healthcare, research or education",
+      "basis": {
+        "layer": "code",
+        "ref": "EFPIA 12.01",
+        "citation": "EFPIA Code (2019/2023 numbering) Section 12.01: donations and grants to HCOs only to support healthcare, research or education. ABPI 2024 clause 23 is to the same effect.",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). 2026 edition numbering not confirmed."
+      },
+      "scope": {
+        "fact": "country",
+        "op": "in",
+        "value": [
+          "GB",
+          "FR"
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "fact": "field.purpose.category",
+          "op": "in",
+          "value": [
+            "healthcare",
+            "research",
+            "education"
+          ]
+        }
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Purpose is {{purpose.category}}.",
+        "fail": "In the UK and Europe, Halden can only support healthcare, research or education. A community or humanitarian purpose cannot be funded through this route.",
+        "requestor": "Under the European codes we can only support healthcare, scientific research or education. If your project serves another purpose, please contact the grants office before going further."
+      },
+      "actions": [
+        {
+          "id": "change:purpose.category",
+          "label": "Change purpose"
+        }
+      ],
+      "source": "pack:efpia"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "efpia.disclosure.deadline",
+      "label": "HCO disclosure deadline (months after year end)",
+      "value": 6,
+      "unit": "months",
+      "source": "EFPIA Disclosure Code per research report",
+      "verified": false
+    },
+    {
+      "key": "efpia.disclosure.publicYears",
+      "label": "Disclosure stays public for at least",
+      "value": 3,
+      "unit": "years",
+      "source": "EFPIA Disclosure Code per research report",
+      "verified": false
+    },
+    {
+      "key": "efpia.records.years",
+      "label": "Disclosure records kept for at least",
+      "value": 5,
+      "unit": "years",
+      "source": "EFPIA Disclosure Code per research report",
+      "verified": false
+    }
+  ],
+  "clauses": [
+    {
+      "id": "efpia-disclosure-consent",
+      "label": "Publication",
+      "text": "The Recipient acknowledges that Halden Pharma will publish the value of this support, the Recipient's name and address under the applicable disclosure code and law.",
+      "requiredWhen": {
+        "fact": "country",
+        "op": "in",
+        "value": [
+          "GB",
+          "FR"
+        ]
+      },
+      "basis": {
+        "layer": "code",
+        "ref": "EFPIA Disclosure",
+        "verified": false
+      }
+    }
+  ],
+  "disclosures": [
+    {
+      "id": "efpia-hco",
+      "name": "EFPIA HCO disclosure",
+      "appliesWhen": {
+        "fact": "country",
+        "op": "in",
+        "value": [
+          "GB",
+          "FR"
+        ]
+      },
+      "categoryField": "tov.disclosureCategory",
+      "deadline": "Within six months of the end of the calendar year of payment (by 30 June)",
+      "fields": [
+        "recipient.legalName",
+        "recipient.address",
+        "recipient.country",
+        "tov.disclosureCategory",
+        "payment.amount",
+        "payment.year"
+      ]
+    }
+  ],
+  "calendar": [
+    {
+      "id": "efpia-hco-publication",
+      "label": "EFPIA HCO disclosure of prior-year transfers of value",
+      "rule": "annual:06-30",
+      "regime": "efpia-hco",
+      "basis": {
+        "layer": "code",
+        "ref": "EFPIA Disclosure",
+        "verified": false
+      }
+    }
+  ],
+  "verification": {
+    "status": "unverified",
+    "notes": [
+      "Categories used for tov.disclosureCategory: donations-grants-hco; contribution-to-event-costs; fees-for-service; rnd (aggregate). Taken from company methodological notes cited in the research report, not from the 2026 Code text.",
+      "A mandatory patient-organisation template applies from the 2026 cycle; no pilot organization is a European patient organisation, so it is not encoded."
+    ]
+  }
+}

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "rq-marsh",
+    "name": "Dr. Elena Marsh",
+    "title": "Director of Education",
+    "email": "e.marsh@necs.example.org",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000001",
+    "roles": [
+      "requestor",
+      "org-admin"
+    ]
+  },
+  {
+    "id": "rq-delgado",
+    "name": "R. Delgado",
+    "title": "Executive Director (authorized signer)",
+    "email": "r.delgado@necs.example.org",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000001",
+    "roles": [
+      "org-admin"
+    ]
+  },
+  {
+    "id": "rq-whitlock",
+    "name": "Dana Whitlock",
+    "title": "Chief Executive Officer",
+    "email": "d.whitlock@beaconcme.example.com",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000002",
+    "roles": [
+      "requestor",
+      "org-admin"
+    ]
+  },
+  {
+    "id": "rq-shah",
+    "name": "Dr. Amira Shah",
+    "title": "Education Lead",
+    "email": "a.shah@penninehf.example.org.uk",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000003",
+    "roles": [
+      "requestor"
+    ]
+  },
+  {
+    "id": "rq-ashdown",
+    "name": "Neil Ashdown",
+    "title": "Head of Charity",
+    "email": "n.ashdown@severnsidecharity.example.org.uk",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000004",
+    "roles": [
+      "requestor",
+      "org-admin"
+    ]
+  },
+  {
+    "id": "rq-mercier",
+    "name": "Julien Mercier",
+    "title": "Délégué général",
+    "email": "j.mercier@afic.example.fr",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000005",
+    "roles": [
+      "requestor",
+      "org-admin"
+    ]
+  },
+  {
+    "id": "rq-vasseur",
+    "name": "Hélène Vasseur",
+    "title": "Directrice générale",
+    "email": "h.vasseur@fondation-saint-aubin.example.fr",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000006",
+    "roles": [
+      "requestor",
+      "org-admin"
+    ]
+  },
+  {
+    "id": "rq-quinlan",
+    "name": "Teresa Quinlan",
+    "title": "Executive Director",
+    "email": "t.quinlan@heartline.example.org",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000007",
+    "roles": [
+      "requestor",
+      "org-admin"
+    ]
+  },
+  {
+    "id": "rq-ofori",
+    "name": "Dr. Janet Ofori",
+    "title": "Director, Office of CME",
+    "email": "j.ofori@mercyridge.example.org",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000008",
+    "roles": [
+      "requestor"
+    ]
+  },
+  {
+    "id": "rq-asante",
+    "name": "Dr. Kevin Asante",
+    "title": "Associate Dean, Graduate Medical Education",
+    "email": "k.asante@lakeshore.example.edu",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000009",
+    "roles": [
+      "requestor"
+    ]
+  },
+  {
+    "id": "rq-haddadi",
+    "name": "Omar Haddadi",
+    "title": "Executive Director",
+    "email": "o.haddadi@meridianrelief.example.org",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000010",
+    "roles": [
+      "requestor",
+      "org-admin"
+    ]
+  },
+  {
+    "id": "rq-legoff",
+    "name": "Pr. Yann Le Goff",
+    "title": "Chef du service de cardiologie",
+    "email": "y.legoff@chu-rennes-armor.example.fr",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000011",
+    "roles": [
+      "requestor"
+    ]
+  },
+  {
+    "id": "rq-hale",
+    "name": "Dr. Thomas Hale",
+    "title": "Cardiologist",
+    "email": "t.hale@mail.example.com",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000012",
+    "roles": [
+      "requestor"
+    ]
+  },
+  {
+    "id": "rq-tranter",
+    "name": "Oliver Tranter",
+    "title": "Managing Director",
+    "email": "o.tranter@westbrookmeded.example.co.uk",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000013",
+    "roles": [
+      "requestor",
+      "org-admin"
+    ]
+  },
+  {
+    "id": "rq-petit",
+    "name": "Dr. Camille Petit",
+    "title": "Directrice scientifique",
+    "email": "c.petit@sffc.example.fr",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000014",
+    "roles": [
+      "requestor"
+    ]
+  },
+  {
+    "id": "rq-dupuis",
+    "name": "Karen Dupuis, RN",
+    "title": "President",
+    "email": "k.dupuis@gscna.example.org",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000015",
+    "roles": [
+      "requestor",
+      "org-admin"
+    ]
+  },
+  {
+    "id": "rq-ward",
+    "name": "Susan Ward",
+    "title": "Administrator",
+    "email": "s.ward@ovls.example.org",
+    "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000016",
+    "roles": [
+      "requestor",
+      "org-admin"
+    ]
+  }
+]

@@ -1,0 +1,219 @@
+{
+  "slug": "halden",
+  "name": "Halden Pharma",
+  "region": "us-east",
+  "residency": "US+EU",
+  "codeFamily": "PhRMA/EFPIA",
+  "brand": {
+    "logoText": "Halden Pharma",
+    "color": "#176B63",
+    "headingFace": "serif",
+    "corners": "crisp"
+  },
+  "words": {
+    "request": "Request",
+    "committee": "Grants and Donations Committee",
+    "reviewingTeam": "Triage group",
+    "reconciliation": "Financial reconciliation",
+    "assistantName": "FundingEnvoy"
+  },
+  "languages": [
+    "en"
+  ],
+  "products": [
+    "Cardiovex",
+    "Halvexa",
+    "Renotide"
+  ],
+  "legalEntities": {
+    "US": "Halden Pharma Inc.",
+    "GB": "Halden Pharma Ltd",
+    "FR": "Halden Pharma France SAS"
+  },
+  "grantsOffice": {
+    "email": "grants@halden.example",
+    "hours": "Monday to Friday, 9:00 to 17:00 US Eastern"
+  },
+  "people": [
+    {
+      "id": "hp-osei",
+      "name": "K. Osei",
+      "title": "Grants Coordinator, US Medical Education",
+      "email": "k.osei@halden.example",
+      "roles": [
+        "coordinator"
+      ],
+      "fullName": "Kwame Osei",
+      "region": "US"
+    },
+    {
+      "id": "hp-whitfield",
+      "name": "J. Whitfield",
+      "title": "Director, Grants Process and Governance (process owner)",
+      "email": "j.whitfield@halden.example",
+      "roles": [
+        "process-owner"
+      ],
+      "fullName": "Jane Whitfield",
+      "region": "US"
+    },
+    {
+      "id": "hp-alvarez",
+      "name": "M. Alvarez",
+      "title": "Head of Grants and Donations; Chair, Grants and Donations Committee",
+      "email": "m.alvarez@halden.example",
+      "roles": [
+        "committee-chair"
+      ],
+      "fullName": "Marisol Alvarez",
+      "region": "US"
+    },
+    {
+      "id": "hp-nair",
+      "name": "P. Nair",
+      "title": "Internal Audit Manager",
+      "email": "p.nair@halden.example",
+      "roles": [
+        "compliance-auditor"
+      ],
+      "fullName": "Priya Nair",
+      "region": "US"
+    },
+    {
+      "id": "hp-lindqvist",
+      "name": "Dr. H. Lindqvist",
+      "title": "Medical Director, Cardiovascular and Renal",
+      "email": "h.lindqvist@halden.example",
+      "roles": [
+        "committee-member"
+      ],
+      "fullName": "Dr. Henrik Lindqvist",
+      "region": "US"
+    },
+    {
+      "id": "hp-costa",
+      "name": "Dr. R. Costa",
+      "title": "Head of US Medical Affairs",
+      "email": "r.costa@halden.example",
+      "roles": [
+        "committee-member"
+      ],
+      "fullName": "Dr. Rafael Costa",
+      "region": "US"
+    },
+    {
+      "id": "hp-brennan",
+      "name": "L. Brennan",
+      "title": "Senior Compliance Counsel",
+      "email": "l.brennan@halden.example",
+      "roles": [
+        "committee-member"
+      ],
+      "fullName": "Laura Brennan",
+      "region": "US"
+    },
+    {
+      "id": "hp-moreau",
+      "name": "C. Moreau",
+      "title": "Responsable conformité et subventions, Halden Pharma France",
+      "email": "c.moreau@halden.example",
+      "roles": [
+        "committee-member",
+        "coordinator"
+      ],
+      "fullName": "Claire Moreau",
+      "region": "FR"
+    },
+    {
+      "id": "hp-patel",
+      "name": "Dr. N. Patel",
+      "title": "Medical Reviewer, Cardiovascular",
+      "email": "n.patel@halden.example",
+      "roles": [
+        "medical-reviewer"
+      ],
+      "fullName": "Dr. Nisha Patel",
+      "region": "US"
+    },
+    {
+      "id": "hp-okafor",
+      "name": "T. Okafor",
+      "title": "Compliance Reviewer, Third-Party Due Diligence",
+      "email": "t.okafor@halden.example",
+      "roles": [
+        "compliance-reviewer"
+      ],
+      "fullName": "Tobi Okafor",
+      "region": "US"
+    },
+    {
+      "id": "hp-kowalski",
+      "name": "D. Kowalski",
+      "title": "Grants Finance Manager",
+      "email": "d.kowalski@halden.example",
+      "roles": [
+        "finance"
+      ],
+      "fullName": "Daniel Kowalski",
+      "region": "US"
+    },
+    {
+      "id": "hp-sato",
+      "name": "E. Sato",
+      "title": "Tax Manager, Indirect and Information Reporting",
+      "email": "e.sato@halden.example",
+      "roles": [
+        "tax"
+      ],
+      "fullName": "Emi Sato",
+      "region": "US"
+    },
+    {
+      "id": "hp-haddad",
+      "name": "R. Haddad",
+      "title": "Senior Counsel, Commercial Contracts",
+      "email": "r.haddad@halden.example",
+      "roles": [
+        "legal"
+      ],
+      "fullName": "Rania Haddad",
+      "region": "US"
+    },
+    {
+      "id": "hp-ashworth",
+      "name": "Dr. F. Ashworth",
+      "title": "UK Final Medical Signatory, Halden Pharma Ltd",
+      "email": "f.ashworth@halden.example",
+      "roles": [
+        "medical-reviewer"
+      ],
+      "fullName": "Dr. Fiona Ashworth",
+      "region": "GB",
+      "certifies": [
+        "GB"
+      ]
+    },
+    {
+      "id": "hp-carter",
+      "name": "B. Carter",
+      "title": "Regional Sales Director, Cardiovascular (no access to grants; demonstrates gate G2)",
+      "email": "b.carter@halden.example",
+      "roles": [
+        "sales"
+      ],
+      "fullName": "Brian Carter",
+      "region": "US"
+    },
+    {
+      "id": "hp-brandt",
+      "name": "S. Brandt",
+      "title": "Managed Service Lead, FundingEnvoy operations (guest account)",
+      "email": "s.brandt@halden.example",
+      "roles": [
+        "operator"
+      ],
+      "fullName": "Sophie Brandt",
+      "region": "US"
+    }
+  ]
+}

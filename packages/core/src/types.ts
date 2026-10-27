@@ -201,6 +201,7 @@ export interface Rule {
   messages: {
     pass: string; // templates: {{amount}}, {{ratio}}, etc.
     fail: string;
+    judge?: string; // shown when the result needs a person's judgement; falls back to fail
     requestor?: string; // plain-language explanation for the requestor
   };
   actions?: ActionHint[];

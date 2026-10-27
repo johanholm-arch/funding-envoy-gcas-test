@@ -58,6 +58,10 @@ export function buildFacts(ctx: EvalContext): Facts {
     "coi.anyYes": Object.values(r.coi).some((a) => a.answer === "yes"),
     "screening.anyMatch": o.screening.some((s) => s.result !== "clear" && s.adjudication?.outcome !== "false-positive"),
     today: ctx.today,
+    "agreement.exists": Boolean(ctx.agreement),
+    "agreement.certified": Boolean(ctx.agreement?.certifiedAt),
+    "agreement.clauseIds": ctx.agreement?.clauseIds,
+    "agreement.signatures": ctx.agreement?.signatures.length ?? 0,
   };
   for (const [k, v] of Object.entries(r.fields)) f[`field.${k}`] = v.value;
   for (const d of ctx.documents) f[`docs.${d.type}`] = true;

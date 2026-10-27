@@ -1,0 +1,348 @@
+{
+  "id": "uk",
+  "name": "United Kingdom (ABPI Code 2024)",
+  "version": 1,
+  "effectiveFrom": "2026-11-01",
+  "jurisdiction": "GB",
+  "codeFamily": "EFPIA",
+  "rules": [
+    {
+      "id": "UK-ABPI-01",
+      "statement": "The title and purpose do not carry the name of a Halden medicine",
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 23.1",
+        "citation": "ABPI Code of Practice 2024, clause 23: donations and grants must not bear the name of any medicine.",
+        "url": "https://www.pmcpa.org.uk/the-code/2024-interactive-abpi-code-of-practice/clause-23-donations-and-grants/",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "check": {
+        "kind": "productNameAbsent",
+        "fields": [
+          "title",
+          "purpose"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "No Halden medicine is named in the title or purpose.",
+        "fail": "The {{field}} names {{product}}. Under the ABPI Code a grant or donation must not bear the name of a medicine.",
+        "requestor": "Please remove the medicine name from the title and description. You can describe the therapeutic area instead."
+      },
+      "actions": [
+        {
+          "id": "change:title",
+          "label": "Change the title"
+        }
+      ],
+      "source": "pack:uk"
+    },
+    {
+      "id": "UK-ABPI-02",
+      "statement": "The support is prospective: the activity has not started",
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 23",
+        "citation": "ABPI Code 2024, clause 23: donations and grants must be prospective.",
+        "url": "https://www.pmcpa.org.uk/the-code/2024-interactive-abpi-code-of-practice/clause-23-donations-and-grants/",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "check": {
+        "kind": "leadTime",
+        "dateField": "activity.startDate",
+        "minDays": 1,
+        "from": "today"
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Activity starts on {{date}}, in {{days}} days.",
+        "fail": "The activity started on {{date}}. Support in the UK must be agreed before the activity, not after."
+      },
+      "actions": [
+        {
+          "id": "change:dates",
+          "label": "Change dates"
+        }
+      ],
+      "source": "pack:uk"
+    },
+    {
+      "id": "UK-ABPI-03",
+      "statement": "The agreement contains the ABPI clauses, including acknowledgement 'apparent from the start'",
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 23.2",
+        "citation": "ABPI Code 2024, clause 23.2 and supplementary information: the written agreement describes the donation or grant, its objective, how it supports healthcare, research or education, the parties, and that the support will be acknowledged and that acknowledgement will be apparent from the start. PMCPA AUTH/3676/7/22 and AUTH/3851/11/23 (Roche).",
+        "url": "https://www.pmcpa.org.uk/the-code/2024-interactive-abpi-code-of-practice/clause-23-donations-and-grants/",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). Clause wording 'acknowledged and apparent from the start' is from the case reports as summarised in the research report."
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "all": [
+            {
+              "fact": "field.agreement.clauses",
+              "op": "contains",
+              "value": "uk-description"
+            },
+            {
+              "fact": "field.agreement.clauses",
+              "op": "contains",
+              "value": "uk-objective"
+            },
+            {
+              "fact": "field.agreement.clauses",
+              "op": "contains",
+              "value": "uk-parties"
+            },
+            {
+              "fact": "field.agreement.clauses",
+              "op": "contains",
+              "value": "uk-acknowledgement"
+            }
+          ]
+        }
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Agreement contains the four ABPI clauses.",
+        "fail": "The agreement is missing at least one ABPI clause: description, objective, parties, or acknowledgement apparent from the start. Recent PMCPA rulings found breaches for exactly this."
+      },
+      "actions": [
+        {
+          "id": "route:legal",
+          "label": "Regenerate from the UK template"
+        }
+      ],
+      "appliesAt": [
+        "pre-payment"
+      ],
+      "source": "pack:uk"
+    },
+    {
+      "id": "UK-ABPI-04",
+      "statement": "The agreement is certified by a UK final signatory before payment",
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 8.3",
+        "citation": "ABPI Code 2024, clause 8.3 and clause 23: the written agreement for donations and grants is certified. PMCPA CASE/0646/06/25 (Moderna): uncertified grants breached clauses 8.3 and 23.2.",
+        "url": "https://www.pmcpa.org.uk/the-code/2024-interactive-abpi-code-of-practice/clause-8-certification-and-examination/",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "check": {
+        "kind": "priorApproval",
+        "authority": "UK final signatory (ABPI clause 8.3)",
+        "recordField": "uk.certificationRef"
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Certified by the UK final signatory: {{record}}.",
+        "fail": "The agreement has not been certified by a UK final signatory. Payment cannot be released."
+      },
+      "actions": [
+        {
+          "id": "route:final-signatory",
+          "label": "Send for certification"
+        }
+      ],
+      "appliesAt": [
+        "pre-payment"
+      ],
+      "source": "pack:uk"
+    },
+    {
+      "id": "UK-ABPI-05",
+      "statement": "The support will be disclosed on Disclosure UK",
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 28",
+        "citation": "ABPI Code 2024, clause 28 (HCOs) and clause 29 (patient organisations): annual disclosure by 30 June for the prior calendar year.",
+        "url": "https://www.pmcpa.org.uk/the-code/2024-interactive-abpi-code-of-practice/clause-28-annual-disclosure-of-transfers-of-value-to-health-professionals-other-relevant-decision-makers-and-healthcare-organisations/",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "This support will be published on Disclosure UK by 30 June of the year after payment.",
+        "fail": "This support will be published on Disclosure UK by 30 June of the year after payment."
+      },
+      "source": "pack:uk"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "uk.abpi.edition",
+      "label": "ABPI Code edition in force",
+      "value": "2024",
+      "effectiveFrom": "2024-10-01",
+      "source": "ABPI news Sept 2024 per research report; fully in force 1 Jan 2025.",
+      "verified": false
+    },
+    {
+      "key": "uk.disclosure.deadline",
+      "label": "Disclosure UK deadline",
+      "value": "06-30",
+      "source": "ABPI clauses 28/29 per research report",
+      "verified": false
+    }
+  ],
+  "clauses": [
+    {
+      "id": "uk-description",
+      "label": "Description of the grant or donation",
+      "text": "This agreement describes the [grant/donation] of [amount] to be provided by Halden Pharma Ltd to [Recipient] for [activity].",
+      "requiredWhen": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 23.2",
+        "url": "https://www.pmcpa.org.uk/the-code/2024-interactive-abpi-code-of-practice/clause-23-donations-and-grants/",
+        "verified": false
+      }
+    },
+    {
+      "id": "uk-objective",
+      "label": "Objective and how it supports healthcare, research or education",
+      "text": "The objective of this support is [objective]. It supports [healthcare / scientific research / education] by [explanation].",
+      "requiredWhen": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 23.2",
+        "url": "https://www.pmcpa.org.uk/the-code/2024-interactive-abpi-code-of-practice/clause-23-donations-and-grants/",
+        "verified": false
+      }
+    },
+    {
+      "id": "uk-parties",
+      "label": "Parties and their roles",
+      "text": "The parties are Halden Pharma Ltd and [Recipient legal name, charity or company number]. No other party has a role in decisions about the use of this support.",
+      "requiredWhen": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 23.2",
+        "url": "https://www.pmcpa.org.uk/the-code/2024-interactive-abpi-code-of-practice/clause-23-donations-and-grants/",
+        "verified": false
+      }
+    },
+    {
+      "id": "uk-acknowledgement",
+      "label": "Acknowledgement apparent from the start",
+      "text": "The Recipient will acknowledge Halden Pharma's support in all materials relating to the [activity], and the acknowledgement will be clear and apparent from the start, including on the first page or screen and in any invitation.",
+      "requiredWhen": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 23.2",
+        "citation": "PMCPA AUTH/3676/7/22; AUTH/3851/11/23",
+        "url": "https://www.pmcpa.org.uk/the-code/2024-interactive-abpi-code-of-practice/clause-23-donations-and-grants/",
+        "verified": false
+      }
+    },
+    {
+      "id": "uk-disclosure",
+      "label": "Disclosure UK",
+      "text": "The Recipient acknowledges that the value of this support will be published on Disclosure UK and in Halden Pharma's annual disclosure.",
+      "requiredWhen": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 28",
+        "verified": false
+      }
+    }
+  ],
+  "disclosures": [
+    {
+      "id": "disclosure-uk",
+      "name": "Disclosure UK (ABPI clause 28; patient organisations clause 29)",
+      "appliesWhen": {
+        "fact": "country",
+        "op": "eq",
+        "value": "GB"
+      },
+      "categoryField": "tov.disclosureCategory",
+      "deadline": "30 June for the prior calendar year",
+      "fields": [
+        "recipient.legalName",
+        "recipient.address",
+        "recipient.charityNumber",
+        "tov.disclosureCategory",
+        "payment.amount",
+        "payment.year"
+      ]
+    }
+  ],
+  "calendar": [
+    {
+      "id": "uk-disclosure",
+      "label": "Disclosure UK publication of prior-year transfers of value",
+      "rule": "annual:06-30",
+      "regime": "disclosure-uk",
+      "basis": {
+        "layer": "code",
+        "ref": "ABPI 28",
+        "verified": false
+      }
+    }
+  ],
+  "verification": {
+    "status": "unverified",
+    "notes": [
+      "pmcpa.org.uk was blocked. Clause numbers 8.3, 23, 23.2, 28 and 29 come from the research report, which cites the PMCPA interactive Code and case reports. A web search on 27 Oct 2026 returned the Moderna case PDF title and summary (breaches of 8.3, 23.2, 5.1) but not the clause text.",
+      "The exact wording a UK agreement must use for acknowledgement should be checked against clause 23.2 supplementary information and the two Roche case reports before Legal finalises the UK template.",
+      "Certification is held as the internal field uk.certificationRef (the final signatory's certificate reference) so the priorApproval check can run with the current engine."
+    ]
+  }
+}

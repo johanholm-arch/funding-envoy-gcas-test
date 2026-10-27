@@ -1,0 +1,1465 @@
+{
+  "version": 1,
+  "status": "published",
+  "packs": [
+    {
+      "id": "core",
+      "version": 1
+    },
+    {
+      "id": "us",
+      "version": 1
+    },
+    {
+      "id": "accredited-ce",
+      "version": 1
+    },
+    {
+      "id": "efpia",
+      "version": 1
+    },
+    {
+      "id": "uk",
+      "version": 1
+    },
+    {
+      "id": "fr",
+      "version": 1
+    }
+  ],
+  "rules": [
+    {
+      "id": "R-02",
+      "statement": "The organization is a type Halden can fund",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 3.1",
+        "citation": "Grants and Donations Policy v6 3.1: eligible organizations."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "fact": "org.type",
+          "op": "in",
+          "value": [
+            "association",
+            "hospital",
+            "teaching-hospital",
+            "university",
+            "patient-organization",
+            "charity",
+            "accredited-provider",
+            "medical-education-company"
+          ]
+        }
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Organization type is eligible: {{org.type}}.",
+        "fail": "Halden funds societies, associations, hospitals, universities, patient organizations, registered charities and education providers. This organization's type ({{org.type}}) is not eligible.",
+        "requestor": "Under our policy we can fund societies, associations, hospitals, universities, patient organizations, registered charities and education providers. Please contact the grants office if you think your organization's type is recorded wrongly."
+      },
+      "actions": [
+        {
+          "id": "contact:grants-office",
+          "label": "Contact the grants office"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-04",
+      "statement": "Requested amount within the annual revenue cap",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 5.2",
+        "citation": "Grants and Donations Policy v6 5.2: cumulative funding to a recipient in a calendar year (requested, pending and approved) may not exceed 25% of its annual gross revenue. Exceptions for named programmes go to the committee."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "ratioMax",
+        "numerator": [
+          "amount.requested"
+        ],
+        "denominator": "org.annualRevenue",
+        "max": "param.revenueCap",
+        "includeOpenRequests": true
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Your request of {{amount}} is {{ratio}} of your organization's annual revenue of {{denominator}}, within the {{max}} limit. ({{amount}} plus {{open}} pending and approved this year.)",
+        "fail": "Your request of {{amount}}, with {{open}} already pending or approved this year, is {{ratio}} of your organization's annual revenue of {{denominator}}. Halden's limit is {{max}}.",
+        "requestor": "Halden's policy limits funding to any organization in a calendar year to a quarter of its annual revenue, counting this request and any others that are pending or approved. You can reduce the amount, or ask the coordinator whether the programme qualifies for a committee exception."
+      },
+      "actions": [
+        {
+          "id": "change:amount",
+          "label": "Reduce the amount"
+        },
+        {
+          "id": "contact:coordinator",
+          "label": "Ask about an exception"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-06",
+      "statement": "The core facts of the request are complete",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 3.1",
+        "citation": "Management of Grants and Donations SOP v4 3.1: a request is complete when the catalogue's required fields for its type are answered."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "fieldsPresent",
+        "fields": [
+          "title",
+          "amount.requested",
+          "amount.currency",
+          "activity.startDate",
+          "activity.endDate",
+          "activity.location",
+          "activity.format",
+          "audience.geography",
+          "purpose",
+          "purpose.category"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Title, amount, dates, location, format, audience and purpose recorded.",
+        "fail": "Still needed: {{missing}}."
+      },
+      "actions": [
+        {
+          "id": "answer:missing",
+          "label": "Answer the remaining questions"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-06e",
+      "statement": "The educational design is described",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 3.1",
+        "citation": "Management of Grants and Donations SOP v4 3.1 and Annex C (education checklist)."
+      },
+      "scope": {
+        "fact": "family",
+        "op": "eq",
+        "value": "education"
+      },
+      "check": {
+        "kind": "fieldsPresent",
+        "fields": [
+          "provider.name",
+          "provider.accredited",
+          "learningObjectives",
+          "needsAssessment",
+          "outcomes.level",
+          "outcomes.methods",
+          "audience.expected",
+          "audience.breakdown",
+          "otherFunders",
+          "support.type"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Provider, objectives, needs assessment, outcomes plan, audience and other funders recorded.",
+        "fail": "Still needed for an education request: {{missing}}."
+      },
+      "actions": [
+        {
+          "id": "answer:missing",
+          "label": "Answer the remaining questions"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-06n",
+      "statement": "A non-accredited provider explains how it keeps control of content, faculty and learners",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 7.1",
+        "citation": "Grants and Donations Policy v6 7.1: where no accreditor stands behind the provider, Halden needs the provider's own statement of how it keeps commercial supporters out of content, faculty and learner decisions."
+      },
+      "scope": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-non-accredited"
+      },
+      "check": {
+        "kind": "fieldsPresent",
+        "fields": [
+          "independence.contentControl"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Provider's independence statement recorded.",
+        "fail": "This non-accredited education request has no statement of how the provider controls content, faculty and learners.",
+        "requestor": "Because no accreditor checks this programme, please describe who decides the content, chooses faculty and selects learners, and how sponsors are kept out of those decisions."
+      },
+      "actions": [
+        {
+          "id": "answer:independence.contentControl",
+          "label": "Describe independence"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-06c",
+      "statement": "The charitable programme and its beneficiaries are described",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 3.1",
+        "citation": "Management of Grants and Donations SOP v4 3.1 and Annex D (charitable checklist)."
+      },
+      "scope": {
+        "fact": "family",
+        "op": "eq",
+        "value": "charitable"
+      },
+      "check": {
+        "kind": "fieldsPresent",
+        "fields": [
+          "programmeDescription",
+          "beneficiaries",
+          "donation.use"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Programme, beneficiaries and use of the donation recorded.",
+        "fail": "Still needed for a charitable request: {{missing}}."
+      },
+      "actions": [
+        {
+          "id": "answer:missing",
+          "label": "Answer the remaining questions"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-07",
+      "statement": "Activity starts at least 60 days after submission",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 4.1",
+        "citation": "Management of Grants and Donations SOP v4 4.1: requests are submitted at least 60 calendar days before the activity starts, so that the decision and an executed agreement both come first."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "leadTime",
+        "dateField": "activity.startDate",
+        "minDays": "param.leadTimeDays",
+        "from": "today"
+      },
+      "severity": "warn",
+      "messages": {
+        "pass": "Activity starts on {{date}}, {{days}} days from now.",
+        "fail": "Activity starts in {{days}} days; the company asks for at least {{min}}. Approval by the committee and a signed agreement must both happen before {{date}}.",
+        "requestor": "Approval by the committee and a signed agreement must both happen before {{date}}. The reviewing team's typical decision time is 6 to 8 weeks, so this is at risk. You can submit anyway and the reviewer will see this flag, or you can change the activity dates if that's possible."
+      },
+      "actions": [
+        {
+          "id": "submit-with-flag",
+          "label": "Submit with the flag"
+        },
+        {
+          "id": "change:dates",
+          "label": "Change dates"
+        }
+      ],
+      "appliesAt": [
+        "draft",
+        "submit",
+        "review"
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-08",
+      "statement": "The activity has not started",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 4.3",
+        "citation": "Grants and Donations Policy v6 4.3: Halden does not fund activities that have already started or support retrospectively."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "leadTime",
+        "dateField": "activity.startDate",
+        "minDays": 1,
+        "from": "today"
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Activity has not started.",
+        "fail": "The activity started on {{date}}. Halden does not fund activities that have already started.",
+        "requestor": "Halden can't fund an activity that has already started. If the date is wrong, please correct it."
+      },
+      "actions": [
+        {
+          "id": "change:dates",
+          "label": "Correct the dates"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-11a",
+      "statement": "Proof of non-profit status on file",
+      "basis": {
+        "layer": "practice",
+        "ref": "Checklist",
+        "citation": "Platform checklist (US reviewing groups); Grants and Donations Policy v6 3.1."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "country",
+            "op": "eq",
+            "value": "US"
+          },
+          {
+            "fact": "org.type",
+            "op": "in",
+            "value": [
+              "association",
+              "patient-organization",
+              "charity"
+            ]
+          }
+        ]
+      },
+      "check": {
+        "kind": "documentsPresent",
+        "types": [
+          "nonprofit-proof"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Proof of non-profit status on file.",
+        "fail": "Proof of non-profit status is missing.",
+        "requestor": "Please upload your IRS determination letter or state equivalent. If your profile already holds one from an earlier year, you can reuse it if nothing has changed."
+      },
+      "actions": [
+        {
+          "id": "reuse:nonprofit-proof",
+          "label": "Reuse letter from profile"
+        },
+        {
+          "id": "upload:nonprofit-proof",
+          "label": "Upload new"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-11b",
+      "statement": "Financial statement on file, so the funding cap can be evidenced",
+      "basis": {
+        "layer": "practice",
+        "ref": "Checklist",
+        "citation": "Platform checklist; Grants and Donations Policy v6 5.2 (revenue must be evidenced by a financial statement)."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "documentsPresent",
+        "types": [
+          "financial-statement"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Financial statement on file.",
+        "fail": "Financial statement missing, so the funding cap can't be evidenced.",
+        "requestor": "Reviewers need your most recent annual financial statement to confirm gross revenue. The revenue on your profile must be evidenced by the statement."
+      },
+      "actions": [
+        {
+          "id": "upload:financial-statement",
+          "label": "Upload statement"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-11c",
+      "statement": "Charity or association registration on file",
+      "basis": {
+        "layer": "practice",
+        "ref": "Checklist",
+        "citation": "Grants and Donations Policy v6 3.1; UK Charity Commission / OSCR registration; French association statuts and récépissé."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "country",
+            "op": "in",
+            "value": [
+              "GB",
+              "FR"
+            ]
+          },
+          {
+            "fact": "org.type",
+            "op": "in",
+            "value": [
+              "association",
+              "patient-organization",
+              "charity"
+            ]
+          }
+        ]
+      },
+      "check": {
+        "kind": "documentsPresent",
+        "types": [
+          "charity-registration"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Registration on file.",
+        "fail": "Charity or association registration is missing.",
+        "requestor": "Please upload your registration: in the UK a Charity Commission or OSCR register extract; in France your statuts with the préfecture récépissé or Journal officiel publication."
+      },
+      "actions": [
+        {
+          "id": "upload:charity-registration",
+          "label": "Upload registration"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-12",
+      "statement": "Request letter and itemized budget on file",
+      "basis": {
+        "layer": "practice",
+        "ref": "Checklist",
+        "citation": "Management of Grants and Donations SOP v4 3.2: every request has a signed request letter on letterhead and an itemized budget."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "documentsPresent",
+        "types": [
+          "request-letter",
+          "budget"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Request letter and budget on file.",
+        "fail": "Missing: {{missing}}."
+      },
+      "actions": [
+        {
+          "id": "upload:missing",
+          "label": "Upload"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-13",
+      "statement": "Prospectus or agenda on file",
+      "basis": {
+        "layer": "practice",
+        "ref": "Checklist",
+        "citation": "Management of Grants and Donations SOP v4 3.2 and Annex C."
+      },
+      "scope": {
+        "fact": "family",
+        "op": "eq",
+        "value": "education"
+      },
+      "check": {
+        "kind": "documentsPresent",
+        "types": [
+          "prospectus"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Prospectus on file.",
+        "fail": "The prospectus or agenda is missing."
+      },
+      "actions": [
+        {
+          "id": "upload:prospectus",
+          "label": "Upload prospectus"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-14",
+      "statement": "Accreditation statement on file",
+      "basis": {
+        "layer": "practice",
+        "ref": "Checklist",
+        "citation": "Management of Grants and Donations SOP v4 Annex C."
+      },
+      "scope": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "check": {
+        "kind": "documentsPresent",
+        "types": [
+          "accreditation-statement"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Accreditation statement on file.",
+        "fail": "The accreditation statement is missing."
+      },
+      "actions": [
+        {
+          "id": "upload:accreditation-statement",
+          "label": "Upload"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-15",
+      "statement": "Provider controls content, faculty and learners",
+      "basis": {
+        "layer": "code",
+        "ref": "Code · SII 4",
+        "citation": "ACCME Standards for Integrity and Independence, Standards 2 and 4; PhRMA Code (CME); Grants and Donations Policy v6 7.1. Accredited: contradicting wording blocks submission; silence goes to the medical reviewer."
+      },
+      "scope": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "check": {
+        "kind": "documentQuote",
+        "documentType": "prospectus",
+        "mustContainAny": [
+          "no role in planning",
+          "no role in the planning",
+          "supporters have no role",
+          "supporter has no role",
+          "commercial supporters have no role",
+          "independent of commercial supporters",
+          "sole responsibility of the accredited provider"
+        ],
+        "mustNotContainAny": [
+          "supporter will review",
+          "supporter may suggest",
+          "suggested by the supporter",
+          "recommended by the sponsor",
+          "sponsor will select",
+          "in consultation with the supporter",
+          "subject to supporter approval",
+          "supporter-nominated"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Stated in the prospectus (p.{{page}}): \"{{quote}}\" Will be restated in the letter of agreement.",
+        "fail": "The prospectus does not confirm that the provider alone controls content, faculty and learners. Wording that gives a commercial supporter a role blocks submission; if the prospectus is silent, the medical reviewer decides.",
+        "requestor": "Accredited education must be planned and controlled by the provider. Please check the prospectus wording with your accredited provider and upload a corrected version."
+      },
+      "actions": [
+        {
+          "id": "upload:prospectus",
+          "label": "Upload corrected prospectus"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-15n",
+      "statement": "Organizer controls content, faculty and learners (non-accredited)",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 7.1",
+        "citation": "Grants and Donations Policy v6 7.1. Non-accredited: wording is evidence for the medical reviewer, who judges independence."
+      },
+      "scope": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-non-accredited"
+      },
+      "check": {
+        "kind": "documentQuote",
+        "documentType": "prospectus",
+        "mustContainAny": [
+          "no role in planning",
+          "no role in the planning",
+          "supporters have no role",
+          "supporter has no role",
+          "commercial supporters have no role",
+          "independent of commercial supporters",
+          "sole responsibility of the"
+        ],
+        "mustNotContainAny": [
+          "supporter will review",
+          "supporter may suggest",
+          "suggested by the supporter",
+          "recommended by the sponsor",
+          "sponsor will select",
+          "in consultation with the supporter",
+          "subject to supporter approval",
+          "supporter-nominated"
+        ]
+      },
+      "severity": "judge",
+      "messages": {
+        "pass": "Stated in the prospectus (p.{{page}}): \"{{quote}}\"",
+        "fail": "The prospectus does not confirm that the organizer controls content, faculty and learners, or gives a supporter a role. The medical reviewer decides whether the programme is independent."
+      },
+      "actions": [
+        {
+          "id": "route:medical",
+          "label": "For the medical reviewer"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-16",
+      "statement": "Provider's conflict-of-interest policy on file",
+      "basis": {
+        "layer": "practice",
+        "ref": "Checklist",
+        "citation": "Management of Grants and Donations SOP v4 Annex C."
+      },
+      "scope": {
+        "fact": "family",
+        "op": "eq",
+        "value": "education"
+      },
+      "check": {
+        "kind": "documentsPresent",
+        "types": [
+          "coi-policy"
+        ]
+      },
+      "severity": "warn",
+      "messages": {
+        "pass": "Conflict-of-interest policy on file.",
+        "fail": "The provider's conflict-of-interest policy is missing. You can submit; the reviewer will probably ask for it."
+      },
+      "actions": [
+        {
+          "id": "upload:coi-policy",
+          "label": "Upload policy"
+        },
+        {
+          "id": "submit-with-flag",
+          "label": "Submit with the flag"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-18",
+      "statement": "Itemized budget total equals amount requested",
+      "basis": {
+        "layer": "sop",
+        "ref": "Added here",
+        "citation": "Agent check added in rulebook v1; Management of Grants and Donations SOP v4 3.2 (requested amount not above the itemized budget). Tolerance 50 in request currency (absolute)."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "equalsWithin",
+        "a": "amount.requested",
+        "b": "budget.total",
+        "tolerance": 50
+      },
+      "severity": "warn",
+      "messages": {
+        "pass": "Budget total {{b}} matches the amount requested.",
+        "fail": "The budget totals {{b}} but you're requesting {{a}} (difference {{diff}}).",
+        "requestor": "Should the request use the budget total, or is there a line missing?"
+      },
+      "actions": [
+        {
+          "id": "change:amount",
+          "label": "Request the budget total"
+        },
+        {
+          "id": "add:budget-line",
+          "label": "Add a line"
+        },
+        {
+          "id": "upload:budget",
+          "label": "Upload a revised budget"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-21",
+      "statement": "Anti-discrimination statement acknowledged",
+      "basis": {
+        "layer": "practice",
+        "ref": "Checklist",
+        "citation": "Platform checklist; Grants and Donations Policy v6 8.1."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "attestationsComplete",
+        "ids": [
+          "anti-discrimination"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Anti-discrimination statement typed by the requestor.",
+        "fail": "The anti-discrimination statement has not been made."
+      },
+      "actions": [
+        {
+          "id": "attest:anti-discrimination",
+          "label": "Make the statement"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-22",
+      "statement": "Accuracy statement made",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 3.4",
+        "citation": "Management of Grants and Donations SOP v4 3.4."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "attestationsComplete",
+        "ids": [
+          "accuracy"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Accuracy statement typed by the requestor.",
+        "fail": "The accuracy statement has not been made."
+      },
+      "actions": [
+        {
+          "id": "attest:accuracy",
+          "label": "Make the statement"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-23",
+      "statement": "Independence statement made",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 7.1",
+        "citation": "Grants and Donations Policy v6 7.1; ACCME Standard 4."
+      },
+      "scope": {
+        "fact": "family",
+        "op": "eq",
+        "value": "education"
+      },
+      "check": {
+        "kind": "attestationsComplete",
+        "ids": [
+          "independence"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Independence statement typed by the requestor.",
+        "fail": "Complete the independence statement to enable submission."
+      },
+      "actions": [
+        {
+          "id": "attest:independence",
+          "label": "Make the statement"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-24",
+      "statement": "No ineligible budget lines; hospitality goes to the reviewer",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 6.4",
+        "citation": "Grants and Donations Policy v6 6.1 and 6.4; PhRMA Code (CME); ACCME Standard 4 (no learner expenses)."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "budgetLines",
+        "blockCategories": [
+          "entertainment",
+          "gifts",
+          "learner-travel"
+        ],
+        "judgeCategories": [
+          "meals"
+        ],
+        "keywords": {
+          "hospitality": [
+            "dinner",
+            "reception",
+            "gala",
+            "drinks",
+            "cocktail"
+          ]
+        }
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Budget lines reviewed: none for entertainment, gifts or learner travel, and none for hospitality.",
+        "fail": "Budget lines needing attention: {{lines}}. Entertainment, gifts and learner travel cannot be funded and must be removed; meals and receptions are reviewed as hospitality.",
+        "requestor": "The company does not fund entertainment, gifts, travel for learners, or meals for named individuals. A working meal inside the agenda, decided by the provider, is usually acceptable: keep that line and the reviewer will decide, or remove it and reduce the request."
+      },
+      "actions": [
+        {
+          "id": "keep-and-explain",
+          "label": "Keep and explain"
+        },
+        {
+          "id": "remove:budget-line",
+          "label": "Remove line"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-25",
+      "statement": "No-business-benefit statement made",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 9.2",
+        "citation": "Grants and Donations Policy v6 9.2."
+      },
+      "scope": {
+        "fact": "family",
+        "op": "eq",
+        "value": "charitable"
+      },
+      "check": {
+        "kind": "attestationsComplete",
+        "ids": [
+          "no-business-benefit"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "No-business-benefit statement typed by the requestor.",
+        "fail": "The statement that Halden receives nothing in return has not been made."
+      },
+      "actions": [
+        {
+          "id": "attest:no-business-benefit",
+          "label": "Make the statement"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-26",
+      "statement": "Acknowledgement commitment made",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 10.1",
+        "citation": "Grants and Donations Policy v6 10.1; ABPI 23.2; ACCME Standard 4."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "attestationsComplete",
+        "ids": [
+          "acknowledgement"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Acknowledgement commitment made.",
+        "fail": "The commitment to acknowledge Halden's support has not been made."
+      },
+      "actions": [
+        {
+          "id": "attest:acknowledgement",
+          "label": "Make the commitment"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-28",
+      "statement": "Conflict of interest questions answered",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 7.3",
+        "citation": "Grants and Donations Policy v6 7.3: nine questions, answered by the requestor."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "coiComplete"
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Conflict of interest: {{answered}} of {{total}} answered.",
+        "fail": "Conflict of interest questions: {{answered}} of {{total}} answered.",
+        "requestor": "{{left}} left. I'll ask them one at a time. Your answers are recorded as yours."
+      },
+      "actions": [
+        {
+          "id": "answer:coi",
+          "label": "Continue questions"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-29",
+      "statement": "Conflict of interest answers are all 'no'",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 7.3",
+        "citation": "Grants and Donations Policy v6 7.3: any 'yes' goes to compliance review (SOP 6.1)."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "coiAllNo"
+      },
+      "severity": "judge",
+      "messages": {
+        "pass": "All conflict of interest answers are 'no'.",
+        "fail": "{{yes}} conflict of interest answer(s) are 'yes'. The request goes to compliance review.",
+        "requestor": "A 'yes' doesn't stop your request. It means a compliance reviewer looks at the answer before the committee does."
+      },
+      "actions": [
+        {
+          "id": "route:compliance",
+          "label": "Send to Compliance"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-30",
+      "statement": "The organization is clear on the sanctions and politically exposed persons lists",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 5.1",
+        "citation": "Management of Grants and Donations SOP v4 5.1: every organization is screened at intake and again before payment. Outside the US: OFAC (Halden is a US company), UK OFSI, EU consolidated list and PEP screening of officers."
+      },
+      "scope": {
+        "fact": "country",
+        "op": "ne",
+        "value": "US"
+      },
+      "check": {
+        "kind": "screeningClear",
+        "lists": [
+          "OFAC-SDN",
+          "UK-OFSI",
+          "EU-CFSP",
+          "PEP"
+        ],
+        "maxAgeDays": 90
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Screened {{date}} against {{lists}}: clear.",
+        "fail": "Screening returned a match or possible match. Compliance adjudicates; a confirmed match cannot be funded.",
+        "requestor": "Our routine screening found a possible issue that a compliance reviewer needs to look at. You don't need to do anything yet."
+      },
+      "actions": [
+        {
+          "id": "route:compliance",
+          "label": "Send to Compliance"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "R-31",
+      "statement": "Charitable contribution within the single-approver limit",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 6.5",
+        "citation": "Management of Grants and Donations SOP v4 6.5: charitable contributions of US$5,000 or less are decided by a single approver (the Committee Chair) instead of the full committee."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "family",
+            "op": "eq",
+            "value": "charitable"
+          },
+          {
+            "fact": "currency",
+            "op": "eq",
+            "value": "USD"
+          }
+        ]
+      },
+      "check": {
+        "kind": "amountMax",
+        "field": "amount.requested",
+        "max": "param.singleApproverMaxUSD",
+        "currency": "USD"
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "{{value}} is within the single-approver limit of {{max}} (SOP 6.5): the Committee Chair decides.",
+        "fail": "{{value}} is above the single-approver limit of {{max}}: the full committee decides."
+      },
+      "source": "tenant"
+    },
+    {
+      "id": "R-35",
+      "statement": "No Halden product named in the title, purpose or objectives",
+      "basis": {
+        "layer": "policy",
+        "ref": "Policy 6.1",
+        "citation": "Grants and Donations Policy v6 6.1: Halden does not fund product promotion; independent education is not about a Halden medicine."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "productNameAbsent",
+        "fields": [
+          "title",
+          "purpose",
+          "learningObjectives"
+        ]
+      },
+      "severity": "judge",
+      "messages": {
+        "pass": "No Halden product named.",
+        "fail": "The {{field}} names {{product}}. The medical reviewer checks that the programme is balanced and not promotional."
+      },
+      "actions": [
+        {
+          "id": "route:medical",
+          "label": "For the medical reviewer"
+        }
+      ],
+      "source": "tenant"
+    },
+    {
+      "id": "T-1",
+      "statement": "Triage: Education, UK → UK medical education",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 5.2",
+        "citation": "Management of Grants and Donations SOP v4 5.2: requests are routed by type, country and audience geography. The coordinator can override."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "family",
+            "op": "eq",
+            "value": "education"
+          },
+          {
+            "fact": "country",
+            "op": "eq",
+            "value": "GB"
+          },
+          {
+            "fact": "field.audience.geography",
+            "op": "ne",
+            "value": "international"
+          }
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Reviewed by: UK medical education.",
+        "fail": "Reviewed by: UK medical education."
+      },
+      "source": "tenant"
+    },
+    {
+      "id": "T-2",
+      "statement": "Triage: Education, France → France medical affairs",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 5.2",
+        "citation": "Management of Grants and Donations SOP v4 5.2: requests are routed by type, country and audience geography. The coordinator can override."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "family",
+            "op": "eq",
+            "value": "education"
+          },
+          {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          {
+            "fact": "field.audience.geography",
+            "op": "ne",
+            "value": "international"
+          }
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Reviewed by: France medical affairs.",
+        "fail": "Reviewed by: France medical affairs."
+      },
+      "source": "tenant"
+    },
+    {
+      "id": "T-3",
+      "statement": "Triage: Accredited IME, audience mainly US → US medical education",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 5.2",
+        "citation": "Management of Grants and Donations SOP v4 5.2: requests are routed by type, country and audience geography. The coordinator can override."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "subtype",
+            "op": "eq",
+            "value": "ime-accredited"
+          },
+          {
+            "fact": "country",
+            "op": "eq",
+            "value": "US"
+          },
+          {
+            "fact": "field.audience.geography",
+            "op": "eq",
+            "value": "mainly-us"
+          }
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Reviewed by: US medical education.",
+        "fail": "Reviewed by: US medical education."
+      },
+      "source": "tenant"
+    },
+    {
+      "id": "T-4",
+      "statement": "Triage: Non-accredited IME, audience mainly US → US medical education",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 5.2",
+        "citation": "Management of Grants and Donations SOP v4 5.2: requests are routed by type, country and audience geography. The coordinator can override."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "subtype",
+            "op": "eq",
+            "value": "ime-non-accredited"
+          },
+          {
+            "fact": "country",
+            "op": "eq",
+            "value": "US"
+          },
+          {
+            "fact": "field.audience.geography",
+            "op": "eq",
+            "value": "mainly-us"
+          }
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Reviewed by: US medical education.",
+        "fail": "Reviewed by: US medical education."
+      },
+      "source": "tenant"
+    },
+    {
+      "id": "T-5",
+      "statement": "Triage: Education, international audience or US provider with a non-US audience → Global grants committee",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 5.2",
+        "citation": "Management of Grants and Donations SOP v4 5.2: requests are routed by type, country and audience geography. The coordinator can override."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "family",
+            "op": "eq",
+            "value": "education"
+          },
+          {
+            "any": [
+              {
+                "fact": "field.audience.geography",
+                "op": "eq",
+                "value": "international"
+              },
+              {
+                "all": [
+                  {
+                    "fact": "country",
+                    "op": "eq",
+                    "value": "US"
+                  },
+                  {
+                    "fact": "field.audience.geography",
+                    "op": "ne",
+                    "value": "mainly-us"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Reviewed by: Global grants committee.",
+        "fail": "Reviewed by: Global grants committee."
+      },
+      "source": "tenant"
+    },
+    {
+      "id": "T-6",
+      "statement": "Triage: Charitable, US → US charitable contributions",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 5.2",
+        "citation": "Management of Grants and Donations SOP v4 5.2: requests are routed by type, country and audience geography. The coordinator can override."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "family",
+            "op": "eq",
+            "value": "charitable"
+          },
+          {
+            "fact": "country",
+            "op": "eq",
+            "value": "US"
+          }
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Reviewed by: US charitable contributions.",
+        "fail": "Reviewed by: US charitable contributions."
+      },
+      "source": "tenant"
+    },
+    {
+      "id": "T-7",
+      "statement": "Triage: Charitable, UK → UK charitable contributions",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 5.2",
+        "citation": "Management of Grants and Donations SOP v4 5.2: requests are routed by type, country and audience geography. The coordinator can override."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "family",
+            "op": "eq",
+            "value": "charitable"
+          },
+          {
+            "fact": "country",
+            "op": "eq",
+            "value": "GB"
+          }
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Reviewed by: UK charitable contributions.",
+        "fail": "Reviewed by: UK charitable contributions."
+      },
+      "source": "tenant"
+    },
+    {
+      "id": "T-8",
+      "statement": "Triage: Charitable, France → France affiliate",
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 5.2",
+        "citation": "Management of Grants and Donations SOP v4 5.2: requests are routed by type, country and audience geography. The coordinator can override."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "family",
+            "op": "eq",
+            "value": "charitable"
+          },
+          {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          }
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Reviewed by: France affiliate.",
+        "fail": "Reviewed by: France affiliate."
+      },
+      "source": "tenant"
+    }
+  ],
+  "disabled": [],
+  "parameters": {
+    "revenueCap": 0.25,
+    "leadTimeDays": 60,
+    "singleApproverMaxUSD": 5000,
+    "budgetTolerance": 50,
+    "triage": [
+      {
+        "ruleId": "T-1",
+        "group": "UK medical education"
+      },
+      {
+        "ruleId": "T-2",
+        "group": "France medical affairs"
+      },
+      {
+        "ruleId": "T-3",
+        "group": "US medical education"
+      },
+      {
+        "ruleId": "T-4",
+        "group": "US medical education"
+      },
+      {
+        "ruleId": "T-5",
+        "group": "Global grants committee"
+      },
+      {
+        "ruleId": "T-6",
+        "group": "US charitable contributions"
+      },
+      {
+        "ruleId": "T-7",
+        "group": "UK charitable contributions"
+      },
+      {
+        "ruleId": "T-8",
+        "group": "France affiliate"
+      }
+    ],
+    "complianceFlags": [
+      "R-29",
+      "R-30",
+      "US-SCR-01",
+      "US-FCPA-01",
+      "FR-AC-02",
+      "FR-AC-04"
+    ],
+    "signedBy": "J. Whitfield (process owner)",
+    "signedAt": "2026-10-26T16:00:00Z",
+    "sources": {
+      "policy": "Grants and Donations Policy v6",
+      "sop": "Management of Grants and Donations SOP v4"
+    }
+  }
+}

@@ -1,0 +1,1781 @@
+{
+  "version": 1,
+  "families": [
+    {
+      "id": "education",
+      "name": "Independent medical education",
+      "description": "Support for education of healthcare professionals that the provider plans and controls. Accredited (with credit) or non-accredited."
+    },
+    {
+      "id": "charitable",
+      "name": "Charitable contributions",
+      "description": "Donations to registered non-profits for charitable programmes, with no business benefit to Halden."
+    }
+  ],
+  "subtypes": [
+    {
+      "id": "ime-accredited",
+      "family": "education",
+      "name": "Independent medical education, accredited",
+      "description": "Education for healthcare professionals offering continuing education credit, where an accredited provider controls content, faculty, learners and the use of funds.",
+      "distinguishers": [
+        "Is credit offered (for example AMA PRA Category 1, CPD points, DPC)?",
+        "Is the provider accredited by a recognised body, and does it control content and faculty?",
+        "Is the audience healthcare professionals rather than patients or the public?"
+      ],
+      "sections": [
+        {
+          "id": "activity",
+          "label": "The activity"
+        },
+        {
+          "id": "provider",
+          "label": "Provider and accreditation"
+        },
+        {
+          "id": "education",
+          "label": "Educational design and outcomes"
+        },
+        {
+          "id": "audience",
+          "label": "Audience"
+        },
+        {
+          "id": "funding",
+          "label": "Funding and budget"
+        },
+        {
+          "id": "independence",
+          "label": "Independence"
+        },
+        {
+          "id": "internal",
+          "label": "Completed by Halden"
+        }
+      ],
+      "fields": [
+        {
+          "key": "title",
+          "label": "Title of the activity or programme",
+          "kind": "text",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "As it appears on the prospectus or programme description. Do not include the name of any medicine.",
+          "basis": "Policy 6.1; ABPI 23"
+        },
+        {
+          "key": "amount.requested",
+          "label": "Amount requested",
+          "kind": "money",
+          "section": "funding",
+          "required": true,
+          "extractable": true,
+          "help": "The amount you are asking Halden to provide. It should equal your itemized budget total, or the part of it Halden is asked to fund.",
+          "basis": "Policy 5.2"
+        },
+        {
+          "key": "amount.currency",
+          "label": "Currency",
+          "kind": "enum",
+          "section": "funding",
+          "options": [
+            "USD",
+            "GBP",
+            "EUR"
+          ],
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "activity.startDate",
+          "label": "Start date and time",
+          "kind": "datetime",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "The first day of the activity or programme. Halden must approve and sign an agreement before this date.",
+          "basis": "SOP 4.1, 7.1"
+        },
+        {
+          "key": "activity.endDate",
+          "label": "End date and time",
+          "kind": "datetime",
+          "section": "activity",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "activity.location",
+          "label": "Location",
+          "kind": "text",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "City, region and country, or 'online'."
+        },
+        {
+          "key": "activity.format",
+          "label": "Format",
+          "kind": "enum",
+          "section": "activity",
+          "options": [
+            "in-person",
+            "virtual",
+            "hybrid",
+            "enduring"
+          ],
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "audience.geography",
+          "label": "Where the audience or beneficiaries mainly are",
+          "kind": "enum",
+          "section": "audience",
+          "options": [
+            "mainly-us",
+            "mainly-uk",
+            "mainly-fr",
+            "international"
+          ],
+          "required": true,
+          "extractable": true,
+          "help": "Decides which Halden team reviews the request.",
+          "basis": "SOP 5.2"
+        },
+        {
+          "key": "purpose",
+          "label": "Purpose",
+          "kind": "longtext",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "What the activity or programme will achieve, in your own words. FundingEnvoy will not draft this for you."
+        },
+        {
+          "key": "purpose.category",
+          "label": "Purpose category",
+          "kind": "enum",
+          "section": "activity",
+          "options": [
+            "education",
+            "healthcare",
+            "research",
+            "community",
+            "humanitarian"
+          ],
+          "required": true,
+          "extractable": false,
+          "help": "In the UK and France Halden can only support healthcare, research or education.",
+          "basis": "EFPIA 12.01; ABPI 23"
+        },
+        {
+          "key": "therapeuticArea",
+          "label": "Therapeutic area",
+          "kind": "text",
+          "section": "activity",
+          "extractable": true
+        },
+        {
+          "key": "provider.name",
+          "label": "Education provider",
+          "kind": "text",
+          "section": "provider",
+          "required": true,
+          "extractable": true,
+          "help": "The organization that plans and delivers the education and controls its content."
+        },
+        {
+          "key": "provider.accredited",
+          "label": "Is the provider accredited for continuing education?",
+          "kind": "boolean",
+          "section": "provider",
+          "required": true,
+          "extractable": true,
+          "basis": "ACCME eligibility"
+        },
+        {
+          "key": "provider.accreditor",
+          "label": "Accrediting body",
+          "kind": "text",
+          "section": "provider",
+          "requiredWhen": {
+            "fact": "field.provider.accredited",
+            "op": "truthy"
+          },
+          "extractable": true,
+          "help": "For example ACCME, Joint Accreditation, ANCC, Federation of the Royal Colleges of Physicians (CPD), ANDPC."
+        },
+        {
+          "key": "credits",
+          "label": "Credit offered",
+          "kind": "text",
+          "section": "provider",
+          "required": true,
+          "extractable": true,
+          "help": "For example '11.0 AMA PRA Category 1 Credits'."
+        },
+        {
+          "key": "faculty.selection",
+          "label": "How faculty are selected",
+          "kind": "text",
+          "section": "provider",
+          "extractable": true
+        },
+        {
+          "key": "learningObjectives",
+          "label": "Learning objectives",
+          "kind": "longtext",
+          "section": "education",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "needsAssessment",
+          "label": "Needs assessment",
+          "kind": "longtext",
+          "section": "education",
+          "required": true,
+          "extractable": true,
+          "help": "The gap in knowledge, competence or performance the education addresses, with its evidence."
+        },
+        {
+          "key": "outcomes.level",
+          "label": "Outcomes level you will measure",
+          "kind": "enum",
+          "section": "education",
+          "options": [
+            "moore-1",
+            "moore-2",
+            "moore-3a",
+            "moore-3b",
+            "moore-4",
+            "moore-5",
+            "moore-6",
+            "moore-7"
+          ],
+          "required": true,
+          "extractable": true,
+          "help": "Moore's levels: 1 participation, 2 satisfaction, 3a declarative and 3b procedural knowledge, 4 competence, 5 performance, 6 patient health, 7 community health.",
+          "basis": "SOP 8.3"
+        },
+        {
+          "key": "outcomes.methods",
+          "label": "How you will measure outcomes",
+          "kind": "longtext",
+          "section": "education",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "audience.expected",
+          "label": "Expected learners",
+          "kind": "number",
+          "section": "audience",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "audience.breakdown",
+          "label": "Learners by profession",
+          "kind": "text",
+          "section": "audience",
+          "required": true,
+          "extractable": true,
+          "help": "For example '240 physicians; 60 nurses; 20 other'."
+        },
+        {
+          "key": "otherFunders",
+          "label": "Other funders asked or committed",
+          "kind": "list",
+          "section": "funding",
+          "required": true,
+          "extractable": true,
+          "help": "Name every other company or funder, or write 'None'.",
+          "basis": "Policy 7.5"
+        },
+        {
+          "key": "support.type",
+          "label": "Type of support",
+          "kind": "enum",
+          "section": "funding",
+          "options": [
+            "monetary",
+            "in-kind",
+            "both"
+          ],
+          "required": true
+        },
+        {
+          "key": "inKind.nature",
+          "label": "Nature of the in-kind support",
+          "kind": "longtext",
+          "section": "funding",
+          "visibleWhen": {
+            "fact": "field.support.type",
+            "op": "in",
+            "value": [
+              "in-kind",
+              "both"
+            ]
+          },
+          "requiredWhen": {
+            "fact": "field.support.type",
+            "op": "in",
+            "value": [
+              "in-kind",
+              "both"
+            ]
+          },
+          "basis": "ACCME Standard 4"
+        },
+        {
+          "key": "independence.contentControl",
+          "label": "How the provider keeps control of content, faculty and learners",
+          "kind": "longtext",
+          "section": "independence",
+          "required": false,
+          "extractable": true,
+          "help": "Describe who decides the content, chooses faculty and selects learners, and how commercial supporters are kept out of those decisions.",
+          "basis": "Policy 7.1"
+        },
+        {
+          "key": "tov.natureOfPayment",
+          "label": "Nature of payment (Finance)",
+          "kind": "enum",
+          "section": "internal",
+          "options": [
+            "grant",
+            "charitable-contribution",
+            "education"
+          ],
+          "help": "Set by Finance at payment. Not shown to requestors.",
+          "basis": "SOP 9.2"
+        },
+        {
+          "key": "tov.disclosureCategory",
+          "label": "Disclosure category (Finance)",
+          "kind": "enum",
+          "section": "internal",
+          "options": [
+            "donations-grants-hco",
+            "contribution-to-event-costs",
+            "not-disclosable"
+          ],
+          "help": "Set by Finance at payment. Not shown to requestors.",
+          "basis": "SOP 9.2"
+        },
+        {
+          "key": "agreement.clauses",
+          "label": "Clauses in the executed agreement (Legal)",
+          "kind": "list",
+          "section": "internal",
+          "help": "Clause ids from the template used. Written by the agreement step.",
+          "basis": "SOP 7.1"
+        },
+        {
+          "key": "uk.certificationRef",
+          "label": "UK final signatory certificate reference",
+          "kind": "text",
+          "section": "internal",
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "GB"
+          },
+          "help": "Written when the UK final signatory certifies the agreement.",
+          "basis": "ABPI 8.3; SOP Annex A"
+        },
+        {
+          "key": "fr.conventionRoute",
+          "label": "Convention route (Compliance)",
+          "kind": "enum",
+          "section": "internal",
+          "options": [
+            "declaration",
+            "authorisation"
+          ],
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          "basis": "SOP Annex B"
+        },
+        {
+          "key": "fr.conventionRecord",
+          "label": "IDAHE 2 / EPS record number",
+          "kind": "text",
+          "section": "internal",
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          "help": "Written by Compliance after filing.",
+          "basis": "SOP Annex B"
+        },
+        {
+          "key": "fr.conventionRecordDate",
+          "label": "Date the convention was filed",
+          "kind": "date",
+          "section": "internal",
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          "basis": "SOP Annex B"
+        }
+      ],
+      "documents": [
+        {
+          "type": "request-letter",
+          "label": "Request letter on letterhead, signed by an authorized signer",
+          "required": true,
+          "accept": [
+            "pdf",
+            "docx"
+          ],
+          "help": "Addressed to Halden Pharma, stating the amount and purpose."
+        },
+        {
+          "type": "prospectus",
+          "label": "Prospectus or agenda",
+          "required": true,
+          "accept": [
+            "pdf",
+            "docx",
+            "pptx"
+          ],
+          "help": "Must show the provider, dates, faculty selection and the statement on supporter role."
+        },
+        {
+          "type": "budget",
+          "label": "Itemized budget",
+          "required": true,
+          "accept": [
+            "xlsx",
+            "csv",
+            "pdf"
+          ],
+          "help": "Every line with a category and amount. Halden will compare the total with your request."
+        },
+        {
+          "type": "w9",
+          "label": "IRS Form W-9",
+          "requiredWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "US"
+          },
+          "accept": [
+            "pdf"
+          ],
+          "fromPassport": true,
+          "maxAgeMonths": 36
+        },
+        {
+          "type": "nonprofit-proof",
+          "label": "Proof of non-profit status (IRS determination letter or state equivalent)",
+          "requiredWhen": {
+            "all": [
+              {
+                "fact": "country",
+                "op": "eq",
+                "value": "US"
+              },
+              {
+                "fact": "org.type",
+                "op": "in",
+                "value": [
+                  "association",
+                  "patient-organization",
+                  "charity"
+                ]
+              }
+            ]
+          },
+          "accept": [
+            "pdf"
+          ],
+          "fromPassport": true,
+          "help": "A letter from earlier years is accepted if nothing has changed."
+        },
+        {
+          "type": "charity-registration",
+          "label": "Charity or association registration (UK: Charity Commission or OSCR extract; France: statuts and récépissé or JO publication)",
+          "requiredWhen": {
+            "all": [
+              {
+                "fact": "country",
+                "op": "in",
+                "value": [
+                  "GB",
+                  "FR"
+                ]
+              },
+              {
+                "fact": "org.type",
+                "op": "in",
+                "value": [
+                  "association",
+                  "patient-organization",
+                  "charity"
+                ]
+              }
+            ]
+          },
+          "accept": [
+            "pdf"
+          ],
+          "fromPassport": true
+        },
+        {
+          "type": "financial-statement",
+          "label": "Most recent annual financial statement showing gross revenue",
+          "required": true,
+          "accept": [
+            "pdf",
+            "xlsx"
+          ],
+          "fromPassport": true,
+          "maxAgeMonths": 24,
+          "help": "Used to evidence annual revenue for the funding cap (Policy 5.2)."
+        },
+        {
+          "type": "accreditation-statement",
+          "label": "Accreditation statement or letter from the accreditor",
+          "required": true,
+          "accept": [
+            "pdf"
+          ],
+          "fromPassport": true
+        },
+        {
+          "type": "coi-policy",
+          "label": "Provider's conflict-of-interest and disclosure policy",
+          "required": true,
+          "accept": [
+            "pdf",
+            "docx"
+          ],
+          "fromPassport": true
+        },
+        {
+          "type": "other",
+          "label": "Other supporting document",
+          "required": false,
+          "accept": [
+            "pdf",
+            "docx",
+            "xlsx",
+            "png",
+            "jpg"
+          ]
+        }
+      ],
+      "attestations": [
+        "accuracy",
+        "anti-discrimination",
+        "not-conditioned",
+        "independence",
+        "non-direction",
+        "acknowledgement",
+        "separation"
+      ],
+      "coi": [
+        "coi-1",
+        "coi-2",
+        "coi-3",
+        "coi-4",
+        "coi-5",
+        "coi-6",
+        "coi-7",
+        "coi-8",
+        "coi-9"
+      ],
+      "salesRule": "none",
+      "payeeRule": "accredited-provider",
+      "reviewingGroupRule": "triage",
+      "countries": [
+        "US",
+        "GB",
+        "FR"
+      ],
+      "disclosureCategory": {
+        "open-payments": "not-reported-unless-teaching-hospital",
+        "efpia-hco": "donations-grants-hco",
+        "disclosure-uk": "donations-grants-hco",
+        "transparence-sante": "convention-don"
+      },
+      "typicalDecisionWeeks": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": "ime-non-accredited",
+      "family": "education",
+      "name": "Independent medical education, non-accredited",
+      "description": "Education for healthcare professionals without continuing education credit. The same independence principle applies, but Halden reviews the provider's independence itself.",
+      "distinguishers": [
+        "No credit is offered, or the provider is not accredited.",
+        "The organizer still controls content, faculty and learners.",
+        "Not a company-organized meeting, satellite symposium or exhibit (those are commercial and out of scope)."
+      ],
+      "sections": [
+        {
+          "id": "activity",
+          "label": "The activity"
+        },
+        {
+          "id": "provider",
+          "label": "Provider"
+        },
+        {
+          "id": "education",
+          "label": "Educational design and outcomes"
+        },
+        {
+          "id": "audience",
+          "label": "Audience"
+        },
+        {
+          "id": "funding",
+          "label": "Funding and budget"
+        },
+        {
+          "id": "independence",
+          "label": "Independence"
+        },
+        {
+          "id": "internal",
+          "label": "Completed by Halden"
+        }
+      ],
+      "fields": [
+        {
+          "key": "title",
+          "label": "Title of the activity or programme",
+          "kind": "text",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "As it appears on the prospectus or programme description. Do not include the name of any medicine.",
+          "basis": "Policy 6.1; ABPI 23"
+        },
+        {
+          "key": "amount.requested",
+          "label": "Amount requested",
+          "kind": "money",
+          "section": "funding",
+          "required": true,
+          "extractable": true,
+          "help": "The amount you are asking Halden to provide. It should equal your itemized budget total, or the part of it Halden is asked to fund.",
+          "basis": "Policy 5.2"
+        },
+        {
+          "key": "amount.currency",
+          "label": "Currency",
+          "kind": "enum",
+          "section": "funding",
+          "options": [
+            "USD",
+            "GBP",
+            "EUR"
+          ],
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "activity.startDate",
+          "label": "Start date and time",
+          "kind": "datetime",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "The first day of the activity or programme. Halden must approve and sign an agreement before this date.",
+          "basis": "SOP 4.1, 7.1"
+        },
+        {
+          "key": "activity.endDate",
+          "label": "End date and time",
+          "kind": "datetime",
+          "section": "activity",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "activity.location",
+          "label": "Location",
+          "kind": "text",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "City, region and country, or 'online'."
+        },
+        {
+          "key": "activity.format",
+          "label": "Format",
+          "kind": "enum",
+          "section": "activity",
+          "options": [
+            "in-person",
+            "virtual",
+            "hybrid",
+            "enduring"
+          ],
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "audience.geography",
+          "label": "Where the audience or beneficiaries mainly are",
+          "kind": "enum",
+          "section": "audience",
+          "options": [
+            "mainly-us",
+            "mainly-uk",
+            "mainly-fr",
+            "international"
+          ],
+          "required": true,
+          "extractable": true,
+          "help": "Decides which Halden team reviews the request.",
+          "basis": "SOP 5.2"
+        },
+        {
+          "key": "purpose",
+          "label": "Purpose",
+          "kind": "longtext",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "What the activity or programme will achieve, in your own words. FundingEnvoy will not draft this for you."
+        },
+        {
+          "key": "purpose.category",
+          "label": "Purpose category",
+          "kind": "enum",
+          "section": "activity",
+          "options": [
+            "education",
+            "healthcare",
+            "research",
+            "community",
+            "humanitarian"
+          ],
+          "required": true,
+          "extractable": false,
+          "help": "In the UK and France Halden can only support healthcare, research or education.",
+          "basis": "EFPIA 12.01; ABPI 23"
+        },
+        {
+          "key": "therapeuticArea",
+          "label": "Therapeutic area",
+          "kind": "text",
+          "section": "activity",
+          "extractable": true
+        },
+        {
+          "key": "provider.name",
+          "label": "Education provider",
+          "kind": "text",
+          "section": "provider",
+          "required": true,
+          "extractable": true,
+          "help": "The organization that plans and delivers the education and controls its content."
+        },
+        {
+          "key": "provider.accredited",
+          "label": "Is the provider accredited for continuing education?",
+          "kind": "boolean",
+          "section": "provider",
+          "required": true,
+          "extractable": true,
+          "basis": "ACCME eligibility"
+        },
+        {
+          "key": "provider.accreditor",
+          "label": "Accrediting body",
+          "kind": "text",
+          "section": "provider",
+          "requiredWhen": {
+            "fact": "field.provider.accredited",
+            "op": "truthy"
+          },
+          "extractable": true,
+          "help": "For example ACCME, Joint Accreditation, ANCC, Federation of the Royal Colleges of Physicians (CPD), ANDPC."
+        },
+        {
+          "key": "credits",
+          "label": "Credit offered",
+          "kind": "text",
+          "section": "provider",
+          "required": false,
+          "extractable": true,
+          "help": "For example '11.0 AMA PRA Category 1 Credits'."
+        },
+        {
+          "key": "faculty.selection",
+          "label": "How faculty are selected",
+          "kind": "text",
+          "section": "provider",
+          "extractable": true
+        },
+        {
+          "key": "learningObjectives",
+          "label": "Learning objectives",
+          "kind": "longtext",
+          "section": "education",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "needsAssessment",
+          "label": "Needs assessment",
+          "kind": "longtext",
+          "section": "education",
+          "required": true,
+          "extractable": true,
+          "help": "The gap in knowledge, competence or performance the education addresses, with its evidence."
+        },
+        {
+          "key": "outcomes.level",
+          "label": "Outcomes level you will measure",
+          "kind": "enum",
+          "section": "education",
+          "options": [
+            "moore-1",
+            "moore-2",
+            "moore-3a",
+            "moore-3b",
+            "moore-4",
+            "moore-5",
+            "moore-6",
+            "moore-7"
+          ],
+          "required": true,
+          "extractable": true,
+          "help": "Moore's levels: 1 participation, 2 satisfaction, 3a declarative and 3b procedural knowledge, 4 competence, 5 performance, 6 patient health, 7 community health.",
+          "basis": "SOP 8.3"
+        },
+        {
+          "key": "outcomes.methods",
+          "label": "How you will measure outcomes",
+          "kind": "longtext",
+          "section": "education",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "audience.expected",
+          "label": "Expected learners",
+          "kind": "number",
+          "section": "audience",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "audience.breakdown",
+          "label": "Learners by profession",
+          "kind": "text",
+          "section": "audience",
+          "required": true,
+          "extractable": true,
+          "help": "For example '240 physicians; 60 nurses; 20 other'."
+        },
+        {
+          "key": "otherFunders",
+          "label": "Other funders asked or committed",
+          "kind": "list",
+          "section": "funding",
+          "required": true,
+          "extractable": true,
+          "help": "Name every other company or funder, or write 'None'.",
+          "basis": "Policy 7.5"
+        },
+        {
+          "key": "support.type",
+          "label": "Type of support",
+          "kind": "enum",
+          "section": "funding",
+          "options": [
+            "monetary",
+            "in-kind",
+            "both"
+          ],
+          "required": true
+        },
+        {
+          "key": "inKind.nature",
+          "label": "Nature of the in-kind support",
+          "kind": "longtext",
+          "section": "funding",
+          "visibleWhen": {
+            "fact": "field.support.type",
+            "op": "in",
+            "value": [
+              "in-kind",
+              "both"
+            ]
+          },
+          "requiredWhen": {
+            "fact": "field.support.type",
+            "op": "in",
+            "value": [
+              "in-kind",
+              "both"
+            ]
+          },
+          "basis": "ACCME Standard 4"
+        },
+        {
+          "key": "independence.contentControl",
+          "label": "How the provider keeps control of content, faculty and learners",
+          "kind": "longtext",
+          "section": "independence",
+          "required": true,
+          "extractable": true,
+          "help": "Describe who decides the content, chooses faculty and selects learners, and how commercial supporters are kept out of those decisions.",
+          "basis": "Policy 7.1"
+        },
+        {
+          "key": "tov.natureOfPayment",
+          "label": "Nature of payment (Finance)",
+          "kind": "enum",
+          "section": "internal",
+          "options": [
+            "grant",
+            "charitable-contribution",
+            "education"
+          ],
+          "help": "Set by Finance at payment. Not shown to requestors.",
+          "basis": "SOP 9.2"
+        },
+        {
+          "key": "tov.disclosureCategory",
+          "label": "Disclosure category (Finance)",
+          "kind": "enum",
+          "section": "internal",
+          "options": [
+            "donations-grants-hco",
+            "contribution-to-event-costs",
+            "not-disclosable"
+          ],
+          "help": "Set by Finance at payment. Not shown to requestors.",
+          "basis": "SOP 9.2"
+        },
+        {
+          "key": "agreement.clauses",
+          "label": "Clauses in the executed agreement (Legal)",
+          "kind": "list",
+          "section": "internal",
+          "help": "Clause ids from the template used. Written by the agreement step.",
+          "basis": "SOP 7.1"
+        },
+        {
+          "key": "uk.certificationRef",
+          "label": "UK final signatory certificate reference",
+          "kind": "text",
+          "section": "internal",
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "GB"
+          },
+          "help": "Written when the UK final signatory certifies the agreement.",
+          "basis": "ABPI 8.3; SOP Annex A"
+        },
+        {
+          "key": "fr.conventionRoute",
+          "label": "Convention route (Compliance)",
+          "kind": "enum",
+          "section": "internal",
+          "options": [
+            "declaration",
+            "authorisation"
+          ],
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          "basis": "SOP Annex B"
+        },
+        {
+          "key": "fr.conventionRecord",
+          "label": "IDAHE 2 / EPS record number",
+          "kind": "text",
+          "section": "internal",
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          "help": "Written by Compliance after filing.",
+          "basis": "SOP Annex B"
+        },
+        {
+          "key": "fr.conventionRecordDate",
+          "label": "Date the convention was filed",
+          "kind": "date",
+          "section": "internal",
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          "basis": "SOP Annex B"
+        }
+      ],
+      "documents": [
+        {
+          "type": "request-letter",
+          "label": "Request letter on letterhead, signed by an authorized signer",
+          "required": true,
+          "accept": [
+            "pdf",
+            "docx"
+          ],
+          "help": "Addressed to Halden Pharma, stating the amount and purpose."
+        },
+        {
+          "type": "prospectus",
+          "label": "Prospectus or agenda",
+          "required": true,
+          "accept": [
+            "pdf",
+            "docx",
+            "pptx"
+          ],
+          "help": "Must show the provider, dates, faculty selection and the statement on supporter role."
+        },
+        {
+          "type": "budget",
+          "label": "Itemized budget",
+          "required": true,
+          "accept": [
+            "xlsx",
+            "csv",
+            "pdf"
+          ],
+          "help": "Every line with a category and amount. Halden will compare the total with your request."
+        },
+        {
+          "type": "w9",
+          "label": "IRS Form W-9",
+          "requiredWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "US"
+          },
+          "accept": [
+            "pdf"
+          ],
+          "fromPassport": true,
+          "maxAgeMonths": 36
+        },
+        {
+          "type": "nonprofit-proof",
+          "label": "Proof of non-profit status (IRS determination letter or state equivalent)",
+          "requiredWhen": {
+            "all": [
+              {
+                "fact": "country",
+                "op": "eq",
+                "value": "US"
+              },
+              {
+                "fact": "org.type",
+                "op": "in",
+                "value": [
+                  "association",
+                  "patient-organization",
+                  "charity"
+                ]
+              }
+            ]
+          },
+          "accept": [
+            "pdf"
+          ],
+          "fromPassport": true,
+          "help": "A letter from earlier years is accepted if nothing has changed."
+        },
+        {
+          "type": "charity-registration",
+          "label": "Charity or association registration (UK: Charity Commission or OSCR extract; France: statuts and récépissé or JO publication)",
+          "requiredWhen": {
+            "all": [
+              {
+                "fact": "country",
+                "op": "in",
+                "value": [
+                  "GB",
+                  "FR"
+                ]
+              },
+              {
+                "fact": "org.type",
+                "op": "in",
+                "value": [
+                  "association",
+                  "patient-organization",
+                  "charity"
+                ]
+              }
+            ]
+          },
+          "accept": [
+            "pdf"
+          ],
+          "fromPassport": true
+        },
+        {
+          "type": "financial-statement",
+          "label": "Most recent annual financial statement showing gross revenue",
+          "required": true,
+          "accept": [
+            "pdf",
+            "xlsx"
+          ],
+          "fromPassport": true,
+          "maxAgeMonths": 24,
+          "help": "Used to evidence annual revenue for the funding cap (Policy 5.2)."
+        },
+        {
+          "type": "coi-policy",
+          "label": "Provider's conflict-of-interest and disclosure policy",
+          "required": true,
+          "accept": [
+            "pdf",
+            "docx"
+          ],
+          "fromPassport": true
+        },
+        {
+          "type": "other",
+          "label": "Other supporting document",
+          "required": false,
+          "accept": [
+            "pdf",
+            "docx",
+            "xlsx",
+            "png",
+            "jpg"
+          ]
+        }
+      ],
+      "attestations": [
+        "accuracy",
+        "anti-discrimination",
+        "not-conditioned",
+        "independence",
+        "non-direction",
+        "acknowledgement"
+      ],
+      "coi": [
+        "coi-1",
+        "coi-2",
+        "coi-3",
+        "coi-4",
+        "coi-5",
+        "coi-6",
+        "coi-7",
+        "coi-8",
+        "coi-9"
+      ],
+      "salesRule": "none",
+      "payeeRule": "organization",
+      "reviewingGroupRule": "triage",
+      "countries": [
+        "US",
+        "GB",
+        "FR"
+      ],
+      "disclosureCategory": {
+        "open-payments": "grant-if-teaching-hospital",
+        "efpia-hco": "donations-grants-hco",
+        "disclosure-uk": "donations-grants-hco",
+        "transparence-sante": "convention-don"
+      },
+      "typicalDecisionWeeks": [
+        6,
+        10
+      ]
+    },
+    {
+      "id": "charitable-contribution",
+      "family": "charitable",
+      "name": "Charitable contribution",
+      "description": "A donation to a registered non-profit for a charitable programme, with no business benefit to Halden and nothing given in return except acknowledgement.",
+      "distinguishers": [
+        "The recipient is a registered charity or non-profit.",
+        "There is no educational activity for healthcare professionals (otherwise it is education).",
+        "Halden receives nothing in return beyond an acknowledgement."
+      ],
+      "sections": [
+        {
+          "id": "activity",
+          "label": "The programme"
+        },
+        {
+          "id": "programme",
+          "label": "Programme and beneficiaries"
+        },
+        {
+          "id": "audience",
+          "label": "Where the beneficiaries are"
+        },
+        {
+          "id": "funding",
+          "label": "Funding and budget"
+        },
+        {
+          "id": "internal",
+          "label": "Completed by Halden"
+        }
+      ],
+      "fields": [
+        {
+          "key": "title",
+          "label": "Title of the activity or programme",
+          "kind": "text",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "As it appears on the prospectus or programme description. Do not include the name of any medicine.",
+          "basis": "Policy 6.1; ABPI 23"
+        },
+        {
+          "key": "amount.requested",
+          "label": "Amount requested",
+          "kind": "money",
+          "section": "funding",
+          "required": true,
+          "extractable": true,
+          "help": "The amount you are asking Halden to provide. It should equal your itemized budget total, or the part of it Halden is asked to fund.",
+          "basis": "Policy 5.2"
+        },
+        {
+          "key": "amount.currency",
+          "label": "Currency",
+          "kind": "enum",
+          "section": "funding",
+          "options": [
+            "USD",
+            "GBP",
+            "EUR"
+          ],
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "activity.startDate",
+          "label": "Start date and time",
+          "kind": "datetime",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "The first day of the activity or programme. Halden must approve and sign an agreement before this date.",
+          "basis": "SOP 4.1, 7.1"
+        },
+        {
+          "key": "activity.endDate",
+          "label": "End date and time",
+          "kind": "datetime",
+          "section": "activity",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "activity.location",
+          "label": "Location",
+          "kind": "text",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "City, region and country, or 'online'."
+        },
+        {
+          "key": "activity.format",
+          "label": "Format",
+          "kind": "enum",
+          "section": "activity",
+          "options": [
+            "in-person",
+            "virtual",
+            "hybrid",
+            "enduring"
+          ],
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "audience.geography",
+          "label": "Where the audience or beneficiaries mainly are",
+          "kind": "enum",
+          "section": "audience",
+          "options": [
+            "mainly-us",
+            "mainly-uk",
+            "mainly-fr",
+            "international"
+          ],
+          "required": true,
+          "extractable": true,
+          "help": "Decides which Halden team reviews the request.",
+          "basis": "SOP 5.2"
+        },
+        {
+          "key": "purpose",
+          "label": "Purpose",
+          "kind": "longtext",
+          "section": "activity",
+          "required": true,
+          "extractable": true,
+          "help": "What the activity or programme will achieve, in your own words. FundingEnvoy will not draft this for you."
+        },
+        {
+          "key": "purpose.category",
+          "label": "Purpose category",
+          "kind": "enum",
+          "section": "activity",
+          "options": [
+            "education",
+            "healthcare",
+            "research",
+            "community",
+            "humanitarian"
+          ],
+          "required": true,
+          "extractable": false,
+          "help": "In the UK and France Halden can only support healthcare, research or education.",
+          "basis": "EFPIA 12.01; ABPI 23"
+        },
+        {
+          "key": "programmeDescription",
+          "label": "Programme description",
+          "kind": "longtext",
+          "section": "programme",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "beneficiaries",
+          "label": "Who benefits and how many",
+          "kind": "longtext",
+          "section": "programme",
+          "required": true,
+          "extractable": true
+        },
+        {
+          "key": "donation.use",
+          "label": "Use of the donation",
+          "kind": "enum",
+          "section": "programme",
+          "options": [
+            "restricted-programme",
+            "general-operating"
+          ],
+          "required": true
+        },
+        {
+          "key": "otherFunders",
+          "label": "Other funders asked or committed",
+          "kind": "list",
+          "section": "funding",
+          "extractable": true
+        },
+        {
+          "key": "tov.natureOfPayment",
+          "label": "Nature of payment (Finance)",
+          "kind": "enum",
+          "section": "internal",
+          "options": [
+            "grant",
+            "charitable-contribution",
+            "education"
+          ],
+          "help": "Set by Finance at payment. Not shown to requestors.",
+          "basis": "SOP 9.2"
+        },
+        {
+          "key": "tov.disclosureCategory",
+          "label": "Disclosure category (Finance)",
+          "kind": "enum",
+          "section": "internal",
+          "options": [
+            "donations-grants-hco",
+            "contribution-to-event-costs",
+            "not-disclosable"
+          ],
+          "help": "Set by Finance at payment. Not shown to requestors.",
+          "basis": "SOP 9.2"
+        },
+        {
+          "key": "agreement.clauses",
+          "label": "Clauses in the executed agreement (Legal)",
+          "kind": "list",
+          "section": "internal",
+          "help": "Clause ids from the template used. Written by the agreement step.",
+          "basis": "SOP 7.1"
+        },
+        {
+          "key": "uk.certificationRef",
+          "label": "UK final signatory certificate reference",
+          "kind": "text",
+          "section": "internal",
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "GB"
+          },
+          "help": "Written when the UK final signatory certifies the agreement.",
+          "basis": "ABPI 8.3; SOP Annex A"
+        },
+        {
+          "key": "fr.conventionRoute",
+          "label": "Convention route (Compliance)",
+          "kind": "enum",
+          "section": "internal",
+          "options": [
+            "declaration",
+            "authorisation"
+          ],
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          "basis": "SOP Annex B"
+        },
+        {
+          "key": "fr.conventionRecord",
+          "label": "IDAHE 2 / EPS record number",
+          "kind": "text",
+          "section": "internal",
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          "help": "Written by Compliance after filing.",
+          "basis": "SOP Annex B"
+        },
+        {
+          "key": "fr.conventionRecordDate",
+          "label": "Date the convention was filed",
+          "kind": "date",
+          "section": "internal",
+          "visibleWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          "basis": "SOP Annex B"
+        }
+      ],
+      "documents": [
+        {
+          "type": "request-letter",
+          "label": "Request letter on letterhead, signed by an authorized signer",
+          "required": true,
+          "accept": [
+            "pdf",
+            "docx"
+          ],
+          "help": "Addressed to Halden Pharma, stating the amount and purpose."
+        },
+        {
+          "type": "programme-description",
+          "label": "Programme description",
+          "required": false,
+          "accept": [
+            "pdf",
+            "docx"
+          ]
+        },
+        {
+          "type": "budget",
+          "label": "Itemized budget",
+          "required": true,
+          "accept": [
+            "xlsx",
+            "csv",
+            "pdf"
+          ],
+          "help": "Every line with a category and amount. Halden will compare the total with your request."
+        },
+        {
+          "type": "w9",
+          "label": "IRS Form W-9",
+          "requiredWhen": {
+            "fact": "country",
+            "op": "eq",
+            "value": "US"
+          },
+          "accept": [
+            "pdf"
+          ],
+          "fromPassport": true,
+          "maxAgeMonths": 36
+        },
+        {
+          "type": "nonprofit-proof",
+          "label": "Proof of non-profit status (IRS determination letter or state equivalent)",
+          "requiredWhen": {
+            "all": [
+              {
+                "fact": "country",
+                "op": "eq",
+                "value": "US"
+              },
+              {
+                "fact": "org.type",
+                "op": "in",
+                "value": [
+                  "association",
+                  "patient-organization",
+                  "charity"
+                ]
+              }
+            ]
+          },
+          "accept": [
+            "pdf"
+          ],
+          "fromPassport": true,
+          "help": "A letter from earlier years is accepted if nothing has changed."
+        },
+        {
+          "type": "charity-registration",
+          "label": "Charity or association registration (UK: Charity Commission or OSCR extract; France: statuts and récépissé or JO publication)",
+          "requiredWhen": {
+            "all": [
+              {
+                "fact": "country",
+                "op": "in",
+                "value": [
+                  "GB",
+                  "FR"
+                ]
+              },
+              {
+                "fact": "org.type",
+                "op": "in",
+                "value": [
+                  "association",
+                  "patient-organization",
+                  "charity"
+                ]
+              }
+            ]
+          },
+          "accept": [
+            "pdf"
+          ],
+          "fromPassport": true
+        },
+        {
+          "type": "financial-statement",
+          "label": "Most recent annual financial statement showing gross revenue",
+          "required": true,
+          "accept": [
+            "pdf",
+            "xlsx"
+          ],
+          "fromPassport": true,
+          "maxAgeMonths": 24,
+          "help": "Used to evidence annual revenue for the funding cap (Policy 5.2)."
+        },
+        {
+          "type": "other",
+          "label": "Other supporting document",
+          "required": false,
+          "accept": [
+            "pdf",
+            "docx",
+            "xlsx",
+            "png",
+            "jpg"
+          ]
+        }
+      ],
+      "attestations": [
+        "accuracy",
+        "anti-discrimination",
+        "not-conditioned",
+        "no-business-benefit",
+        "acknowledgement"
+      ],
+      "coi": [
+        "coi-1",
+        "coi-2",
+        "coi-3",
+        "coi-4",
+        "coi-5",
+        "coi-6",
+        "coi-7",
+        "coi-8",
+        "coi-9"
+      ],
+      "salesRule": "input-no-control",
+      "payeeRule": "organization",
+      "reviewingGroupRule": "triage",
+      "countries": [
+        "US",
+        "GB",
+        "FR"
+      ],
+      "disclosureCategory": {
+        "open-payments": "charitable-contribution-if-teaching-hospital",
+        "efpia-hco": "donations-grants-hco",
+        "disclosure-uk": "donations-grants-hco",
+        "transparence-sante": "convention-don"
+      },
+      "typicalDecisionWeeks": [
+        3,
+        6
+      ]
+    }
+  ],
+  "attestations": [
+    {
+      "id": "accuracy",
+      "label": "Accuracy",
+      "version": "1.0",
+      "mode": "type",
+      "text": "The information in this request is accurate and complete to the best of my knowledge. I reviewed every value the assistant proposed, and I will tell Halden Pharma promptly if anything changes.",
+      "basis": "SOP 3.4"
+    },
+    {
+      "id": "anti-discrimination",
+      "label": "Anti-discrimination",
+      "version": "1.0",
+      "mode": "type",
+      "text": "Our organization complies with applicable anti-discrimination laws and will not use the funds to support activities that discriminate on any legally protected basis.",
+      "basis": "Policy 8.1"
+    },
+    {
+      "id": "not-conditioned",
+      "label": "No link to business",
+      "version": "1.0",
+      "mode": "type",
+      "text": "This request is not made in return for, and is not linked to, any purchase, prescription, recommendation, formulary decision, tender or other business with Halden Pharma. No one at Halden has suggested otherwise.",
+      "basis": "Policy 4.2; Gate G3"
+    },
+    {
+      "id": "independence",
+      "label": "Independence",
+      "version": "1.0",
+      "mode": "type",
+      "requiredWhen": {
+        "fact": "family",
+        "op": "eq",
+        "value": "education"
+      },
+      "text": "Halden Pharma will have no role in the selection of faculty, learners or content, or in the use of the funds, and the activity will be balanced and free of commercial bias.",
+      "basis": "Policy 7.1; ACCME Standard 4"
+    },
+    {
+      "id": "non-direction",
+      "label": "Non-direction of speakers and learners",
+      "version": "1.0",
+      "mode": "tick",
+      "requiredWhen": {
+        "fact": "family",
+        "op": "eq",
+        "value": "education"
+      },
+      "text": "Halden Pharma has not required, instructed, suggested or otherwise caused us to pay, invite or select any particular speaker, faculty member or learner, and we will not accept any such suggestion.",
+      "basis": "Open Payments indirect payments (42 CFR 403.904)"
+    },
+    {
+      "id": "no-business-benefit",
+      "label": "No business benefit",
+      "version": "1.0",
+      "mode": "type",
+      "requiredWhen": {
+        "fact": "family",
+        "op": "eq",
+        "value": "charitable"
+      },
+      "text": "Halden Pharma will receive nothing in return for this donation except an acknowledgement. The donation will not be used to promote any Halden product, and no patient, prescriber or purchasing data will be shared with Halden.",
+      "basis": "Policy 9.2"
+    },
+    {
+      "id": "acknowledgement",
+      "label": "Acknowledgement",
+      "version": "1.0",
+      "mode": "tick",
+      "text": "We will acknowledge Halden Pharma's support clearly from the start of the activity or programme, by name only and without product names or logos, and for accredited education in the form our accreditor requires.",
+      "basis": "Policy 10.1; ABPI 23.2; ACCME Standard 4"
+    },
+    {
+      "id": "separation",
+      "label": "Separation of promotion",
+      "version": "1.0",
+      "mode": "tick",
+      "requiredWhen": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "text": "Exhibits, advertising and any non-accredited sessions will be kept apart from the accredited education in place and time, as our accreditor requires, and will not be presented as part of it.",
+      "basis": "ACCME Standard 5"
+    }
+  ],
+  "coiQuestions": [
+    {
+      "id": "coi-1",
+      "text": "Does any officer, director or trustee of your organization, or a member of their immediate family, work for Halden Pharma?",
+      "ifYes": "A compliance reviewer looks at the relationship before the request goes to the committee."
+    },
+    {
+      "id": "coi-2",
+      "text": "Has anyone at Halden Pharma suggested this request, helped prepare it, or told you it would be funded?",
+      "help": "A medical science liaison sharing the public grants page is not a 'yes'. Being encouraged by a sales representative is.",
+      "ifYes": "Compliance reviews how the request started. Requests started by sales cannot be funded."
+    },
+    {
+      "id": "coi-3",
+      "text": "Does any Halden Pharma employee, or a member of their immediate family, hold a role in your organization (officer, trustee, committee member or employee)?",
+      "ifYes": "That person is recused from Halden's review and Compliance records the relationship."
+    },
+    {
+      "id": "coi-4",
+      "text": "Will any part of the funds reach a healthcare professional or official who can prescribe, buy, recommend or decide on the formulary for Halden products, other than fair-market faculty payments decided by your organization?",
+      "ifYes": "Compliance reviews the payment flow; Halden cannot fund payments to named individuals."
+    },
+    {
+      "id": "coi-5",
+      "text": "Does your organization, or any of its officers, hold shares, royalties or another financial interest in Halden Pharma or a Halden product?",
+      "ifYes": "Compliance reviews the interest."
+    },
+    {
+      "id": "coi-6",
+      "text": "Is your organization, or any of its officers, under investigation, excluded, debarred or sanctioned by a government or regulator?",
+      "ifYes": "Compliance reviews before anything else happens. Halden cannot fund an excluded or sanctioned organization."
+    },
+    {
+      "id": "coi-7",
+      "text": "Does any board member or officer of your organization provide paid services to Halden Pharma (for example consulting, advisory boards, speaking or research)?",
+      "ifYes": "The person is named in the committee pack and Compliance checks that their services are unrelated to this request."
+    },
+    {
+      "id": "coi-8",
+      "text": "Is your organization currently in commercial discussions with Halden Pharma, for example about purchasing, supply, a tender, formulary listing or a contract?",
+      "ifYes": "Compliance reviews the timing; Halden will not decide a request while a related purchasing decision is open."
+    },
+    {
+      "id": "coi-9",
+      "text": "Is any officer, director or trustee of your organization a government official, a public official or an employee of a public body (including a public hospital or university)?",
+      "help": "In many countries, doctors at public hospitals are public officials.",
+      "ifYes": "The request goes to Halden's enhanced anti-bribery review."
+    }
+  ]
+}

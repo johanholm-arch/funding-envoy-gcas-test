@@ -1,0 +1,131 @@
+{
+  "format": "Markdown files: each page starts with a line '=== Page N ==='; key facts are 'Label: value' lines. Budgets are CSV with header Line,Description,Category,Amount.",
+  "requests": {
+    "necs-hf2027": {
+      "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000001",
+      "testCases": [
+        "tc-01",
+        "tc-02",
+        "tc-03"
+      ]
+    },
+    "pennine-masterclass2027": {
+      "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000003",
+      "testCases": [
+        "tc-36",
+        "tc-38"
+      ]
+    },
+    "afic-jfic2027": {
+      "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000005",
+      "testCases": [
+        "tc-42",
+        "tc-28"
+      ]
+    },
+    "heartline-groups2027": {
+      "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000007",
+      "testCases": [
+        "tc-45"
+      ]
+    }
+  },
+  "files": {
+    "necs-hf2027/NECS_Request_Letter.md": {
+      "requestKey": "necs-hf2027",
+      "type": "request-letter",
+      "pages": 2,
+      "dated": "2027-03-29"
+    },
+    "necs-hf2027/HF2027_Prospectus.md": {
+      "requestKey": "necs-hf2027",
+      "type": "prospectus",
+      "pages": 6,
+      "dated": "2027-03-01"
+    },
+    "necs-hf2027/HF2027_Budget.csv": {
+      "requestKey": "necs-hf2027",
+      "type": "budget",
+      "pages": 1,
+      "dated": "2027-03-29"
+    },
+    "necs-hf2027/NECS_W9_2026.md": {
+      "requestKey": "necs-hf2027",
+      "type": "w9",
+      "pages": 1,
+      "dated": "2026-01-08"
+    },
+    "necs-hf2027/NECS_Nonprofit_Letter_2021.md": {
+      "requestKey": "necs-hf2027",
+      "type": "nonprofit-proof",
+      "pages": 1,
+      "dated": "2021-03-12"
+    },
+    "necs-hf2027/NECS_Financial_Statement_2025.md": {
+      "requestKey": "necs-hf2027",
+      "type": "financial-statement",
+      "pages": 2,
+      "dated": "2026-04-18"
+    },
+    "pennine-masterclass2027/Pennine_Request_Letter.md": {
+      "requestKey": "pennine-masterclass2027",
+      "type": "request-letter",
+      "pages": 1,
+      "dated": "2026-11-26"
+    },
+    "pennine-masterclass2027/Pennine_Prospectus.md": {
+      "requestKey": "pennine-masterclass2027",
+      "type": "prospectus",
+      "pages": 2,
+      "dated": "2026-11-20"
+    },
+    "pennine-masterclass2027/Pennine_Budget.csv": {
+      "requestKey": "pennine-masterclass2027",
+      "type": "budget",
+      "pages": 1,
+      "dated": "2026-11-26"
+    },
+    "afic-jfic2027/AFIC_Lettre_de_demande.md": {
+      "requestKey": "afic-jfic2027",
+      "type": "request-letter",
+      "pages": 1,
+      "dated": "2027-02-19"
+    },
+    "afic-jfic2027/AFIC_Programme.md": {
+      "requestKey": "afic-jfic2027",
+      "type": "prospectus",
+      "pages": 2,
+      "dated": "2027-02-10"
+    },
+    "afic-jfic2027/AFIC_Budget.csv": {
+      "requestKey": "afic-jfic2027",
+      "type": "budget",
+      "pages": 1,
+      "dated": "2027-02-19"
+    },
+    "heartline-groups2027/Heartline_Request_Letter.md": {
+      "requestKey": "heartline-groups2027",
+      "type": "request-letter",
+      "pages": 1,
+      "dated": "2027-01-12"
+    },
+    "heartline-groups2027/Heartline_Programme_Description.md": {
+      "requestKey": "heartline-groups2027",
+      "type": "programme-description",
+      "pages": 1,
+      "dated": "2027-01-12"
+    },
+    "heartline-groups2027/Heartline_Budget.csv": {
+      "requestKey": "heartline-groups2027",
+      "type": "budget",
+      "pages": 1,
+      "dated": "2027-01-12"
+    },
+    "heartline-groups2027/Heartline_Nonprofit_Letter_2019.md": {
+      "requestKey": "heartline-groups2027",
+      "type": "nonprofit-proof",
+      "pages": 1,
+      "dated": "2019-08-02"
+    }
+  }
+}

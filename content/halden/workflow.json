@@ -1,0 +1,558 @@
+{
+  "version": 1,
+  "status": "published",
+  "name": "Grants and donations workflow",
+  "source": {
+    "document": "Management of Grants and Donations SOP v4",
+    "version": "4",
+    "clauses": {
+      "3.1": "Requests are made by the organization through the portal; FundingEnvoy assists; the requestor confirms every value.",
+      "4.1": "Submit at least 60 calendar days before the activity starts.",
+      "5.1": "Every organization is screened at intake and before payment.",
+      "5.2": "Triage to a reviewing group by request type, country and audience geography; the coordinator can override.",
+      "6.1": "Medical review of every education request; compliance review where any compliance flag is raised.",
+      "6.2": "The Grants and Donations Committee decides; no individual approves alone except under 6.5; quorum 4; chair votes last; a decline needs a typed reason.",
+      "6.3": "Decide within 10 business days of the pack being circulated.",
+      "6.4": "Recusals are recorded before the vote.",
+      "6.5": "Charitable contributions of US$5,000 or less: single approver (Committee Chair).",
+      "7.1": "No activity is funded before approval and an executed agreement.",
+      "7.4": "Payment by milestone after signature, only to a verified account in the organization's name.",
+      "8.1": "Reconciliation 90 days after the activity; unused funds returned within 60 days.",
+      "8.3": "Outcomes report at the Moore level stated in the request (education only).",
+      "9.2": "Every payment recorded as a transfer of value for disclosure."
+    }
+  },
+  "stages": [
+    {
+      "id": "intake",
+      "order": 1,
+      "name": "Intake",
+      "ownerRoles": [
+        "requestor",
+        "org-admin"
+      ],
+      "sopRefs": [
+        "SOP 3.1"
+      ],
+      "assistant": {
+        "level": 3,
+        "maxLevel": 3,
+        "does": "Classifies the request, reads documents, proposes field values with their source, asks for what is missing and runs the rulebook on every change. The requestor confirms every value and types every statement."
+      },
+      "outcomes": [
+        {
+          "id": "submit",
+          "label": "Submit for review",
+          "next": "completeness",
+          "actorRoles": [
+            "requestor"
+          ]
+        },
+        {
+          "id": "withdraw",
+          "label": "Withdraw",
+          "next": "withdrawn",
+          "actorRoles": [
+            "requestor"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "completeness",
+      "order": 2,
+      "name": "Completeness and screening",
+      "ownerRoles": [
+        "coordinator"
+      ],
+      "slaBusinessDays": 1,
+      "sopRefs": [
+        "SOP 4.1",
+        "SOP 5.1"
+      ],
+      "assistant": {
+        "level": 4,
+        "maxLevel": 4,
+        "does": "Re-runs the rulebook at submission, runs screening against the lists, computes the revenue cap and attaches the pre-submission review summary. Returns incomplete requests with the fix list."
+      },
+      "requiresPassing": [
+        "CORE-G1",
+        "CORE-G3",
+        "R-02",
+        "R-04",
+        "R-06",
+        "R-11b",
+        "R-12",
+        "R-21",
+        "R-28"
+      ],
+      "outcomes": [
+        {
+          "id": "complete",
+          "label": "Complete",
+          "next": "triage",
+          "actorRoles": [
+            "coordinator"
+          ]
+        },
+        {
+          "id": "request-info",
+          "label": "Request information",
+          "next": "intake",
+          "actorRoles": [
+            "coordinator"
+          ],
+          "requiresReason": true
+        }
+      ]
+    },
+    {
+      "id": "triage",
+      "order": 3,
+      "name": "Triage to reviewing group",
+      "ownerRoles": [
+        "coordinator"
+      ],
+      "slaBusinessDays": 1,
+      "sopRefs": [
+        "SOP 5.2"
+      ],
+      "assistant": {
+        "level": 3,
+        "maxLevel": 4,
+        "does": "Proposes the reviewing group from the triage rules (T-1 to T-8); the coordinator confirms or overrides."
+      },
+      "outcomes": [
+        {
+          "id": "route",
+          "label": "Route to reviewing group",
+          "next": "medical-review",
+          "actorRoles": [
+            "coordinator"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "medical-review",
+      "order": 4,
+      "name": "Medical review",
+      "ownerRoles": [
+        "medical-reviewer"
+      ],
+      "slaBusinessDays": 10,
+      "sopRefs": [
+        "SOP 6.1"
+      ],
+      "assistant": {
+        "level": 2,
+        "maxLevel": 2,
+        "does": "Summarises the educational need, independence evidence and budget with quotes and page references; lists open points. Recommends; does not score."
+      },
+      "skipWhen": {
+        "fact": "family",
+        "op": "eq",
+        "value": "charitable"
+      },
+      "outcomes": [
+        {
+          "id": "accept",
+          "label": "Review complete",
+          "next": "compliance-review",
+          "actorRoles": [
+            "medical-reviewer"
+          ]
+        },
+        {
+          "id": "request-info",
+          "label": "Request information",
+          "next": "intake",
+          "actorRoles": [
+            "medical-reviewer"
+          ],
+          "requiresReason": true
+        },
+        {
+          "id": "decline",
+          "label": "Recommend decline",
+          "next": "compliance-review",
+          "actorRoles": [
+            "medical-reviewer"
+          ],
+          "requiresReason": true
+        }
+      ]
+    },
+    {
+      "id": "compliance-review",
+      "order": 5,
+      "name": "Compliance review",
+      "ownerRoles": [
+        "compliance-reviewer"
+      ],
+      "slaBusinessDays": 5,
+      "sopRefs": [
+        "SOP 6.1"
+      ],
+      "assistant": {
+        "level": 2,
+        "maxLevel": 2,
+        "does": "Assembles the conflict of interest answers, screening results, government-affiliation facts and country prior-approval status; drafts the enhanced due diligence memo for a person to complete."
+      },
+      "skipWhen": {
+        "all": [
+          {
+            "fact": "coi.anyYes",
+            "op": "falsy"
+          },
+          {
+            "fact": "screening.anyMatch",
+            "op": "falsy"
+          },
+          {
+            "fact": "org.governmentControlled",
+            "op": "falsy"
+          }
+        ]
+      },
+      "variations": [
+        {
+          "when": {
+            "fact": "country",
+            "op": "eq",
+            "value": "FR"
+          },
+          "companyChoice": true,
+          "note": "Mandatory for France (company choice approved by J. Whitfield on 24 Oct 2026; goes beyond SOP 6.1). Italy and Korea were also approved but are outside the pilot countries.",
+          "patch": {
+            "skipWhen": {
+              "not": {
+                "always": true
+              }
+            }
+          }
+        }
+      ],
+      "outcomes": [
+        {
+          "id": "accept",
+          "label": "Cleared",
+          "next": "committee",
+          "actorRoles": [
+            "compliance-reviewer"
+          ]
+        },
+        {
+          "id": "accept-with-conditions",
+          "label": "Cleared with conditions",
+          "next": "committee",
+          "actorRoles": [
+            "compliance-reviewer"
+          ],
+          "requiresReason": true
+        },
+        {
+          "id": "decline",
+          "label": "Not cleared",
+          "next": "declined",
+          "actorRoles": [
+            "compliance-reviewer"
+          ],
+          "requiresReason": true
+        },
+        {
+          "id": "request-info",
+          "label": "Request information",
+          "next": "intake",
+          "actorRoles": [
+            "compliance-reviewer"
+          ],
+          "requiresReason": true
+        }
+      ]
+    },
+    {
+      "id": "committee",
+      "order": 6,
+      "name": "Committee decision",
+      "ownerRoles": [
+        "committee-chair",
+        "committee-member"
+      ],
+      "slaBusinessDays": 10,
+      "sopRefs": [
+        "SOP 6.2",
+        "SOP 6.3",
+        "SOP 6.4"
+      ],
+      "assistant": {
+        "level": 2,
+        "maxLevel": 2,
+        "does": "Prepares the committee pack and a recommendation with its basis; shows 'no recommendation' below the confidence floor. Never decides."
+      },
+      "variations": [
+        {
+          "when": {
+            "all": [
+              {
+                "fact": "family",
+                "op": "eq",
+                "value": "charitable"
+              },
+              {
+                "fact": "currency",
+                "op": "eq",
+                "value": "USD"
+              },
+              {
+                "fact": "amount",
+                "op": "lte",
+                "value": 5000
+              }
+            ]
+          },
+          "companyChoice": false,
+          "note": "SOP 6.5: charitable contributions of US$5,000 or less are decided by a single approver, the Committee Chair.",
+          "patch": {
+            "ownerRoles": [
+              "committee-chair"
+            ],
+            "slaBusinessDays": 5
+          }
+        }
+      ],
+      "outcomes": [
+        {
+          "id": "approve",
+          "label": "Approve",
+          "next": "agreement",
+          "actorRoles": [
+            "committee-chair",
+            "committee-member"
+          ],
+          "locked": "decide-funding"
+        },
+        {
+          "id": "approve-with-conditions",
+          "label": "Approve with conditions",
+          "next": "agreement",
+          "actorRoles": [
+            "committee-chair",
+            "committee-member"
+          ],
+          "requiresReason": true,
+          "locked": "decide-funding"
+        },
+        {
+          "id": "decline",
+          "label": "Decline",
+          "next": "declined",
+          "actorRoles": [
+            "committee-chair",
+            "committee-member"
+          ],
+          "requiresReason": true,
+          "locked": "decide-funding"
+        },
+        {
+          "id": "defer",
+          "label": "Defer",
+          "next": "committee",
+          "actorRoles": [
+            "committee-chair"
+          ],
+          "requiresReason": true
+        }
+      ]
+    },
+    {
+      "id": "agreement",
+      "order": 7,
+      "name": "Agreement",
+      "ownerRoles": [
+        "legal",
+        "coordinator"
+      ],
+      "slaBusinessDays": 10,
+      "sopRefs": [
+        "SOP 7.1"
+      ],
+      "assistant": {
+        "level": 3,
+        "maxLevel": 3,
+        "does": "Drafts the agreement from the template with the clauses each pack requires and checks that every required clause is present. Sends for signature only when a person confirms. Cannot sign."
+      },
+      "requiresPassing": [
+        "CORE-G4",
+        "ACE-03"
+      ],
+      "outcomes": [
+        {
+          "id": "complete",
+          "label": "Agreement executed",
+          "next": "payment",
+          "actorRoles": [
+            "legal"
+          ],
+          "locked": "sign-agreement"
+        },
+        {
+          "id": "withdraw",
+          "label": "Withdrawn by requestor",
+          "next": "withdrawn",
+          "actorRoles": [
+            "coordinator"
+          ],
+          "requiresReason": true
+        }
+      ]
+    },
+    {
+      "id": "payment",
+      "order": 8,
+      "name": "Payment by milestone",
+      "ownerRoles": [
+        "finance"
+      ],
+      "slaBusinessDays": 10,
+      "sopRefs": [
+        "SOP 7.4"
+      ],
+      "assistant": {
+        "level": 2,
+        "maxLevel": 2,
+        "does": "Checks the payment gate (agreement, certification, convention record, W-9, screening, transfer-of-value fields) and prepares the payment request. Cannot release payment."
+      },
+      "requiresPassing": [
+        "CORE-G4",
+        "CORE-G6",
+        "ACE-03",
+        "US-TAX-01",
+        "US-SCR-01",
+        "R-30",
+        "UK-ABPI-03",
+        "UK-ABPI-04",
+        "FR-AC-03"
+      ],
+      "outcomes": [
+        {
+          "id": "complete",
+          "label": "Release payment",
+          "next": "reconciliation",
+          "actorRoles": [
+            "finance"
+          ],
+          "locked": "release-payment"
+        }
+      ]
+    },
+    {
+      "id": "reconciliation",
+      "order": 9,
+      "name": "Financial reconciliation",
+      "ownerRoles": [
+        "coordinator",
+        "finance"
+      ],
+      "slaBusinessDays": 20,
+      "sopRefs": [
+        "SOP 8.1"
+      ],
+      "assistant": {
+        "level": 3,
+        "maxLevel": 3,
+        "does": "Asks for the reconciliation 90 days after the activity, collects actuals against the approved budget, attendance and unused funds, and drafts the variance note."
+      },
+      "outcomes": [
+        {
+          "id": "accept",
+          "label": "Reconciliation accepted",
+          "next": "outcomes",
+          "actorRoles": [
+            "coordinator"
+          ]
+        },
+        {
+          "id": "request-info",
+          "label": "Request information",
+          "next": "reconciliation",
+          "actorRoles": [
+            "coordinator"
+          ],
+          "requiresReason": true
+        }
+      ]
+    },
+    {
+      "id": "outcomes",
+      "order": 10,
+      "name": "Outcomes report",
+      "ownerRoles": [
+        "coordinator"
+      ],
+      "slaBusinessDays": 20,
+      "sopRefs": [
+        "SOP 8.3"
+      ],
+      "assistant": {
+        "level": 3,
+        "maxLevel": 3,
+        "does": "Collects the outcomes report at the Moore level stated in the request and compares expected with actual learners."
+      },
+      "skipWhen": {
+        "fact": "family",
+        "op": "ne",
+        "value": "education"
+      },
+      "outcomes": [
+        {
+          "id": "accept",
+          "label": "Outcomes accepted",
+          "next": "close-and-disclose",
+          "actorRoles": [
+            "coordinator"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "close-and-disclose",
+      "order": 11,
+      "name": "Close and disclose",
+      "ownerRoles": [
+        "coordinator",
+        "finance"
+      ],
+      "slaBusinessDays": 10,
+      "sopRefs": [
+        "SOP 9.2"
+      ],
+      "assistant": {
+        "level": 3,
+        "maxLevel": 3,
+        "does": "Closes the request and queues the transfer of value for Open Payments, EFPIA, Disclosure UK or Transparence Santé. Submitting a disclosure needs a person."
+      },
+      "outcomes": [
+        {
+          "id": "complete",
+          "label": "Close request",
+          "next": "closed",
+          "actorRoles": [
+            "coordinator"
+          ]
+        },
+        {
+          "id": "submit-disclosure",
+          "label": "Submit disclosure",
+          "next": "closed",
+          "actorRoles": [
+            "finance"
+          ],
+          "locked": "submit-disclosure"
+        }
+      ]
+    }
+  ],
+  "signedBy": "J. Whitfield (process owner)",
+  "signedAt": "2026-10-26T16:00:00Z"
+}

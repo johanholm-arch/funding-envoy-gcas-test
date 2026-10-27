@@ -1,0 +1,196 @@
+{
+  "id": "tc-44",
+  "title": "France: payment gate with no convention record and a late signature",
+  "purpose": "SFFC's DPC programme: the provider countersigned after the programme started and no IDAHE 2 / EPS record is stored.",
+  "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000014",
+  "subtype": "ime-accredited",
+  "country": "FR",
+  "today": "2027-03-08",
+  "phase": "pre-payment",
+  "fields": {
+    "title": "Programme DPC : prise en charge de l'insuffisance cardiaque 2027",
+    "amount.requested": 20000,
+    "amount.currency": "EUR",
+    "activity.startDate": "2027-03-10T09:00:00",
+    "activity.endDate": "2027-03-11T17:00:00",
+    "activity.location": "Lille, FR",
+    "activity.format": "in-person",
+    "audience.geography": "mainly-fr",
+    "purpose": "An accredited DPC programme on heart failure management for general practitioners.",
+    "purpose.category": "education",
+    "provider.name": "SFFC",
+    "provider.accredited": true,
+    "provider.accreditor": "ANDPC",
+    "credits": "DPC programme (14 hours)",
+    "learningObjectives": "1. Diagnose heart failure in primary care. 2. Start and titrate treatment. 3. Refer appropriately.",
+    "needsAssessment": "ANDPC national priority orientation on chronic disease.",
+    "outcomes.level": "moore-4",
+    "outcomes.methods": "Pre/post case vignettes",
+    "audience.expected": 50,
+    "audience.breakdown": "50 general practitioners",
+    "otherFunders": [
+      "None"
+    ],
+    "support.type": "monetary",
+    "tov.natureOfPayment": "grant",
+    "tov.disclosureCategory": "donations-grants-hco",
+    "agreement.clauses": [
+      "fr-convention-object",
+      "fr-convention-filing",
+      "fr-transparence"
+    ]
+  },
+  "budget": [
+    {
+      "line": 1,
+      "description": "Salle et restauration",
+      "category": "venue",
+      "amount": 8000
+    },
+    {
+      "line": 2,
+      "description": "Intervenants",
+      "category": "faculty-honoraria",
+      "amount": 8000
+    },
+    {
+      "line": 3,
+      "description": "Supports",
+      "category": "materials",
+      "amount": 2000
+    },
+    {
+      "line": 4,
+      "description": "Évaluation",
+      "category": "outcomes",
+      "amount": 2000
+    }
+  ],
+  "documents": [
+    "request-letter",
+    "prospectus",
+    "budget",
+    "financial-statement",
+    "accreditation-statement",
+    "coi-policy"
+  ],
+  "documentText": {
+    "prospectus": "Le programme est de la seule responsabilité de la SFFC. Supporters have no role in planning, faculty or content."
+  },
+  "attestations": [
+    "accuracy",
+    "anti-discrimination",
+    "not-conditioned",
+    "independence",
+    "non-direction",
+    "acknowledgement",
+    "separation"
+  ],
+  "coi": {
+    "coi-1": "no",
+    "coi-2": "no",
+    "coi-3": "no",
+    "coi-4": "no",
+    "coi-5": "no",
+    "coi-6": "no",
+    "coi-7": "no",
+    "coi-8": "no",
+    "coi-9": "no"
+  },
+  "screening": "clear",
+  "openRequestsAmount": 0,
+  "agreement": {
+    "templateId": "halden-fr-convention-v2",
+    "signatures": [
+      {
+        "party": "Halden Pharma France SAS",
+        "name": "C. Moreau",
+        "at": "2027-02-26T10:00:00Z"
+      },
+      {
+        "party": "SFFC",
+        "name": "Arnaud Lefèbvre",
+        "at": "2027-03-12T09:00:00Z"
+      }
+    ],
+    "clauseIds": [
+      "fr-convention-object",
+      "fr-convention-filing",
+      "fr-transparence"
+    ]
+  },
+  "expected": {
+    "checks": {
+      "CORE-G1": "pass",
+      "CORE-G2": "pass",
+      "CORE-G3": "pass",
+      "CORE-G4": "fail",
+      "CORE-G5": "na",
+      "CORE-G6": "pass",
+      "US-OP-01": "na",
+      "US-OP-02": "na",
+      "US-TAX-01": "na",
+      "US-TAX-02": "na",
+      "US-SCR-01": "na",
+      "US-FCPA-01": "na",
+      "ACE-01": "pass",
+      "ACE-02": "pass",
+      "ACE-03": "fail",
+      "ACE-04": "na",
+      "EFPIA-01": "pass",
+      "EFPIA-02": "pass",
+      "UK-ABPI-01": "na",
+      "UK-ABPI-02": "na",
+      "UK-ABPI-03": "na",
+      "UK-ABPI-04": "na",
+      "UK-ABPI-05": "na",
+      "FR-AC-01": "pass",
+      "FR-AC-02": "fail",
+      "FR-AC-03": "fail",
+      "FR-AC-04": "na",
+      "FR-TS-01": "pass",
+      "R-02": "pass",
+      "R-04": "pass",
+      "R-06": "pass",
+      "R-06e": "pass",
+      "R-06n": "na",
+      "R-06c": "na",
+      "R-07": "na",
+      "R-08": "pass",
+      "R-11a": "na",
+      "R-11b": "pass",
+      "R-11c": "na",
+      "R-12": "pass",
+      "R-13": "pass",
+      "R-14": "pass",
+      "R-15": "pass",
+      "R-15n": "na",
+      "R-16": "pass",
+      "R-18": "pass",
+      "R-21": "pass",
+      "R-22": "pass",
+      "R-23": "pass",
+      "R-24": "pass",
+      "R-25": "na",
+      "R-26": "pass",
+      "R-28": "pass",
+      "R-29": "pass",
+      "R-30": "pass",
+      "R-31": "na",
+      "R-35": "pass",
+      "T-1": "na",
+      "T-2": "pass",
+      "T-3": "na",
+      "T-4": "na",
+      "T-5": "na",
+      "T-6": "na",
+      "T-7": "na",
+      "T-8": "na"
+    },
+    "submittable": false,
+    "reviewingGroup": "France medical affairs",
+    "routesToCompliance": true,
+    "approvalPath": "committee",
+    "notes": "Phase pre-payment. FR-AC-03 fails (block); CORE-G4 and ACE-03 fail (block, signature on 12 March after the 10 March start). R-08 passes (2 days to start on 8 March). FR-AC-02 fails (judge). Payment blocked."
+  }
+}

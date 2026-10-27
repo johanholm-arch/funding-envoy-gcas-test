@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "profile": "cautious",
+  "overrides": [
+    {
+      "stage": "intake",
+      "level": 2
+    },
+    {
+      "stage": "completeness",
+      "level": 3
+    },
+    {
+      "stage": "triage",
+      "level": 2
+    },
+    {
+      "stage": "medical-review",
+      "level": 1
+    },
+    {
+      "stage": "compliance-review",
+      "level": 1
+    },
+    {
+      "stage": "committee",
+      "level": 1
+    },
+    {
+      "stage": "agreement",
+      "level": 2
+    },
+    {
+      "stage": "payment",
+      "level": 1
+    },
+    {
+      "stage": "reconciliation",
+      "level": 2
+    },
+    {
+      "stage": "outcomes",
+      "level": 2
+    },
+    {
+      "stage": "close-and-disclose",
+      "level": 2
+    },
+    {
+      "stage": "triage",
+      "when": {
+        "fact": "country",
+        "op": "in",
+        "value": [
+          "GB",
+          "FR"
+        ]
+      },
+      "level": 1
+    }
+  ],
+  "confidenceFloor": 0.85
+}

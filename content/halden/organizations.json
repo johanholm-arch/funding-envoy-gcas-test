@@ -1,0 +1,1049 @@
+[
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000001",
+    "legalName": "New England Cardiology Society",
+    "type": "association",
+    "country": "US",
+    "identifiers": {
+      "ein": "04-3187265"
+    },
+    "governmentControlled": false,
+    "address": "200 Atlantic Avenue, Suite 610, Boston, MA 02110, US",
+    "website": "https://necs.example.org",
+    "annualRevenue": {
+      "amount": 1200000,
+      "currency": "USD",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "501(c)(3)",
+      "asOf": "2021-03-12"
+    },
+    "officers": [
+      {
+        "name": "Dr. Alan Whitcombe",
+        "title": "President",
+        "isHcp": true
+      },
+      {
+        "name": "R. Delgado",
+        "title": "Executive Director"
+      },
+      {
+        "name": "Dr. Elena Marsh",
+        "title": "Director of Education",
+        "isHcp": true
+      },
+      {
+        "name": "Margaret Okonjo",
+        "title": "Treasurer"
+      }
+    ],
+    "signers": [
+      {
+        "name": "R. Delgado",
+        "title": "Executive Director",
+        "email": "r.delgado@necs.example.org"
+      }
+    ],
+    "screening": [
+      {
+        "list": "LEIE",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "SAM",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "IRS-TEOS",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ]
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000002",
+    "legalName": "Beacon CME LLC",
+    "type": "accredited-provider",
+    "country": "US",
+    "identifiers": {
+      "ein": "05-0581144"
+    },
+    "governmentControlled": false,
+    "address": "50 Exchange Terrace, Providence, RI 02903, US",
+    "website": "https://beaconcme.example.com",
+    "annualRevenue": {
+      "amount": 6800000,
+      "currency": "USD",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "for-profit LLC",
+      "asOf": "2025-12-31"
+    },
+    "officers": [
+      {
+        "name": "Dana Whitlock",
+        "title": "Chief Executive Officer"
+      },
+      {
+        "name": "Dr. Samuel Ferris",
+        "title": "Medical Director",
+        "isHcp": true
+      }
+    ],
+    "signers": [
+      {
+        "name": "Dana Whitlock",
+        "title": "Chief Executive Officer",
+        "email": "d.whitlock@beaconcme.example.com"
+      }
+    ],
+    "screening": [
+      {
+        "list": "LEIE",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "SAM",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "IRS-TEOS",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ],
+    "accreditation": {
+      "body": "ACCME",
+      "id": "ACCME-PRV-0418 (fictional)",
+      "expires": "2029-11-30"
+    }
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000003",
+    "legalName": "Pennine Heart Failure Society",
+    "type": "association",
+    "country": "GB",
+    "identifiers": {
+      "charityNumber": "1187342"
+    },
+    "governmentControlled": false,
+    "address": "14 Park Square East, Leeds LS1 2NE, GB",
+    "website": "https://penninehf.example.org.uk",
+    "annualRevenue": {
+      "amount": 420000,
+      "currency": "GBP",
+      "fiscalYear": "FY2025 (year to 31 March 2026)"
+    },
+    "taxStatus": {
+      "status": "Registered charity (England and Wales)",
+      "asOf": "2026-04-30"
+    },
+    "officers": [
+      {
+        "name": "Prof. Gareth Ellison",
+        "title": "President",
+        "isHcp": true
+      },
+      {
+        "name": "Helen Brook",
+        "title": "Chief Executive"
+      },
+      {
+        "name": "Dr. Amira Shah",
+        "title": "Education Lead",
+        "isHcp": true
+      }
+    ],
+    "signers": [
+      {
+        "name": "Helen Brook",
+        "title": "Chief Executive",
+        "email": "h.brook@penninehf.example.org.uk"
+      }
+    ],
+    "screening": [
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "UK-OFSI",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "EU-CFSP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "PEP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ]
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000004",
+    "legalName": "Severnside Hospitals Charity",
+    "type": "charity",
+    "country": "GB",
+    "identifiers": {
+      "charityNumber": "1093318"
+    },
+    "governmentControlled": false,
+    "address": "Severnside Royal Infirmary, Riverside Road, Gloucester GL1 3NN, GB",
+    "website": "https://severnsidecharity.example.org.uk",
+    "annualRevenue": {
+      "amount": 3100000,
+      "currency": "GBP",
+      "fiscalYear": "FY2025 (year to 31 March 2026)"
+    },
+    "taxStatus": {
+      "status": "Registered charity (NHS charity)",
+      "asOf": "2026-05-15"
+    },
+    "officers": [
+      {
+        "name": "Neil Ashdown",
+        "title": "Head of Charity"
+      },
+      {
+        "name": "Dr. Ruth Penhaligon",
+        "title": "Chair of Trustees",
+        "isHcp": true,
+        "isPublicOfficial": true
+      }
+    ],
+    "signers": [
+      {
+        "name": "Neil Ashdown",
+        "title": "Head of Charity",
+        "email": "n.ashdown@severnsidecharity.example.org.uk"
+      }
+    ],
+    "screening": [
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "UK-OFSI",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "EU-CFSP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "PEP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ],
+    "notes": "Independent registered charity linked to a fictional NHS trust. Trustees include NHS employees; governmentControlled is false because the charity is a separate legal person, but the officer flag will raise coi-9."
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000005",
+    "legalName": "Association Francophone d'Insuffisance Cardiaque (AFIC)",
+    "type": "association",
+    "country": "FR",
+    "identifiers": {
+      "siren": "812 447 903",
+      "rna": "W751234567"
+    },
+    "governmentControlled": false,
+    "address": "18 rue de la Chaussée-d'Antin, 75009 Paris, FR",
+    "website": "https://afic.example.fr",
+    "annualRevenue": {
+      "amount": 380000,
+      "currency": "EUR",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "Association loi 1901, intérêt général",
+      "asOf": "2025-06-30"
+    },
+    "officers": [
+      {
+        "name": "Pr. Mathilde Garnier",
+        "title": "Présidente",
+        "isHcp": true
+      },
+      {
+        "name": "Julien Mercier",
+        "title": "Délégué général"
+      }
+    ],
+    "signers": [
+      {
+        "name": "Julien Mercier",
+        "title": "Délégué général",
+        "email": "j.mercier@afic.example.fr"
+      }
+    ],
+    "screening": [
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "UK-OFSI",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "EU-CFSP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "PEP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ]
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000006",
+    "legalName": "Fondation Saint-Aubin pour la Recherche Cardiovasculaire",
+    "type": "charity",
+    "country": "FR",
+    "identifiers": {
+      "siren": "784 220 516"
+    },
+    "governmentControlled": false,
+    "address": "7 place Saint-Aubin, 49100 Angers, FR",
+    "website": "https://fondation-saint-aubin.example.fr",
+    "annualRevenue": {
+      "amount": 2400000,
+      "currency": "EUR",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "Fondation reconnue d'utilité publique",
+      "asOf": "2024-01-10"
+    },
+    "officers": [
+      {
+        "name": "Hélène Vasseur",
+        "title": "Directrice générale"
+      },
+      {
+        "name": "Pr. Olivier Brun",
+        "title": "Président du conseil d'administration",
+        "isHcp": true
+      }
+    ],
+    "signers": [
+      {
+        "name": "Hélène Vasseur",
+        "title": "Directrice générale",
+        "email": "h.vasseur@fondation-saint-aubin.example.fr"
+      }
+    ],
+    "screening": [
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "UK-OFSI",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "EU-CFSP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "PEP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ]
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000007",
+    "legalName": "Heartline Patient Alliance",
+    "type": "patient-organization",
+    "country": "US",
+    "identifiers": {
+      "ein": "27-4410983"
+    },
+    "governmentControlled": false,
+    "address": "1120 Market Street, Suite 300, Philadelphia, PA 19107, US",
+    "website": "https://heartline.example.org",
+    "annualRevenue": {
+      "amount": 640000,
+      "currency": "USD",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "501(c)(3)",
+      "asOf": "2019-08-02"
+    },
+    "officers": [
+      {
+        "name": "Teresa Quinlan",
+        "title": "Executive Director"
+      },
+      {
+        "name": "Marcus Bell",
+        "title": "Board Chair"
+      }
+    ],
+    "signers": [
+      {
+        "name": "Teresa Quinlan",
+        "title": "Executive Director",
+        "email": "t.quinlan@heartline.example.org"
+      }
+    ],
+    "screening": [
+      {
+        "list": "LEIE",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "SAM",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "IRS-TEOS",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ]
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000008",
+    "legalName": "Mercy Ridge University Medical Center",
+    "type": "teaching-hospital",
+    "country": "US",
+    "identifiers": {
+      "ein": "06-0646712",
+      "ccn": "070099"
+    },
+    "governmentControlled": false,
+    "address": "300 Ridge Road, New Haven, CT 06511, US",
+    "website": "https://mercyridge.example.org",
+    "annualRevenue": {
+      "amount": 1850000000,
+      "currency": "USD",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "501(c)(3)",
+      "asOf": "2015-02-01"
+    },
+    "officers": [
+      {
+        "name": "Dr. Janet Ofori",
+        "title": "Director, Office of Continuing Medical Education",
+        "isHcp": true
+      },
+      {
+        "name": "Paul Whitley",
+        "title": "Chief Financial Officer"
+      }
+    ],
+    "signers": [
+      {
+        "name": "Paul Whitley",
+        "title": "Chief Financial Officer",
+        "email": "p.whitley@mercyridge.example.org"
+      }
+    ],
+    "screening": [
+      {
+        "list": "LEIE",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "SAM",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "IRS-TEOS",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ],
+    "notes": "Fictional CCN; included in the demo teaching hospital list (teachingHospitalIds)."
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000009",
+    "legalName": "Lakeshore University",
+    "type": "university",
+    "country": "US",
+    "identifiers": {
+      "ein": "36-2170833"
+    },
+    "governmentControlled": false,
+    "address": "1 University Drive, Evanston, IL 60201, US",
+    "website": "https://lakeshore.example.edu",
+    "annualRevenue": {
+      "amount": 940000000,
+      "currency": "USD",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "501(c)(3) private university",
+      "asOf": "2010-07-01"
+    },
+    "officers": [
+      {
+        "name": "Dr. Kevin Asante",
+        "title": "Associate Dean, Graduate Medical Education",
+        "isHcp": true
+      },
+      {
+        "name": "Laura Fenwick",
+        "title": "Director, Sponsored Programs"
+      }
+    ],
+    "signers": [
+      {
+        "name": "Laura Fenwick",
+        "title": "Director, Sponsored Programs",
+        "email": "l.fenwick@lakeshore.example.edu"
+      }
+    ],
+    "screening": [
+      {
+        "list": "LEIE",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "SAM",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "IRS-TEOS",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ]
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000010",
+    "legalName": "Meridian Global Health Relief",
+    "type": "charity",
+    "country": "US",
+    "identifiers": {
+      "ein": "81-3307219"
+    },
+    "governmentControlled": false,
+    "address": "900 K Street NW, Washington, DC 20001, US",
+    "website": "https://meridianrelief.example.org",
+    "annualRevenue": {
+      "amount": 2200000,
+      "currency": "USD",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "501(c)(3)",
+      "asOf": "2018-05-20"
+    },
+    "officers": [
+      {
+        "name": "Omar Haddadi",
+        "title": "Executive Director"
+      },
+      {
+        "name": "Grace Mwangi",
+        "title": "Board Chair"
+      }
+    ],
+    "signers": [
+      {
+        "name": "Omar Haddadi",
+        "title": "Executive Director",
+        "email": "o.haddadi@meridianrelief.example.org"
+      }
+    ],
+    "screening": [
+      {
+        "list": "LEIE",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "SAM",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "possible-match",
+        "score": 0.82
+      },
+      {
+        "list": "IRS-TEOS",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ],
+    "notes": "Possible match on OFAC SDN: an officer's name resembles a listed person. Unadjudicated."
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000011",
+    "legalName": "Centre Hospitalier Universitaire de Rennes-Armor",
+    "type": "teaching-hospital",
+    "country": "FR",
+    "identifiers": {
+      "siren": "263 500 077",
+      "finess": "350000999"
+    },
+    "governmentControlled": true,
+    "address": "2 rue Henri Le Guilloux, 35000 Rennes, FR",
+    "website": "https://chu-rennes-armor.example.fr",
+    "annualRevenue": {
+      "amount": 1120000000,
+      "currency": "EUR",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "Établissement public de santé",
+      "asOf": "2025-12-31"
+    },
+    "officers": [
+      {
+        "name": "Isabelle Roux",
+        "title": "Directrice générale",
+        "isPublicOfficial": true
+      },
+      {
+        "name": "Pr. Yann Le Goff",
+        "title": "Chef du service de cardiologie",
+        "isHcp": true,
+        "isPublicOfficial": true
+      }
+    ],
+    "signers": [
+      {
+        "name": "Isabelle Roux",
+        "title": "Directrice générale",
+        "email": "i.roux@chu-rennes-armor.example.fr"
+      }
+    ],
+    "screening": [
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "UK-OFSI",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "EU-CFSP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "PEP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "possible-match",
+        "score": 0.74
+      }
+    ],
+    "notes": "Public hospital: officers are public officials. PEP possible-match is expected for public-hospital directors and needs adjudication."
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000012",
+    "legalName": "Dr. Thomas Hale",
+    "type": "individual",
+    "country": "US",
+    "identifiers": {
+      "npi": "1999999999 (fictional)"
+    },
+    "governmentControlled": false,
+    "address": "45 Elm Street, Worcester, MA 01609, US",
+    "officers": [
+      {
+        "name": "Dr. Thomas Hale",
+        "title": "Cardiologist",
+        "isHcp": true
+      }
+    ],
+    "signers": [
+      {
+        "name": "Dr. Thomas Hale",
+        "title": "Self",
+        "email": "t.hale@mail.example.com"
+      }
+    ],
+    "screening": [
+      {
+        "list": "LEIE",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "SAM",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "IRS-TEOS",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ],
+    "notes": "An individual physician. Exists to prove gate G1 blocks."
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000013",
+    "legalName": "Westbrook Medical Education Ltd",
+    "type": "medical-education-company",
+    "country": "GB",
+    "identifiers": {
+      "companyNumber": "09876543"
+    },
+    "governmentControlled": false,
+    "address": "3 Queen Square, Bristol BS1 4JQ, GB",
+    "website": "https://westbrookmeded.example.co.uk",
+    "annualRevenue": {
+      "amount": 1500000,
+      "currency": "GBP",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "Private limited company",
+      "asOf": "2026-01-31"
+    },
+    "officers": [
+      {
+        "name": "Oliver Tranter",
+        "title": "Managing Director"
+      }
+    ],
+    "signers": [
+      {
+        "name": "Oliver Tranter",
+        "title": "Managing Director",
+        "email": "o.tranter@westbrookmeded.example.co.uk"
+      }
+    ],
+    "screening": [
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "UK-OFSI",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "EU-CFSP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "PEP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ]
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000014",
+    "legalName": "Société Française de Formation en Cardiologie (SFFC)",
+    "type": "accredited-provider",
+    "country": "FR",
+    "identifiers": {
+      "siren": "530 118 204",
+      "odpc": "ODPC-4471 (fictional)"
+    },
+    "governmentControlled": false,
+    "address": "41 boulevard Vauban, 59800 Lille, FR",
+    "website": "https://sffc.example.fr",
+    "annualRevenue": {
+      "amount": 2100000,
+      "currency": "EUR",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "Association loi 1901, organisme de DPC",
+      "asOf": "2025-09-01"
+    },
+    "officers": [
+      {
+        "name": "Dr. Camille Petit",
+        "title": "Directrice scientifique",
+        "isHcp": true
+      },
+      {
+        "name": "Arnaud Lefèbvre",
+        "title": "Directeur administratif"
+      }
+    ],
+    "signers": [
+      {
+        "name": "Arnaud Lefèbvre",
+        "title": "Directeur administratif",
+        "email": "a.lefebvre@sffc.example.fr"
+      }
+    ],
+    "screening": [
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "UK-OFSI",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "EU-CFSP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "PEP",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ],
+    "accreditation": {
+      "body": "ANDPC",
+      "id": "ODPC-4471 (fictional)",
+      "expires": "2028-12-31"
+    }
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000015",
+    "legalName": "Granite State Cardiovascular Nurses Association",
+    "type": "association",
+    "country": "US",
+    "identifiers": {
+      "ein": "02-0519377"
+    },
+    "governmentControlled": false,
+    "address": "12 Pleasant Street, Concord, NH 03301, US",
+    "taxStatus": {
+      "status": "501(c)(6)",
+      "asOf": "2016-04-11"
+    },
+    "officers": [
+      {
+        "name": "Karen Dupuis, RN",
+        "title": "President",
+        "isHcp": true
+      }
+    ],
+    "signers": [
+      {
+        "name": "Karen Dupuis, RN",
+        "title": "President",
+        "email": "k.dupuis@gscna.example.org"
+      }
+    ],
+    "screening": [
+      {
+        "list": "LEIE",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "SAM",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "IRS-TEOS",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ],
+    "notes": "No annual revenue on the profile yet: the revenue cap check is pending."
+  },
+  {
+    "id": "0b6c1d2e-4f5a-4b7c-8d9e-000000000016",
+    "legalName": "Ohio Valley Lipid Society",
+    "type": "association",
+    "country": "US",
+    "identifiers": {
+      "ein": "31-1654402"
+    },
+    "governmentControlled": false,
+    "address": "255 East Fifth Street, Cincinnati, OH 45202, US",
+    "annualRevenue": {
+      "amount": 200000,
+      "currency": "USD",
+      "fiscalYear": "FY2025"
+    },
+    "taxStatus": {
+      "status": "501(c)(3)",
+      "asOf": "2020-02-14"
+    },
+    "officers": [
+      {
+        "name": "Dr. Peter Lang",
+        "title": "President",
+        "isHcp": true
+      },
+      {
+        "name": "Susan Ward",
+        "title": "Administrator"
+      }
+    ],
+    "signers": [
+      {
+        "name": "Susan Ward",
+        "title": "Administrator",
+        "email": "s.ward@ovls.example.org"
+      }
+    ],
+    "screening": [
+      {
+        "list": "LEIE",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "SAM",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "OFAC-SDN",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      },
+      {
+        "list": "IRS-TEOS",
+        "listVersion": "2026-10-20",
+        "checkedAt": "2026-10-21T09:00:00Z",
+        "result": "clear"
+      }
+    ]
+  }
+]

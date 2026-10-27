@@ -262,7 +262,7 @@ export function evaluateRule(rule: Rule, ctx: EvalContext, facts: Facts): CheckR
     out = { status: "pending", detail: `Check could not run: ${(e as Error).message}` };
   }
   const vars: Record<string, unknown> = { ...flatFacts(facts), ...(ctx.parameters ?? {}), ...(out.vars ?? {}) };
-  const tpl = out.status === "pass" ? rule.messages.pass : rule.messages.fail;
+  const tpl = out.status === "pass" ? rule.messages.pass : out.status === "judge" ? rule.messages.judge ?? rule.messages.fail : rule.messages.fail;
   let message = render(tpl, vars);
   if (out.detail && out.status !== "pass") message = `${message} ${out.detail}`.trim();
   if (out.status === "pending") message = `${rule.statement}: waiting for information. ${out.detail ?? ""}`.trim();

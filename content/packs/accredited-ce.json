@@ -1,0 +1,276 @@
+{
+  "id": "accredited-ce",
+  "name": "Accredited continuing education",
+  "version": 1,
+  "effectiveFrom": "2026-11-01",
+  "jurisdiction": "GLOBAL",
+  "rules": [
+    {
+      "id": "ACE-01",
+      "statement": "The provider is accredited and the accreditor is named",
+      "basis": {
+        "layer": "accreditation",
+        "ref": "ACCME eligibility",
+        "citation": "Accredited continuing education is offered by a provider accredited by ACCME, a state medical society recognised by ACCME, Joint Accreditation, or the equivalent body for the profession or country.",
+        "url": "https://accme.org/rule/eligibility/",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "all": [
+            {
+              "fact": "field.provider.accredited",
+              "op": "truthy"
+            },
+            {
+              "fact": "field.provider.accreditor",
+              "op": "exists"
+            }
+          ]
+        }
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Provider is accredited ({{provider.accreditor}}).",
+        "fail": "The provider is not shown as accredited, or the accreditor is not named. If no credit is offered this is a non-accredited education request.",
+        "requestor": "Accredited education requests need a provider accredited by a recognised body. If the activity offers no credit, change the request type to non-accredited education."
+      },
+      "actions": [
+        {
+          "id": "change:subtype",
+          "label": "Change request type"
+        },
+        {
+          "id": "answer:provider",
+          "label": "Name the accreditor"
+        }
+      ],
+      "source": "pack:accredited-ce"
+    },
+    {
+      "id": "ACE-02",
+      "statement": "The requestor confirms marketing is kept apart from the accredited education",
+      "basis": {
+        "layer": "accreditation",
+        "ref": "ACCME Standard 5",
+        "citation": "Standards for Integrity and Independence, Standard 5: marketing, exhibits and non-accredited education are not in the educational space within 30 minutes before or after an accredited activity.",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). 30-minute figure from research report."
+      },
+      "scope": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "check": {
+        "kind": "attestationsComplete",
+        "ids": [
+          "separation"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Separation statement typed by the requestor.",
+        "fail": "The statement that exhibits and promotion will be kept apart from the education is missing."
+      },
+      "actions": [
+        {
+          "id": "attest:separation",
+          "label": "Make the statement"
+        }
+      ],
+      "source": "pack:accredited-ce"
+    },
+    {
+      "id": "ACE-03",
+      "statement": "The commercial support agreement is executed before the education starts",
+      "basis": {
+        "layer": "accreditation",
+        "ref": "ACCME Standard 4",
+        "citation": "Standard 4: the terms, conditions and purposes of commercial support are documented in a written agreement between the ineligible company and the accredited provider, executed before the education starts.",
+        "url": "https://accme.org/rule/manage-commercial-support-appropriately/",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). A 27 Oct 2026 web search summary of accme.org/node/452391 corroborates 'executed before the accredited education starts'; the page itself was not read."
+      },
+      "scope": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "check": {
+        "kind": "agreementBeforeStart"
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Agreement executed before the education starts on {{start}}.",
+        "fail": "The commercial support agreement was not executed by both parties before the education started. ACCME treats this as non-compliant support."
+      },
+      "actions": [
+        {
+          "id": "route:legal",
+          "label": "Send to Legal"
+        }
+      ],
+      "appliesAt": [
+        "pre-payment"
+      ],
+      "source": "pack:accredited-ce"
+    },
+    {
+      "id": "ACE-04",
+      "statement": "In-kind support has a written description of its nature",
+      "basis": {
+        "layer": "accreditation",
+        "ref": "ACCME Standard 4",
+        "citation": "Standard 4: learners are told the source and the nature of any in-kind support before the activity.",
+        "url": "https://accme.org/rule/manage-commercial-support-appropriately/",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "subtype",
+            "op": "eq",
+            "value": "ime-accredited"
+          },
+          {
+            "fact": "field.support.type",
+            "op": "in",
+            "value": [
+              "in-kind",
+              "both"
+            ]
+          }
+        ]
+      },
+      "check": {
+        "kind": "fieldsPresent",
+        "fields": [
+          "inKind.nature"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Nature of in-kind support described.",
+        "fail": "This request includes in-kind support but does not say what it is. Learners must be told its nature before the activity.",
+        "requestor": "Please describe the in-kind support, for example 'loan of two ultrasound training units for the hands-on workshop'."
+      },
+      "actions": [
+        {
+          "id": "answer:inKind.nature",
+          "label": "Describe the in-kind support"
+        }
+      ],
+      "source": "pack:accredited-ce"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "accme.standard5.separationMinutes",
+      "label": "Separation of marketing from accredited education (minutes before and after)",
+      "value": 30,
+      "unit": "minutes",
+      "source": "ACCME Standard 5 per research report (UCF CPD policy restating it). Not read in primary text.",
+      "verified": false
+    }
+  ],
+  "clauses": [
+    {
+      "id": "ace-provider-controls",
+      "label": "Provider control of funds and content",
+      "text": "The Provider makes all decisions about the receipt and disbursement of this support and about content, faculty, learners and methods. Halden Pharma will not pay directly for any expense of the education, of faculty or of learners.",
+      "requiredWhen": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "basis": {
+        "layer": "accreditation",
+        "ref": "ACCME Standard 4",
+        "url": "https://accme.org/rule/manage-commercial-support-appropriately/",
+        "verified": false
+      }
+    },
+    {
+      "id": "ace-no-learner-expenses",
+      "label": "No learner expenses",
+      "text": "No part of the support will be used to pay for the travel, lodging, registration, honoraria or personal expenses of individual learners.",
+      "requiredWhen": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "basis": {
+        "layer": "accreditation",
+        "ref": "ACCME Standard 4",
+        "url": "https://accme.org/rule/manage-commercial-support-appropriately/",
+        "verified": false
+      }
+    },
+    {
+      "id": "ace-accounting",
+      "label": "Accounting on request",
+      "text": "The Provider will keep a record of the amount or kind of support received and how it was used, and will provide that accounting to Halden Pharma on request.",
+      "requiredWhen": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "basis": {
+        "layer": "accreditation",
+        "ref": "ACCME Standard 4",
+        "url": "https://accme.org/rule/manage-commercial-support-appropriately/",
+        "verified": false
+      }
+    },
+    {
+      "id": "ace-learner-disclosure",
+      "label": "Disclosure to learners",
+      "text": "Before the activity the Provider will tell learners the name of Halden Pharma as a source of support and the nature of any in-kind support, without corporate or product logos, trade names or messages.",
+      "requiredWhen": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "basis": {
+        "layer": "accreditation",
+        "ref": "ACCME Standard 4",
+        "url": "https://accme.org/rule/manage-commercial-support-appropriately/",
+        "verified": false
+      }
+    },
+    {
+      "id": "ace-signed-by-provider",
+      "label": "Parties",
+      "text": "This agreement is between Halden Pharma and the accredited Provider. A joint provider or educational partner may be named but does not sign in the Provider's place.",
+      "requiredWhen": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "ime-accredited"
+      },
+      "basis": {
+        "layer": "accreditation",
+        "ref": "ACCME Standard 4",
+        "url": "https://accme.org/rule/manage-commercial-support-appropriately/",
+        "verified": false
+      }
+    }
+  ],
+  "disclosures": [],
+  "calendar": [],
+  "verification": {
+    "status": "unverified",
+    "notes": [
+      "accme.org was blocked. Standard 4 content follows the research report and a web-search summary; item numbering (4.1–4.4, 5.1–5.3) is not used in rule refs because it could not be confirmed.",
+      "The same Standards apply to ANCC, ACPE, Joint Accreditation and, from June 2026, ADA CERP per the research report. For UK and France the pack is used with the national accreditor named in provider.accreditor (e.g. Federation of the Royal Colleges of Physicians CPD approval; ANDPC for DPC). Whether those bodies impose identical terms has not been verified."
+    ]
+  }
+}

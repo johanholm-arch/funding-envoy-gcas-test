@@ -1,0 +1,214 @@
+{
+  "id": "tc-27",
+  "title": "W-9 missing",
+  "purpose": "US request without a W-9.",
+  "organizationId": "0b6c1d2e-4f5a-4b7c-8d9e-000000000001",
+  "subtype": "ime-accredited",
+  "country": "US",
+  "today": "2027-02-15",
+  "phase": "submit",
+  "fields": {
+    "title": "Advances in Heart Failure Management 2027",
+    "amount.requested": 48500,
+    "amount.currency": "USD",
+    "activity.startDate": "2027-05-14T08:00:00",
+    "activity.endDate": "2027-05-15T16:30:00",
+    "activity.location": "Boston, MA, US",
+    "activity.format": "in-person",
+    "audience.geography": "mainly-us",
+    "purpose": "A two-day accredited symposium on guideline-directed therapy, device therapy and care transitions in heart failure for cardiologists, internists, advanced practice providers and nurses in New England.",
+    "purpose.category": "education",
+    "therapeuticArea": "Cardiovascular · heart failure",
+    "provider.name": "Beacon CME",
+    "provider.accredited": true,
+    "provider.accreditor": "ACCME",
+    "credits": "11.0 AMA PRA Category 1 Credits",
+    "faculty.selection": "Faculty are selected by the Beacon CME planning committee with NECS programme chairs",
+    "learningObjectives": "1. Apply current guideline-directed medical therapy sequencing in HFrEF. 2. Identify patients who may benefit from device therapy. 3. Plan safe transitions of care after hospitalisation for heart failure.",
+    "needsAssessment": "NECS 2026 member survey (n=412) and regional readmission data show gaps in therapy titration after discharge and in referral for device evaluation.",
+    "outcomes.level": "moore-5",
+    "outcomes.methods": "Pre/post knowledge test; 90-day practice survey (Moore level 5)",
+    "audience.expected": 320,
+    "audience.breakdown": "240 physicians; 60 nurses; 20 other",
+    "otherFunders": [
+      "None"
+    ],
+    "support.type": "monetary"
+  },
+  "budget": [
+    {
+      "line": 1,
+      "description": "Venue hire, Seaport Conference Center, 2 days, incl. day-delegate catering",
+      "category": "venue",
+      "amount": 12800
+    },
+    {
+      "line": 2,
+      "description": "Audio-visual, streaming and session recording",
+      "category": "av",
+      "amount": 5600
+    },
+    {
+      "line": 3,
+      "description": "Faculty honoraria, 14 faculty at provider rates",
+      "category": "faculty-honoraria",
+      "amount": 9800
+    },
+    {
+      "line": 4,
+      "description": "Faculty travel and lodging",
+      "category": "faculty-travel",
+      "amount": 6300
+    },
+    {
+      "line": 5,
+      "description": "Joint-providership and accreditation fee (Beacon CME)",
+      "category": "accreditation",
+      "amount": 3500
+    },
+    {
+      "line": 6,
+      "description": "Printed syllabus and learner materials",
+      "category": "materials",
+      "amount": 1600
+    },
+    {
+      "line": 7,
+      "description": "Outcomes evaluation: pre/post test and 90-day practice survey",
+      "category": "outcomes",
+      "amount": 2800
+    },
+    {
+      "line": 8,
+      "description": "Programme management and planning committee support",
+      "category": "management-fee",
+      "amount": 2400
+    },
+    {
+      "line": 9,
+      "description": "Faculty dinner",
+      "category": "meals",
+      "amount": 2400
+    },
+    {
+      "line": 10,
+      "description": "Registration platform and badges",
+      "category": "other",
+      "amount": 1000
+    },
+    {
+      "line": 11,
+      "description": "Announcement to members (email and society newsletter)",
+      "category": "marketing",
+      "amount": 300
+    }
+  ],
+  "documents": [
+    "request-letter",
+    "prospectus",
+    "budget",
+    "nonprofit-proof",
+    "financial-statement",
+    "accreditation-statement",
+    "coi-policy"
+  ],
+  "documentText": {
+    "prospectus": "Accredited provider: Beacon CME\nJoint provider: New England Cardiology Society\nCredits: 11.0 AMA PRA Category 1 Credits\nFaculty selection: Faculty are selected by the Beacon CME planning committee with NECS programme chairs. Faculty disclose relevant financial relationships per the Standards for Integrity and Independence.\nSupporter role: Supporters have no role in planning, faculty or content."
+  },
+  "attestations": [
+    "accuracy",
+    "anti-discrimination",
+    "not-conditioned",
+    "independence",
+    "non-direction",
+    "acknowledgement",
+    "separation"
+  ],
+  "coi": {
+    "coi-1": "no",
+    "coi-2": "no",
+    "coi-3": "no",
+    "coi-4": "no",
+    "coi-5": "no",
+    "coi-6": "no",
+    "coi-7": "no",
+    "coi-8": "no",
+    "coi-9": "no"
+  },
+  "screening": "clear",
+  "openRequestsAmount": 0,
+  "expected": {
+    "checks": {
+      "CORE-G1": "pass",
+      "CORE-G2": "pass",
+      "CORE-G3": "pass",
+      "CORE-G4": "na",
+      "CORE-G5": "na",
+      "CORE-G6": "na",
+      "US-OP-01": "pass",
+      "US-OP-02": "pass",
+      "US-TAX-01": "fail",
+      "US-TAX-02": "na",
+      "US-SCR-01": "pass",
+      "US-FCPA-01": "na",
+      "ACE-01": "pass",
+      "ACE-02": "pass",
+      "ACE-03": "na",
+      "ACE-04": "na",
+      "EFPIA-01": "na",
+      "EFPIA-02": "na",
+      "UK-ABPI-01": "na",
+      "UK-ABPI-02": "na",
+      "UK-ABPI-03": "na",
+      "UK-ABPI-04": "na",
+      "UK-ABPI-05": "na",
+      "FR-AC-01": "na",
+      "FR-AC-02": "na",
+      "FR-AC-03": "na",
+      "FR-AC-04": "na",
+      "FR-TS-01": "na",
+      "R-02": "pass",
+      "R-04": "pass",
+      "R-06": "pass",
+      "R-06e": "pass",
+      "R-06n": "na",
+      "R-06c": "na",
+      "R-07": "pass",
+      "R-08": "pass",
+      "R-11a": "pass",
+      "R-11b": "pass",
+      "R-11c": "na",
+      "R-12": "pass",
+      "R-13": "pass",
+      "R-14": "pass",
+      "R-15": "pass",
+      "R-15n": "na",
+      "R-16": "pass",
+      "R-18": "pass",
+      "R-21": "pass",
+      "R-22": "pass",
+      "R-23": "pass",
+      "R-24": "judge",
+      "R-25": "na",
+      "R-26": "pass",
+      "R-28": "pass",
+      "R-29": "pass",
+      "R-30": "na",
+      "R-31": "na",
+      "R-35": "pass",
+      "T-1": "na",
+      "T-2": "na",
+      "T-3": "pass",
+      "T-4": "na",
+      "T-5": "na",
+      "T-6": "na",
+      "T-7": "na",
+      "T-8": "na"
+    },
+    "submittable": false,
+    "reviewingGroup": "US medical education",
+    "routesToCompliance": false,
+    "approvalPath": "committee",
+    "notes": "US-TAX-01 fails (block). Not submittable."
+  }
+}

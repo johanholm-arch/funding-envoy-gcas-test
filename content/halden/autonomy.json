@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "profile": "standard",
+  "overrides": [
+    {
+      "stage": "intake",
+      "level": 3
+    },
+    {
+      "stage": "completeness",
+      "level": 4
+    },
+    {
+      "stage": "triage",
+      "level": 3
+    },
+    {
+      "stage": "medical-review",
+      "level": 2
+    },
+    {
+      "stage": "compliance-review",
+      "level": 2
+    },
+    {
+      "stage": "committee",
+      "level": 2
+    },
+    {
+      "stage": "agreement",
+      "level": 3
+    },
+    {
+      "stage": "payment",
+      "level": 2
+    },
+    {
+      "stage": "reconciliation",
+      "level": 3
+    },
+    {
+      "stage": "outcomes",
+      "level": 3
+    },
+    {
+      "stage": "close-and-disclose",
+      "level": 3
+    }
+  ],
+  "confidenceFloor": 0.7
+}

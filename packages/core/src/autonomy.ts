@@ -2,6 +2,18 @@ import type { AutonomyLevel, AutonomyPolicy, StageDef, WorkflowDef } from "./typ
 import { evaluate, type Facts } from "./conditions.ts";
 import { MAX_LEVEL_AT_LOCKED_STAGE } from "./gates.ts";
 
+const BACKWARD = new Set(["decline", "request-info", "withdraw", "defer", "return"]);
+
+/**
+ * A stage whose every way forward is a locked action (committee decision, payment release) is capped at Recommend:
+ * the assistant can prepare, never proceed. A stage with locked and unlocked outcomes (agreement: draft and send,
+ * then a person signs) keeps its level; the locked outcome itself still requires a named person.
+ */
+export function onlyLockedForward(stage: StageDef): boolean {
+  const forward = stage.outcomes.filter((o) => !BACKWARD.has(o.id));
+  return forward.length > 0 && forward.every((o) => o.locked);
+}
+
 /** Effective assistant level at a stage: workflow default, then policy overrides, capped by the stage max and the locked-stage cap. */
 export function effectiveLevel(stage: StageDef, policy: AutonomyPolicy | undefined, facts: Facts): AutonomyLevel {
   let level: AutonomyLevel = stage.assistant.level;
@@ -9,8 +21,7 @@ export function effectiveLevel(stage: StageDef, policy: AutonomyPolicy | undefin
   for (const o of policy?.overrides ?? []) {
     if (o.stage === stage.id && evaluate(o.when, facts)) level = o.level;
   }
-  const hasLocked = stage.outcomes.some((o) => o.locked);
-  const cap = Math.min(stage.assistant.maxLevel, hasLocked ? MAX_LEVEL_AT_LOCKED_STAGE : 4) as AutonomyLevel;
+  const cap = Math.min(stage.assistant.maxLevel, onlyLockedForward(stage) ? MAX_LEVEL_AT_LOCKED_STAGE : 4) as AutonomyLevel;
   return Math.min(level, cap) as AutonomyLevel;
 }
 

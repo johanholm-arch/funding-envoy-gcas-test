@@ -1,0 +1,320 @@
+{
+  "id": "fr",
+  "name": "France (anti-cadeaux and Transparence Santé)",
+  "version": 1,
+  "effectiveFrom": "2026-11-01",
+  "jurisdiction": "FR",
+  "codeFamily": "EFPIA",
+  "rules": [
+    {
+      "id": "FR-AC-01",
+      "statement": "A written convention is needed and must be declared or authorised before any benefit",
+      "basis": {
+        "layer": "law",
+        "ref": "CSP L.1453-7 to L.1453-9",
+        "citation": "Code de la santé publique L.1453-3 ff. as reformed by Ordonnance 2017-49; Décret 2020-730 of 15 June 2020; in force 1 October 2020.",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "FR"
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Halden will put this support in a written convention and file it with the competent Ordre (IDAHE 2 for the Ordre des médecins, EPS otherwise) or the ARS before any benefit is given.",
+        "fail": "Halden will put this support in a written convention and file it before any benefit is given."
+      },
+      "source": "pack:fr"
+    },
+    {
+      "id": "FR-AC-02",
+      "statement": "Route: declaration or prior authorisation, by amount",
+      "basis": {
+        "layer": "law",
+        "ref": "Arrêté 7 août 2020",
+        "citation": "Arrêté du 7 août 2020 fixant les montants à partir desquels une convention prévue à l'article L. 1453-8 est soumise à autorisation (JORFTEXT000042234024).",
+        "url": "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000042234024",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). Thresholds by category could not be reconciled: €1,000 (donation to an association, per Vigier and ONPP), €5,000 (research donation per convention), €10,000 (association reconnue d'utilité publique), and an €8,000 figure whose category was truncated. Whether the threshold is 'at or above' or 'above' also conflicts between sources. Severity is judge until a person reads the arrêté."
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "FR"
+      },
+      "check": {
+        "kind": "amountMax",
+        "field": "amount.requested",
+        "max": "param.fr.antiCadeaux.authorisationThreshold.associationDonation",
+        "currency": "EUR"
+      },
+      "severity": "judge",
+      "messages": {
+        "pass": "{{value}} is within the declaration route (threshold {{max}}, unverified). Compliance confirms the category and files a declaration.",
+        "fail": "{{value}} is above {{max}} (unverified threshold): the convention probably needs prior authorisation from the Ordre or ARS, which can take about two months. Compliance confirms the category and route."
+      },
+      "actions": [
+        {
+          "id": "route:compliance",
+          "label": "Send to Compliance"
+        }
+      ],
+      "source": "pack:fr"
+    },
+    {
+      "id": "FR-AC-03",
+      "statement": "The convention has been declared or authorised and its record number is stored before payment",
+      "basis": {
+        "layer": "law",
+        "ref": "CSP L.1453-8",
+        "citation": "Décret 2020-730; declarations via IDAHE 2 (CNOM) or EPS (other Ordres and ARS). Paper filings are not processed.",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "FR"
+      },
+      "check": {
+        "kind": "priorApproval",
+        "authority": "Ordre (IDAHE 2 / EPS) or ARS",
+        "recordField": "fr.conventionRecord"
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Convention filed: {{record}}.",
+        "fail": "No IDAHE 2 or EPS record number is stored for the convention. Nothing can be paid or provided until the convention is declared, or authorised where required."
+      },
+      "actions": [
+        {
+          "id": "route:compliance",
+          "label": "File the convention"
+        }
+      ],
+      "appliesAt": [
+        "pre-payment"
+      ],
+      "source": "pack:fr"
+    },
+    {
+      "id": "FR-AC-04",
+      "statement": "The activity leaves time for an authorisation decision",
+      "basis": {
+        "layer": "law",
+        "ref": "Décret 2020-730",
+        "citation": "Décret 2020-730: lead times before the benefit (expected: declaration at least 8 days before; authorisation request at least 2 months before, silence for 2 months = authorisation).",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). Lead times are expected values from the research report; '2 months' is encoded as 60 days. Severity judge until verified."
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "FR"
+      },
+      "check": {
+        "kind": "leadTime",
+        "dateField": "activity.startDate",
+        "minDays": "param.fr.antiCadeaux.authorisationLeadDays",
+        "from": "today"
+      },
+      "severity": "judge",
+      "messages": {
+        "pass": "Activity starts in {{days}} days, which leaves time for an authorisation if one is needed.",
+        "fail": "Activity starts in {{days}} days. If the convention needs authorisation, the Ordre may take up to about two months. Compliance checks whether the timing works."
+      },
+      "actions": [
+        {
+          "id": "route:compliance",
+          "label": "Send to Compliance"
+        }
+      ],
+      "appliesAt": [
+        "draft",
+        "submit",
+        "review"
+      ],
+      "source": "pack:fr"
+    },
+    {
+      "id": "FR-TS-01",
+      "statement": "The convention and any benefit of €10 or more are published on Transparence Santé",
+      "basis": {
+        "layer": "law",
+        "ref": "CSP L.1453-1",
+        "citation": "Transparence Santé: every convention regardless of amount and every benefit ≥ €10 TTC, rounded to the euro; semester filings.",
+        "url": "https://www.entreprises-transparence.sante.gouv.fr/",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "FR"
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "This convention and the support paid under it will be published on Transparence Santé.",
+        "fail": "This convention and the support paid under it will be published on Transparence Santé."
+      },
+      "source": "pack:fr"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "fr.antiCadeaux.authorisationThreshold.associationDonation",
+      "label": "Authorisation threshold: donation to an association (whole convention)",
+      "value": 1000,
+      "unit": "EUR",
+      "effectiveFrom": "2020-10-01",
+      "source": "UNVERIFIED. Candidates in sources: €1,000 for association donations (Vigier Avocats; ONPP), €5,000 for research donations per convention (Légifrance summary; Tours note), €10,000 where the beneficiary is an association reconnue d'utilité publique, and an €8,000 figure with truncated category (Tours note). €1,000 is used as the most cautious value: it sends more requests to a person.",
+      "verified": false
+    },
+    {
+      "key": "fr.antiCadeaux.authorisationThreshold.researchDonation",
+      "label": "Authorisation threshold: donation for research (whole convention)",
+      "value": 5000,
+      "unit": "EUR",
+      "effectiveFrom": "2020-10-01",
+      "source": "UNVERIFIED. Légifrance JORFTEXT000042234024 as summarised by the research report; not used by a rule in v1.",
+      "verified": false
+    },
+    {
+      "key": "fr.antiCadeaux.authorisationThreshold.rupDonation",
+      "label": "Authorisation threshold: donation to an association reconnue d'utilité publique",
+      "value": 10000,
+      "unit": "EUR",
+      "effectiveFrom": "2020-10-01",
+      "source": "UNVERIFIED. Vigier Avocats per research report; not used by a rule in v1.",
+      "verified": false
+    },
+    {
+      "key": "fr.antiCadeaux.declarationLeadDays",
+      "label": "Declaration filed at least this many days before the benefit",
+      "value": 8,
+      "unit": "days",
+      "source": "UNVERIFIED expected value (Décret 2020-730). Not used by a rule in v1.",
+      "verified": false
+    },
+    {
+      "key": "fr.antiCadeaux.authorisationLeadDays",
+      "label": "Authorisation requested at least this many days before the benefit",
+      "value": 60,
+      "unit": "days",
+      "source": "UNVERIFIED expected value: '2 months' (Décret 2020-730), encoded as 60 days.",
+      "verified": false
+    },
+    {
+      "key": "fr.transparence.thresholdEUR",
+      "label": "Transparence Santé publication threshold per benefit (TTC)",
+      "value": 10,
+      "unit": "EUR",
+      "source": "Transparence Santé official FAQ per research report; not re-read.",
+      "verified": false
+    }
+  ],
+  "clauses": [
+    {
+      "id": "fr-convention-object",
+      "label": "Objet de la convention",
+      "text": "La présente convention a pour objet [objet], au bénéfice de [bénéficiaire], pour un montant total de [montant] € sur toute sa durée.",
+      "requiredWhen": {
+        "fact": "country",
+        "op": "eq",
+        "value": "FR"
+      },
+      "basis": {
+        "layer": "law",
+        "ref": "CSP L.1453-8",
+        "verified": false
+      }
+    },
+    {
+      "id": "fr-convention-filing",
+      "label": "Déclaration ou autorisation préalable",
+      "text": "La convention est soumise, selon son montant, à déclaration ou à autorisation préalable auprès de l'instance ordinale ou de l'ARS compétente. Aucun avantage n'est accordé avant l'expiration du délai applicable.",
+      "requiredWhen": {
+        "fact": "country",
+        "op": "eq",
+        "value": "FR"
+      },
+      "basis": {
+        "layer": "law",
+        "ref": "Décret 2020-730",
+        "verified": false
+      }
+    },
+    {
+      "id": "fr-transparence",
+      "label": "Transparence",
+      "text": "Le bénéficiaire est informé que l'existence de la convention et les avantages consentis font l'objet d'une publication sur la base Transparence Santé.",
+      "requiredWhen": {
+        "fact": "country",
+        "op": "eq",
+        "value": "FR"
+      },
+      "basis": {
+        "layer": "law",
+        "ref": "CSP L.1453-1",
+        "verified": false
+      }
+    }
+  ],
+  "disclosures": [
+    {
+      "id": "transparence-sante",
+      "name": "Transparence Santé",
+      "appliesWhen": {
+        "fact": "country",
+        "op": "eq",
+        "value": "FR"
+      },
+      "categoryField": "tov.disclosureCategory",
+      "deadline": "Semester filings: 1 March for the second half of the prior year, 1 September for the first half (expected; verify)",
+      "fields": [
+        "recipient.legalName",
+        "recipient.siren",
+        "convention.object",
+        "convention.date",
+        "benefit.amount",
+        "benefit.nature"
+      ]
+    }
+  ],
+  "calendar": [
+    {
+      "id": "fr-ts-mar",
+      "label": "Transparence Santé filing for July–December of the prior year (expected 1 March)",
+      "rule": "semester:03-01,09-01",
+      "regime": "transparence-sante",
+      "basis": {
+        "layer": "law",
+        "ref": "CSP L.1453-1",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). Dates from Vigier Avocats 2024 (secondary); a 2017 DGS note cited 1 October for the first semester."
+      }
+    }
+  ],
+  "verification": {
+    "status": "unverified",
+    "notes": [
+      "legifrance.gouv.fr was blocked, and web searches on 27 Oct 2026 did not surface the arrêté thresholds. A search did confirm (secondary: DS Avocats, CMS France) that the arrêté of 7 August 2020 sets per-category thresholds above which authorisation is required and that filing is by téléprocédure.",
+      "Because the threshold value is unverified, FR-AC-02 and FR-AC-04 are severity judge: a person decides the route. FR-AC-03 (record number before payment) is block because the obligation itself is not in doubt.",
+      "Which French recipients fall within L.1453-4 (associations of health professionals, health establishments, foundations) is decided by Compliance; v1 scopes the pack to every French request."
+    ]
+  }
+}

@@ -218,8 +218,16 @@ describe("workflow and gates", () => {
   it("caps the assistant at Recommend where a locked action lives", () => {
     const committee = { ...wf.stages[2]!, assistant: { level: 4 as const, maxLevel: 4 as const, does: "" } };
     expect(effectiveLevel(committee, undefined, {})).toBe(2);
-    expect(validateWorkflow({ ...wf, stages: [wf.stages[0]!, wf.stages[1]!, committee] }).some((i) => i.message.includes("locked action"))).toBe(true);
+    expect(validateWorkflow({ ...wf, stages: [wf.stages[0]!, wf.stages[1]!, committee] }).some((i) => i.message.includes("person-only action"))).toBe(true);
     expect(effectiveLevel(wf.stages[0]!, { version: 1, profile: "cautious", overrides: [], confidenceFloor: 0.7 }, {})).toBe(2);
+  });
+
+  it("lets the assistant act at a stage that has unlocked outcomes, but never take the locked one", () => {
+    const agreement = { id: "agreement", order: 4, name: "Agreement", ownerRoles: ["legal" as const], sopRefs: ["7.1"], assistant: { level: 3 as const, maxLevel: 4 as const, does: "" },
+      outcomes: [{ id: "complete", label: "Signed", next: "closed", actorRoles: ["legal" as const], locked: "sign-agreement" as const }, { id: "send", label: "Send for signature", next: "agreement", actorRoles: ["legal" as const] }] };
+    expect(effectiveLevel(agreement, undefined, {})).toBe(3);
+    const wf2 = { ...wf, stages: [...wf.stages, { ...agreement, order: 4 }] };
+    expect(() => transition({ wf: wf2, currentStageId: "agreement", outcomeId: "complete", actor: agent, facts: {} })).toThrow(/named person/);
   });
 
   it("gates proposals by level and confidence", () => {

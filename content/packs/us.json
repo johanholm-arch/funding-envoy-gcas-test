@@ -1,0 +1,459 @@
+{
+  "id": "us",
+  "name": "United States (federal)",
+  "version": 1,
+  "effectiveFrom": "2026-11-01",
+  "jurisdiction": "US",
+  "codeFamily": "PhRMA",
+  "rules": [
+    {
+      "id": "US-OP-01",
+      "statement": "Grants to a teaching hospital on the CMS list are directly reportable to Open Payments",
+      "basis": {
+        "layer": "law",
+        "ref": "42 CFR 403.904",
+        "citation": "42 CFR Part 403 Subpart I; CMS annual Teaching Hospital List for the programme year.",
+        "url": "https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-A/part-403/subpart-I",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). The reporting principle is taken from the research report; the CMS list itself must be loaded per programme year."
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "US"
+      },
+      "check": {
+        "kind": "teachingHospitalMatch"
+      },
+      "severity": "judge",
+      "messages": {
+        "pass": "Recipient is not on the CMS teaching hospital list.",
+        "fail": "Recipient appears to be a teaching hospital. A grant paid to it is reportable to Open Payments; the coordinator confirms the match and Finance sets the nature of payment."
+      },
+      "actions": [
+        {
+          "id": "confirm:teaching-hospital",
+          "label": "Confirm list match"
+        }
+      ],
+      "source": "pack:us"
+    },
+    {
+      "id": "US-OP-02",
+      "statement": "For education, the requestor confirms Halden has not designated speakers or learners",
+      "basis": {
+        "layer": "law",
+        "ref": "Open Payments indirect payments",
+        "citation": "42 CFR 403.904(i)(1) and CMS CY2015 PFS final rule reasoning: funding an accredited or certified CE provider is not an indirect payment where the manufacturer does not require, instruct, direct or otherwise cause the provider to pay a specific covered recipient.",
+        "url": "https://www.cms.gov/OpenPayments/Downloads/open-payments-general-faq.pdf",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). Paragraph reference (i)(1) is from secondary sources; confirm against eCFR."
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "country",
+            "op": "eq",
+            "value": "US"
+          },
+          {
+            "fact": "family",
+            "op": "eq",
+            "value": "education"
+          }
+        ]
+      },
+      "check": {
+        "kind": "attestationsComplete",
+        "ids": [
+          "non-direction"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Non-direction statement typed by the requestor.",
+        "fail": "The statement that Halden has not chosen, suggested or paid any speaker, faculty member or learner is missing.",
+        "requestor": "Please confirm that Halden has not suggested or chosen any speaker, faculty member or learner. This keeps the grant outside individual reporting."
+      },
+      "actions": [
+        {
+          "id": "attest:non-direction",
+          "label": "Make the statement"
+        }
+      ],
+      "source": "pack:us"
+    },
+    {
+      "id": "US-TAX-01",
+      "statement": "A current W-9 is on file before any payment to a US organization",
+      "basis": {
+        "layer": "law",
+        "ref": "IRS Form W-9",
+        "citation": "Payee taxpayer identification for information reporting; Halden Finance procedure.",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "US"
+      },
+      "check": {
+        "kind": "documentsPresent",
+        "types": [
+          "w9"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "W-9 on file.",
+        "fail": "A signed W-9 for the organization is missing. Halden cannot set up the payee without it.",
+        "requestor": "Please upload your organization's signed W-9 (Rev. March 2024 or later). The name and EIN must match your profile."
+      },
+      "actions": [
+        {
+          "id": "upload:w9",
+          "label": "Upload W-9"
+        }
+      ],
+      "appliesAt": [
+        "submit",
+        "review",
+        "pre-payment"
+      ],
+      "source": "pack:us"
+    },
+    {
+      "id": "US-TAX-02",
+      "statement": "Tax confirms 1099 treatment before payment",
+      "basis": {
+        "layer": "law",
+        "ref": "OBBBA § 70433",
+        "citation": "One Big Beautiful Bill Act (Pub. L. 119-21) § 70433: Form 1099-NEC/MISC threshold raised from $600 to $2,000 for payments made after 31 December 2025, indexed from 2027.",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). Value seen only in secondary sources (CPA Practice Advisor, NATP; a 27 Oct 2026 web search returned no irs.gov page)."
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "US"
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Tax reviews 1099 treatment at payment. The reporting threshold for 2026 payments is {{param.tax.form1099.threshold.2026}} USD; payments to tax-exempt organizations are generally not reported.",
+        "fail": "Tax reviews 1099 treatment at payment."
+      },
+      "appliesAt": [
+        "pre-payment"
+      ],
+      "source": "pack:us"
+    },
+    {
+      "id": "US-SCR-01",
+      "statement": "The organization is clear on the exclusion, sanctions and tax-exempt lists",
+      "basis": {
+        "layer": "law",
+        "ref": "Screening",
+        "citation": "HHS-OIG LEIE (42 U.S.C. 1320a-7); SAM.gov exclusions; OFAC SDN list (31 CFR Chapter V); IRS Tax Exempt Organization Search for 501(c)(3) status and auto-revocation.",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). List names and purpose only; screening cadence (intake, pre-payment) is Halden SOP 5.1."
+      },
+      "scope": {
+        "fact": "country",
+        "op": "eq",
+        "value": "US"
+      },
+      "check": {
+        "kind": "screeningClear",
+        "lists": [
+          "LEIE",
+          "SAM",
+          "OFAC-SDN",
+          "IRS-TEOS"
+        ],
+        "maxAgeDays": 90
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Screened {{date}} against {{lists}}: clear.",
+        "fail": "Screening returned a match or possible match on an exclusion, sanctions or tax-exempt list. Compliance adjudicates; a confirmed match cannot be funded.",
+        "requestor": "Our routine screening found a possible issue that a compliance reviewer needs to look at. You don't need to do anything yet."
+      },
+      "actions": [
+        {
+          "id": "route:compliance",
+          "label": "Send to Compliance"
+        }
+      ],
+      "source": "pack:us"
+    },
+    {
+      "id": "US-FCPA-01",
+      "statement": "A recipient owned or controlled by a foreign government goes to enhanced due diligence",
+      "basis": {
+        "layer": "law",
+        "ref": "FCPA",
+        "citation": "15 U.S.C. 78dd-1 et seq.; DOJ/SEC FCPA Resource Guide (2nd ed., 2020): donations and grants to foreign public institutions are 'anything of value'.",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      },
+      "scope": {
+        "all": [
+          {
+            "fact": "country",
+            "op": "ne",
+            "value": "US"
+          },
+          {
+            "fact": "org.governmentControlled",
+            "op": "truthy"
+          }
+        ]
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "fact": "org.governmentControlled",
+          "op": "falsy"
+        }
+      },
+      "severity": "judge",
+      "messages": {
+        "pass": "Recipient is not government owned or controlled.",
+        "fail": "Recipient is owned or controlled by a government outside the US. Compliance completes enhanced due diligence: business-purpose memo, no pending tender or purchasing decision, request not originated by an official, payee account in the institution's name."
+      },
+      "actions": [
+        {
+          "id": "route:compliance",
+          "label": "Send to Compliance"
+        }
+      ],
+      "source": "pack:us"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "openPayments.minimumTransfer.2026",
+      "label": "Open Payments small-payment threshold, programme year 2026",
+      "value": 13.82,
+      "unit": "USD",
+      "effectiveFrom": "2026-01-01",
+      "effectiveTo": "2026-12-31",
+      "source": "CMS Open Payments Data Collection page (https://www.cms.gov/openpayments/program-participants/reporting-entities/data-collection). Not readable this session; a web search confirmed the page has a 'Current Reporting Thresholds – Program Year 2026' section but did not show the figure. $13.82 seen only in secondary sources.",
+      "verified": false
+    },
+    {
+      "key": "openPayments.aggregate.2026",
+      "label": "Open Payments annual aggregate threshold, programme year 2026",
+      "value": 138.13,
+      "unit": "USD",
+      "effectiveFrom": "2026-01-01",
+      "effectiveTo": "2026-12-31",
+      "source": "As above. One vendor (Qordata) states $13.07 / $130.66; CMS governs.",
+      "verified": false
+    },
+    {
+      "key": "tax.form1099.threshold.2026",
+      "label": "Form 1099-NEC/MISC reporting threshold for payments made in 2026",
+      "value": 2000,
+      "unit": "USD",
+      "effectiveFrom": "2026-01-01",
+      "source": "OBBBA § 70433 per secondary sources (CPA Practice Advisor 30 Jul 2025; NATP). irs.gov not reachable.",
+      "verified": false
+    },
+    {
+      "key": "ma.perOccurrence",
+      "label": "Massachusetts disclosure threshold per occurrence",
+      "value": 50,
+      "unit": "USD",
+      "source": "105 CMR 970.009 per research report; not re-read.",
+      "verified": false
+    },
+    {
+      "key": "oig.ao2402.expires",
+      "label": "OIG Advisory Opinion 24-02 in effect until",
+      "value": "2027-01-01",
+      "source": "Morgan Lewis, Feb 2025 (secondary). Relevant to PAP donations only (out of pilot scope).",
+      "verified": false
+    },
+    {
+      "key": "screening.lists",
+      "label": "US screening lists",
+      "value": [
+        "LEIE",
+        "SAM",
+        "OFAC-SDN",
+        "IRS-TEOS"
+      ],
+      "source": "Halden SOP 5.1; list owners HHS-OIG, GSA, Treasury OFAC, IRS.",
+      "verified": false
+    }
+  ],
+  "clauses": [
+    {
+      "id": "us-non-direction",
+      "label": "Non-direction (education)",
+      "text": "Halden Pharma has not required, instructed, directed or otherwise caused the Recipient to pay, invite or select any particular speaker, faculty member or learner, and will not do so.",
+      "requiredWhen": {
+        "fact": "family",
+        "op": "eq",
+        "value": "education"
+      },
+      "basis": {
+        "layer": "law",
+        "ref": "Open Payments indirect payments",
+        "verified": false
+      }
+    },
+    {
+      "id": "us-w9",
+      "label": "Taxpayer information",
+      "text": "The Recipient has provided a current IRS Form W-9 and will notify Halden of any change to its name, EIN or tax-exempt status before payment.",
+      "requiredWhen": {
+        "always": true
+      },
+      "basis": {
+        "layer": "law",
+        "ref": "IRS Form W-9",
+        "verified": false
+      }
+    }
+  ],
+  "disclosures": [
+    {
+      "id": "open-payments",
+      "name": "CMS Open Payments",
+      "appliesWhen": {
+        "all": [
+          {
+            "fact": "country",
+            "op": "eq",
+            "value": "US"
+          },
+          {
+            "fact": "org.type",
+            "op": "eq",
+            "value": "teaching-hospital"
+          }
+        ]
+      },
+      "categoryField": "tov.natureOfPayment",
+      "deadline": "Submission for the prior programme year in the CMS window (expected 1 February to 31 March, unverified); CMS publishes by 30 June",
+      "fields": [
+        "recipient.legalName",
+        "recipient.address",
+        "recipient.ccn",
+        "payment.date",
+        "payment.amount",
+        "payment.form",
+        "tov.natureOfPayment",
+        "product.association"
+      ]
+    }
+  ],
+  "calendar": [
+    {
+      "id": "us-op-submission",
+      "label": "Open Payments submission and attestation window closes (expected 31 March; verify each year)",
+      "rule": "annual:03-31",
+      "regime": "open-payments",
+      "basis": {
+        "layer": "law",
+        "ref": "42 CFR 403.908",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). Window dates are an expected value in the research report."
+      }
+    },
+    {
+      "id": "us-op-publication",
+      "label": "CMS publishes prior-year Open Payments data",
+      "rule": "annual:06-30",
+      "regime": "open-payments",
+      "basis": {
+        "layer": "law",
+        "ref": "CMS Open Payments",
+        "verified": false
+      }
+    },
+    {
+      "id": "us-vt",
+      "label": "Vermont manufacturer disclosure of allowable expenditures and gifts (18 V.S.A. § 4632)",
+      "rule": "annual:04-01",
+      "basis": {
+        "layer": "law",
+        "ref": "18 V.S.A. § 4632",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      }
+    },
+    {
+      "id": "us-nv-open",
+      "label": "Nevada Board of Pharmacy marketing code filing window opens (NAC 639.616)",
+      "rule": "annual:05-01",
+      "basis": {
+        "layer": "law",
+        "ref": "NAC 639.616",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      }
+    },
+    {
+      "id": "us-nv-close",
+      "label": "Nevada marketing code filing must be received by today",
+      "rule": "annual:06-01",
+      "basis": {
+        "layer": "law",
+        "ref": "NAC 639.616",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      }
+    },
+    {
+      "id": "us-ma",
+      "label": "Massachusetts disclosure of payments ≥ $50 per occurrence (105 CMR 970.009)",
+      "rule": "annual:07-01",
+      "basis": {
+        "layer": "law",
+        "ref": "105 CMR 970.009",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      }
+    },
+    {
+      "id": "us-ct",
+      "label": "Connecticut annual compliance certification to the Department of Consumer Protection (Conn. Gen. Stat. § 21a-70e)",
+      "rule": "annual:07-01",
+      "basis": {
+        "layer": "law",
+        "ref": "Conn. Gen. Stat. § 21a-70e",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      }
+    },
+    {
+      "id": "us-ao-2402",
+      "label": "OIG Advisory Opinion 24-02 ceases to be in effect (patient-assistance donations, out of pilot scope)",
+      "rule": "once:2027-01-01",
+      "basis": {
+        "layer": "law",
+        "ref": "OIG AO 24-02",
+        "verified": false,
+        "verificationNote": "Primary source not readable in the 27 Oct 2026 authoring session: WebFetch failed DNS resolution for the host and curl through the egress proxy received 403 on CONNECT (hosts tried: cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov, accme.org, pmcpa.org.uk, legifrance.gouv.fr, eur-lex.europa.eu). "
+      }
+    }
+  ],
+  "verification": {
+    "status": "unverified",
+    "notes": [
+      "No value in this pack was read in a primary text during authoring. All primary hosts (cms.gov, ecfr.gov, law.cornell.edu, govinfo.gov, federalregister.gov, irs.gov) were blocked. See content/packs/VERIFICATION.md.",
+      "Open Payments 2026 thresholds and the 1099 threshold are the research report's values and agree across the secondary sources found; a person must read the CMS and IRS pages before go-live.",
+      "Rules in this pack do not depend on the numeric thresholds: they are parameters for the payment and disclosure modules."
+    ]
+  }
+}

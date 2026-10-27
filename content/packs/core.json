@@ -1,0 +1,246 @@
+{
+  "id": "core",
+  "name": "Global gates",
+  "version": 1,
+  "effectiveFrom": "2026-11-01",
+  "jurisdiction": "GLOBAL",
+  "rules": [
+    {
+      "id": "CORE-G1",
+      "statement": "The recipient is an organization, never an individual",
+      "basis": {
+        "layer": "platform",
+        "ref": "Gate G1",
+        "citation": "Global gate G1: organizations only. EFPIA Code 12.02; ABPI Code 2024 clause 23; PhRMA Code (CME support to the provider, never to individual clinicians); AdvaMed Code Section IV."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "recipientIsOrganization"
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Recipient is an organization ({{orgType}}).",
+        "fail": "Funding can only go to an organization. A request from an individual cannot be submitted.",
+        "requestor": "We can only fund organizations, such as a society, hospital, university or charity. If you are applying for an activity your organization runs, please register the organization and apply in its name."
+      },
+      "actions": [
+        {
+          "id": "change:organization",
+          "label": "Apply as an organization"
+        }
+      ],
+      "source": "core",
+      "locked": true
+    },
+    {
+      "id": "CORE-G2",
+      "statement": "Decisions are separate from sales and marketing",
+      "basis": {
+        "layer": "platform",
+        "ref": "Gate G2",
+        "citation": "Global gate G2. OIG Compliance Program Guidance for Pharmaceutical Manufacturers (68 FR 23731, 5 May 2003); AdvaMed Code Section IV. Enforced by the permission model in packages/core/src/gates.ts, not by this rule."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "always": true
+        }
+      },
+      "severity": "inform",
+      "messages": {
+        "pass": "Sales and marketing roles cannot create, score, approve or see the status of this request. Enforced by the platform's permissions.",
+        "fail": "Sales and marketing roles cannot create, score, approve or see the status of this request. Enforced by the platform's permissions."
+      },
+      "source": "core",
+      "locked": true
+    },
+    {
+      "id": "CORE-G3",
+      "statement": "The requestor confirms that support is not conditioned on any business",
+      "basis": {
+        "layer": "platform",
+        "ref": "Gate G3",
+        "citation": "Global gate G3. OIG CPG 2003 (grants conditioned on purchases implicate the Anti-Kickback Statute); PhRMA Code; ABPI 2024 clause 23 (must not be an inducement)."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "attestationsComplete",
+        "ids": [
+          "not-conditioned"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Not-conditioned statement typed by the requestor.",
+        "fail": "The statement that this request is not linked to purchasing, prescribing, formulary or any other business has not been made.",
+        "requestor": "Please read and type the statement that this request has nothing to do with any purchase, prescription or formulary decision."
+      },
+      "actions": [
+        {
+          "id": "attest:not-conditioned",
+          "label": "Make the statement"
+        }
+      ],
+      "source": "core",
+      "locked": true
+    },
+    {
+      "id": "CORE-G4",
+      "statement": "The written agreement is executed by both parties before the activity starts",
+      "basis": {
+        "layer": "platform",
+        "ref": "Gate G4",
+        "citation": "Global gate G4. ACCME Standards for Integrity and Independence, Standard 4 (written agreement executed before the education starts); ABPI 2024 clause 23; Halden SOP 7.1."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "agreementBeforeStart"
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Agreement signed by all parties before the activity starts on {{start}}.",
+        "fail": "The agreement was not signed by every party before the activity start date. No payment can be released."
+      },
+      "actions": [
+        {
+          "id": "route:legal",
+          "label": "Send to Legal"
+        }
+      ],
+      "appliesAt": [
+        "pre-payment"
+      ],
+      "source": "core",
+      "locked": true
+    },
+    {
+      "id": "CORE-G5",
+      "statement": "Patient-assistance donations are not earmarked to a product",
+      "basis": {
+        "layer": "platform",
+        "ref": "Gate G5",
+        "citation": "Global gate G5. OIG Supplemental Special Advisory Bulletin on Independent Charity Patient Assistance Programs, 79 FR 31120 (30 May 2014). Out of pilot scope: applies only to subtype pap-donation, which is not in the Halden catalogue v1."
+      },
+      "scope": {
+        "fact": "subtype",
+        "op": "eq",
+        "value": "pap-donation"
+      },
+      "check": {
+        "kind": "predicate",
+        "condition": {
+          "all": [
+            {
+              "fact": "field.pap.productEarmarked",
+              "op": "falsy"
+            },
+            {
+              "fact": "field.pap.dataReturnedToDonor",
+              "op": "falsy"
+            }
+          ]
+        }
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Donation is not earmarked to a product and no patient-level data flows back.",
+        "fail": "A patient-assistance donation may not be earmarked to a product, and no patient-level or utilisation data may come back from the charity."
+      },
+      "source": "core",
+      "locked": true
+    },
+    {
+      "id": "CORE-G6",
+      "statement": "The transfer of value is recorded with its disclosure attributes before payment",
+      "basis": {
+        "layer": "platform",
+        "ref": "Gate G6",
+        "citation": "Global gate G6. 42 CFR Part 403 Subpart I (Open Payments); EFPIA Code disclosure; ABPI 2024 clause 28; Code de la santé publique L.1453-1 (Transparence Santé); Halden SOP 9.2."
+      },
+      "scope": {
+        "always": true
+      },
+      "check": {
+        "kind": "fieldsPresent",
+        "fields": [
+          "tov.natureOfPayment",
+          "tov.disclosureCategory"
+        ]
+      },
+      "severity": "block",
+      "messages": {
+        "pass": "Transfer of value recorded: nature of payment and disclosure category set.",
+        "fail": "Before payment, Finance must record the nature of payment and the disclosure category. Missing: {{missing}}."
+      },
+      "actions": [
+        {
+          "id": "route:finance",
+          "label": "Send to Finance"
+        }
+      ],
+      "appliesAt": [
+        "pre-payment"
+      ],
+      "source": "core",
+      "locked": true
+    }
+  ],
+  "parameters": [],
+  "clauses": [
+    {
+      "id": "core-not-conditioned",
+      "label": "No link to business",
+      "text": "This support is not offered or given in return for, or to induce, any purchase, prescription, recommendation, formulary listing or other business with Halden Pharma, and the Recipient will not represent it as such.",
+      "requiredWhen": {
+        "always": true
+      },
+      "basis": {
+        "layer": "platform",
+        "ref": "Gate G3"
+      }
+    },
+    {
+      "id": "core-organization-payee",
+      "label": "Payment to the organization only",
+      "text": "Halden Pharma will pay the support only to the Recipient's verified bank account held in the Recipient's legal name. No part of it will be paid to an individual on Halden's instruction.",
+      "requiredWhen": {
+        "always": true
+      },
+      "basis": {
+        "layer": "platform",
+        "ref": "Gate G1"
+      }
+    },
+    {
+      "id": "core-unused-funds",
+      "label": "Reconciliation and return of unused funds",
+      "text": "The Recipient will provide a financial reconciliation within 90 days after the activity ends and will return any unused funds within 60 days of the reconciliation, unless Halden agrees in writing to a different use within the approved purpose.",
+      "requiredWhen": {
+        "always": true
+      },
+      "basis": {
+        "layer": "sop",
+        "ref": "SOP 8.1"
+      }
+    }
+  ],
+  "disclosures": [],
+  "calendar": [],
+  "verification": {
+    "status": "partial",
+    "notes": [
+      "Gate wording follows the FundingEnvoy concept (six gates). The legal bases cited are those in docs/research/requirements-report.md; none was re-read against the primary text in this session because the egress proxy blocked the hosts.",
+      "G2 is enforced in code (permission model). CORE-G2 is an inform rule that documents it on every request.",
+      "G5 applies only to subtype pap-donation, which is out of pilot scope; the rule is present so the gate is visible and testable later."
+    ]
+  }
+}
