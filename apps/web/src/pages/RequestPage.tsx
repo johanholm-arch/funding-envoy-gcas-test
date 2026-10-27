@@ -5,7 +5,7 @@ import { useMe, useToast } from "../lib/app";
 import { plural } from "../lib/format";
 import { useDocumentTitle, useMediaQuery, useResource } from "../lib/hooks";
 import { isEditable, isStatementCheck, shortDocLabel, docLabel } from "../lib/request";
-import type { ActionHint, CheckResult, Preview, RequestPayload } from "../lib/types";
+import type { ActionHint, CheckResult, RequestPayload } from "../lib/types";
 import { RequestContext, useRequest, type RequestCtx } from "../components/requestCtx";
 import { Conversation } from "../components/Conversation";
 import { RequestDocument } from "../components/RequestDocument";
@@ -23,10 +23,10 @@ export function RequestPage() {
   const req = useResource<RequestPayload>(`/api/requests/${id}`);
   const v = req.data;
   const editable = v ? isEditable(v, requestor) : false;
-  const prev = useResource<Preview>(editable ? `/api/requests/${id}/preview` : undefined);
   const [busy, setBusy] = useState<string>();
   const [evidence, setEvidence] = useState<EvidenceTarget>();
   const [editKey, setEditKey] = useState<string>();
+  const [addingLine, setAddingLine] = useState(false);
   const formView = params.get("view") === "form";
   const phone = useMediaQuery("(max-width: 899px)");
   const [tab, setTab] = useState<"conversation" | "document">(formView ? "document" : "conversation");
@@ -37,12 +37,7 @@ export function RequestPage() {
     if (err) toast(`The request was started, but the upload failed: ${err}`, "error");
   }, [location.state, toast]);
 
-  const refetchAll = useCallback(async () => {
-    await Promise.all([req.refetch(), editable ? prev.refetch() : Promise.resolve()]);
-  }, [req, prev, editable]);
-
-  // Keep the preview in step once the request becomes editable.
-  useEffect(() => { if (editable && !prev.data && !prev.loading) void prev.refetch(); }, [editable, prev]);
+  const refetchAll = req.refetch;
 
   const act = useCallback<RequestCtx["act"]>(async (key, fn, okToast) => {
     setBusy(key);
@@ -114,6 +109,11 @@ export function RequestPage() {
       void act("amount", () => api.post(`/api/requests/${id}/fields`, { changes: [{ key: "amount.requested", value: total, reason: "Match itemized budget" }] }), "Amount changed to the budget total");
       return;
     }
+    if (verb === "reuse" && arg) {
+      void act(`reuse:${arg}`, () => api.post(`/api/requests/${id}/documents/reuse`, { type: arg }), "Reused from your earlier request");
+      return;
+    }
+    if (h.id === "add:budget-line") { setAddingLine(true); return goTo("budget"); }
     if (verb === "remove" && c) {
       const line = c.evidence.map((e) => /^Line (\d+)/.exec(e.label)?.[1]).find(Boolean);
       if (line) void act(`remove-${line}`, () => api.post(`/api/requests/${id}/budget`, { removeLine: Number(line) }), `Line ${line} removed`);
@@ -133,8 +133,8 @@ export function RequestPage() {
   if (!v) return <div className="page" aria-busy="true"><p className="muted small">Opening the request…</p></div>;
 
   const ctx: RequestCtx = {
-    id, view: v, preview: prev.data, editable, requestor, busy, act, upload, pick, openEvidence: setEvidence, goTo, runHint,
-    editKey, setEditKey, docTypeOf: (d) => docTypes.get(d),
+    id, view: v, editable, requestor, busy, act, upload, pick, openEvidence: setEvidence, goTo, runHint,
+    refetch: req.refetch, addingLine, setAddingLine, editKey, setEditKey, docTypeOf: (d) => docTypes.get(d),
   };
   const s = v.summary;
   const toFix = s.mustFix.length;
@@ -166,12 +166,13 @@ export function RequestPage() {
 }
 
 function Footer({ toFix, unacked, onSave }: { toFix: number; unacked: number; onSave: () => void }) {
-  const { view: v, preview, id, goTo } = useRequest();
+  const { view: v, id, goTo } = useRequest();
   const navigate = useNavigate();
   const info = v.request.infoRequests?.find((i) => i.status === "open");
   const next = upNext(v);
-  const can = preview?.canSubmit ?? false;
-  const reason = can ? "" : preview ? preview.blockers.length ? `${plural(preview.blockers.length, "thing")} before you can submit` : "" : "Checking…";
+  // readiness comes with the request and has no side effects; the Review screen still calls /preview.
+  const can = v.readiness?.canSubmit ?? false;
+  const reason = can ? "" : v.readiness?.blockers.length ? `${plural(v.readiness.blockers.length, "thing")} to do before you can submit` : "";
   if (info && v.request.status === "info-requested") {
     return (
       <footer className="footbar">

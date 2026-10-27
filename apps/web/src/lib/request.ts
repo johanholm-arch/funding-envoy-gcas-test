@@ -66,7 +66,7 @@ export function docLabel(type: string, v: Pick<RequestView, "documentRequirement
 export function supportedHint(h: ActionHint, requestor: boolean): boolean {
   const [verb] = h.id.split(":");
   if (!requestor) return false;
-  return ["attest", "answer", "upload", "submit-with-flag", "keep-and-explain", "remove", "change"].includes(verb ?? "") && h.id !== "change:subtype-x";
+  return ["attest", "answer", "upload", "reuse", "submit-with-flag", "keep-and-explain", "remove", "change", "add"].includes(verb ?? "");
 }
 
 export function isStatementCheck(c: CheckResult): boolean {

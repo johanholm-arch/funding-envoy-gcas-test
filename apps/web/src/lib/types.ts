@@ -85,7 +85,7 @@ export interface BudgetLine { line: number; description: string; category: strin
 
 export interface InfoRequest {
   id: string; by: Actor; at: string; status: "open" | "answered" | "closed"; dueAt?: string; whatChanged?: string;
-  questions: { id: string; text: string; answer?: string; answeredAt?: string }[];
+  questions: { id: string; text: string; answer?: string; answeredAt?: string; documentIds?: string[] }[];
 }
 
 export type RequestStatus =
@@ -151,7 +151,15 @@ export interface RequestView {
   documentRequirements: DocumentRequirement[];
 }
 
-export interface RequestPayload extends RequestView { messages: Message[] }
+export interface Readiness { canSubmit: boolean; blockers: { ruleId: string; message: string }[] }
+
+export interface RequestPayload extends RequestView {
+  messages: Message[];
+  /** The assistant's current question, while a draft has a confirmed type. */
+  nextAsk?: Ask;
+  /** Whether the request can be submitted now; computed without side effects. */
+  readiness?: Readiness;
+}
 
 export interface Preview extends RequestView {
   canSubmit: boolean;
@@ -193,7 +201,12 @@ export interface Brief extends RequestView {
   decision?: RequestState["decision"];
   reviewSummary?: { generatedAt: string; rulebookVersion: number; markdown: string };
   groups: { id: string; label: string }[];
+  requestor?: { id: string; name: string; title?: string };
+  submittedBy?: string;
+  submittedAt?: string;
 }
+
+export interface CommitteeMember { id: string; name: string; title?: string | null; roles: Role[] }
 
 export interface AiTrace {
   provider: string; model: string; promptVersion: string; inputHashes: string[]; outputHash: string;
@@ -227,6 +240,10 @@ export interface AgreementView {
   certificationRequired: boolean;
   signer?: { name: string; title: string; email: string };
   stage: string;
+  /** The legal name of the side the current person signs for, if any. */
+  mySide?: string;
+  canSign?: boolean;
+  sides?: { organization: string; company: string };
 }
 
 export interface PaymentRow {

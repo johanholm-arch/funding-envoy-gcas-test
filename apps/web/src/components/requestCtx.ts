@@ -1,11 +1,10 @@
 import { createContext, useContext } from "react";
-import type { ActionHint, CheckResult, Preview, RequestPayload } from "../lib/types";
+import type { ActionHint, CheckResult, RequestPayload } from "../lib/types";
 import type { EvidenceTarget } from "./EvidencePane";
 
 export interface RequestCtx {
   id: string;
   view: RequestPayload;
-  preview?: Preview;
   editable: boolean;
   requestor: boolean;
   busy?: string;
@@ -17,6 +16,11 @@ export interface RequestCtx {
   openEvidence: (t: EvidenceTarget) => void;
   goTo: (anchor: string, edit?: string) => void;
   runHint: (h: ActionHint, c?: CheckResult) => void;
+  /** Re-read the request from the ledger. */
+  refetch: () => Promise<RequestPayload | undefined>;
+  /** The inline "add a budget line" form. */
+  addingLine: boolean;
+  setAddingLine: (b: boolean) => void;
   editKey?: string;
   setEditKey: (k: string | undefined) => void;
   docTypeOf: (documentId: string) => string | undefined;
