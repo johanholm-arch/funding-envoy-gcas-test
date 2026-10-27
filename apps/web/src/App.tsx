@@ -18,6 +18,7 @@ import { Agreements } from "./pages/Agreements";
 import { AgreementPage } from "./pages/AgreementPage";
 import { Disclosure } from "./pages/Disclosure";
 import { Studio } from "./pages/Studio";
+import { StudioSetup } from "./pages/Setup";
 import { Ask } from "./pages/Ask";
 import { Operations } from "./pages/Operations";
 import { People, Identity } from "./pages/Access";
@@ -94,7 +95,8 @@ export function App() {
               <Route path="/agreements/:id" element={<Agreements />} />
               <Route path="/disclosure" element={<Disclosure />} />
               <Route path="/ask" element={<Ask />} />
-              <Route path="/studio" element={<Studio />} />
+              <Route path="/studio" element={<StudioSetup />} />
+              <Route path="/studio/advanced" element={<Studio />} />
               <Route path="/studio/:kind" element={<Studio />} />
               <Route path="/ops" element={<Operations />} />
               <Route path="/people" element={<People />} />

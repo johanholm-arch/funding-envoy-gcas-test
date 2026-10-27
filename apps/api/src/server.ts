@@ -28,6 +28,14 @@ export async function buildServer(opts: { logger?: boolean } = {}): Promise<Fast
   const app = Fastify({ logger: opts.logger ?? false, bodyLimit: 2 * 1024 * 1024, trustProxy: process.env.FE_TRUST_PROXY === "1" });
   await app.register(cookie, { secret: process.env.FE_COOKIE_SECRET ?? "fundingenvoy-demo-secret-change-me" });
   await app.register(multipart, { limits: { fileSize: 25 * 1024 * 1024, files: 10 } });
+  // Be forgiving about bodies: an empty JSON body is no body, and a request with a body type we don't use (some
+  // browsers label an empty body text/plain) is read as nothing rather than refused with "unsupported media type".
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (_req, body, done) => {
+    const text = String(body ?? "").trim();
+    if (!text) return done(null, undefined);
+    try { done(null, JSON.parse(text)); } catch { const e = new Error("The request body isn't valid JSON.") as Error & { statusCode: number }; e.statusCode = 400; done(e, undefined); }
+  });
+  app.addContentTypeParser("*", (_req, payload, done) => { payload.resume(); payload.on("end", () => done(null, undefined)); payload.on("error", (e) => done(e, undefined)); });
   app.addHook("onRequest", sessionHook);
 
   app.setErrorHandler((err, _req, reply) => {

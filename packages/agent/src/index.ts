@@ -4,6 +4,7 @@ import { DemoProvider } from "./demo.ts";
 export * from "./provider.ts";
 export * from "./policy.ts";
 export * from "./documents.ts";
+export * from "./setup.ts";
 export { DemoProvider, extractLabelled, alsoCovers } from "./demo.ts";
 
 /** Claude when a credential is configured and FE_ASSISTANT is not "demo"; otherwise the deterministic demo provider. */

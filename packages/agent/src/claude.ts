@@ -1,6 +1,7 @@
 // Claude provider. Used when ANTHROPIC_API_KEY (or another SDK credential source) is configured.
 // Every output is checked in code before use: extracted values must quote text that exists on the cited
 // page, classifications must name a known type, and policy answers may cite only the clauses supplied.
+import { verifyProposal, type SetupInput, type SetupProposal } from "./setup.ts";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
@@ -128,6 +129,38 @@ export class ClaudeProvider implements AssistantProvider {
       question: data.question ? { text: data.question, options: input.catalogue.subtypes.map((s) => ({ id: s.id, label: s.name, subtype: s.id })) } : undefined,
       trace: { ...trace, scores: { confidence: data.confidence } },
     };
+  }
+
+  async proposeSetup(input: SetupInput): Promise<SetupProposal & { trace: AiTrace }> {
+    const src = z.object({ ref: z.string(), quote: z.string() });
+    const schema = z.object({
+      words: z.object({
+        request: src.extend({ value: z.string() }).nullable(), committee: src.extend({ value: z.string() }).nullable(),
+        reviewingTeam: src.extend({ value: z.string() }).nullable(), reconciliation: src.extend({ value: z.string() }).nullable(),
+      }),
+      parameters: z.object({
+        leadTimeDays: src.extend({ value: z.number() }).nullable(), revenueCap: src.extend({ value: z.number() }).nullable(),
+        singleApproverMaxUSD: src.extend({ value: z.number() }).nullable(),
+      }),
+      documents: z.array(src.extend({ type: z.enum(input.documentTypes.map((d) => d.type) as [string, ...string[]]) })),
+      stageTimes: z.array(src.extend({ stage: z.enum(input.stages.map((s) => s.id) as [string, ...string[]]), days: z.number(), unit: z.enum(["business", "calendar"]) })),
+    });
+    const prompt = [
+      "Read this funder's grants policy and SOP. Propose its setup in the given shape. Every item must quote, word for word, one sentence from the documents, and give the clause number as ref (\"Policy 4.1\" or \"SOP 6.2\"). Leave an item null or out when the documents don't say it; never guess.",
+      "words: what the documents call a request (request), the body that decides funding (committee), the team that reviews requests (reviewingTeam), and the report on how funds were spent (reconciliation).",
+      "parameters: minimum days between submission and activity start (leadTimeDays); the cap on funding as a share of the organization's revenue, as a fraction such as 0.25 (revenueCap); the largest amount in US dollars one approver may decide alone (singleApproverMaxUSD).",
+      `documents: which of these document types the documents require requests to include: ${input.documentTypes.map((d) => `${d.type} (${d.label})`).join("; ")}.`,
+      `stageTimes: the time allowed at each of these stages, where the documents state how long the funder's own team has for that stage. Leave out deadlines the requesting organization must meet (reports, returning funds) and times that belong to a different stage: ${input.stages.map((s) => `${s.id} (${s.name}; SOP ${s.sopRefs.join(", ")})`).join("; ")}.`,
+      input.policy ? `\n<policy title="${input.policy.title}">\n${input.policy.markdown}\n</policy>` : "",
+      input.sop ? `\n<sop title="${input.sop.title}">\n${input.sop.markdown}\n</sop>` : "",
+    ].join("\n");
+    const { data, trace } = await this.call(schema, prompt, "medium", 8000);
+    const clean = <T,>(o: Record<string, T | null>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== null)) as Record<string, T>;
+    const proposal: SetupProposal = {
+      words: clean(data.words), parameters: clean(data.parameters),
+      documents: data.documents, stageTimes: data.stageTimes,
+    };
+    return { ...verifyProposal(proposal, input), trace };
   }
 
   async planQuery(question: string, metrics: { id: string; label: string; definition: string; synonyms: string[] }[], dimensions: { id: string; label: string }[], today: string): Promise<QueryPlanOut | undefined> {

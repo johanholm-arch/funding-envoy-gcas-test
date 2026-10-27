@@ -1,5 +1,6 @@
 // Deterministic demo provider. It reads "Label: value" lines and keywords; it does not call any model.
 // The UI labels its output "demo assistant" so nobody mistakes it for model output.
+import { proposeSetupFromText, type SetupInput, type SetupProposal } from "./setup.ts";
 import type { AiTrace, Catalogue, FieldDef, Provenance } from "@fe/core";
 import { sha256, toNumber } from "@fe/core";
 import type { AssistantProvider, DocClassification, ExtractInput, ExtractOutput, FieldProposal, MessageExtraction, PolicyAnswer, RequestClassification } from "./provider.ts";
@@ -152,6 +153,12 @@ export function alsoCovers(pages: string[], mainType: string, allowed: string[])
 export class DemoProvider implements AssistantProvider {
   readonly name = "demo" as const;
   readonly model = "fe-demo-rules-1";
+
+  async proposeSetup(input: SetupInput): Promise<SetupProposal & { trace: AiTrace }> {
+    const t0 = Date.now();
+    const out = proposeSetupFromText(input);
+    return { ...out, trace: trace("setup", [input.policy?.markdown ?? "", input.sop?.markdown ?? ""], out, t0) };
+  }
 
   async extractFields(input: ExtractInput): Promise<ExtractOutput> {
     const t0 = Date.now();

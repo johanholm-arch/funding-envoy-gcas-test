@@ -11,7 +11,7 @@ type Kind = "brand" | "words" | "catalogue" | "rulebook" | "workflow" | "autonom
 interface OverviewRow { kind: Kind; published?: { version: number; signedName: string; signedAt: string }; draft?: { version: number; createdAt: string; note?: string }; versions: number }
 interface VersionBody<T = unknown> { version: number; body: T; status?: string; signedName?: string; signedAt?: string }
 interface Issue { severity: "error" | "warning"; where?: string; message: string }
-interface TestReport { results: { id: string; title: string; ok: boolean; mismatches: string[] }[]; passed: number; total: number; rulebookVersion?: number; catalogueVersion?: number }
+interface TestReport { results: { id: string; title: string; ok: boolean; mismatches: { ruleId: string; expected: string; actual: string }[] }[]; passed: number; total: number; rulebookVersion?: number; catalogueVersion?: number }
 interface AutonomyStage { id: string; name: string; does: string; level: number; label: string; max: number; locked: string[]; sopRefs: string[]; preview: { level: number; label: string; total: number; applied: number; heldForPerson: number; appliedPct: number }[] }
 
 const KINDS: { kind: Kind; label: string; what: string }[] = [
@@ -28,7 +28,8 @@ const KINDS: { kind: Kind; label: string; what: string }[] = [
 
 export function Studio() {
   useDocumentTitle("Studio");
-  const { kind } = useParams();
+  const { kind: param } = useParams();
+  const kind = param === "advanced" ? undefined : param;
   const navigate = useNavigate();
   const phone = useMediaQuery("(max-width: 899px)");
   const ov = useResource<OverviewRow[]>("/api/studio");
@@ -41,8 +42,9 @@ export function Studio() {
       <nav className="queue" aria-label="Studio sections">
         <div className="queue-scroll">
           <section className="queue-group">
-            <h2>Studio</h2>
-            <p className="queue-empty" style={{ paddingTop: 0 }}>Each section is a signed version. Requests keep the version they started on.</p>
+            <p className="queue-empty" style={{ paddingTop: 0, paddingBottom: 8 }}><Link to="/studio">← Guided setup</Link></p>
+            <h2>Studio · Advanced</h2>
+            <p className="queue-empty" style={{ paddingTop: 0 }}>Every section in detail. Each is a signed version; requests keep the version they started on. Drafts saved here are also published from the guided setup.</p>
             {ov.error ? <p className="queue-empty error-text">{ov.error.message}</p> : null}
             {KINDS.map((k) => {
               const r = ov.data?.find((x) => x.kind === k.kind);
@@ -60,7 +62,7 @@ export function Studio() {
       <div className="brief">
         {current ? (
           <div className="brief-inner">
-            {phone ? <p><Link to="/studio">All sections</Link></p> : null}
+            {phone ? <p><Link to="/studio/advanced">All sections</Link></p> : null}
             <KindPanel key={current.kind} meta={current} row={row} onChanged={() => void ov.refetch()} />
           </div>
         ) : null}
@@ -138,7 +140,7 @@ function KindPanel({ meta, row, onChanged }: { meta: (typeof KINDS)[number]; row
           <div className="row">
             <button type="button" className="btn small quiet" disabled={Boolean(busy)} onClick={() => void run("validate", () => api.get<{ issues: Issue[]; tests?: TestReport }>(`/api/studio/${meta.kind}/${row.draft!.version}/validate`)).then((r) => r && setIssues(r))}>Check this version</button>
             {row.published ? <button type="button" className="btn small quiet" disabled={Boolean(busy)} onClick={() => void run("diff", () => api.get<{ summary: string }>(`/api/studio/${meta.kind}/diff/${row.published!.version}/${row.draft!.version}`)).then((r) => r && setDiff(r.summary))}>Compare with v{row.published.version}</button> : null}
-            {canEdit ? <button type="button" className="btn small quiet danger" disabled={Boolean(busy)} onClick={() => void run("discard", () => fetchDelete(`/api/studio/${meta.kind}/${row.draft!.version}`), "Draft discarded").then(() => onChanged())}>Discard draft</button> : null}
+            {canEdit ? <button type="button" className="btn small quiet danger" disabled={Boolean(busy)} onClick={() => void run("discard", () => api.post(`/api/studio/${meta.kind}/${row.draft!.version}/discard`), "Draft discarded").then(() => onChanged())}>Discard draft</button> : null}
           </div>
           {diff ? <p className="small">Compared with v{row.published?.version}: {diff}</p> : null}
           {issues ? (
@@ -178,10 +180,6 @@ function KindPanel({ meta, row, onChanged }: { meta: (typeof KINDS)[number]; row
 async function fetchPut(url: string, body: unknown) {
   const r = await fetch(url, { method: "PUT", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { error?: string }).error ?? "Saving the draft failed.");
-}
-async function fetchDelete(url: string) {
-  const r = await fetch(url, { method: "DELETE", credentials: "same-origin" });
-  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { error?: string }).error ?? "Discarding failed.");
 }
 
 interface LogoRef { sha: string; mime: string; name?: string }
@@ -442,7 +440,7 @@ function Tests() {
       <div className="section-head"><h2 id="h-tests" style={{ fontSize: 20 }}>Test set</h2><button type="button" className="btn small quiet" onClick={() => void run()} disabled={busy}>{busy ? "Running…" : "Run again"}</button></div>
       {err ? <p className="error-text">{err}</p> : null}
       {rep ? <p className={failing.length ? "error-text" : "small"} style={{ color: failing.length ? undefined : "var(--accent)" }}>{rep.passed} of {rep.total} past requests get the expected outcome with the published rulebook v{rep.rulebookVersion} and catalogue v{rep.catalogueVersion}.</p> : busy ? <p className="muted small">Running {""}the test set…</p> : null}
-      {failing.map((r) => <p key={r.id} className="small"><span className="mono">{r.id}</span> {r.title}: {r.mismatches.join("; ")}</p>)}
+      {failing.map((r) => <p key={r.id} className="small"><span className="mono">{r.id}</span> {r.title}: {r.mismatches.map((m) => `${m.ruleId} expected ${m.expected}, got ${m.actual}`).join("; ")}</p>)}
       {rep ? <details><summary className="small" style={{ cursor: "pointer", color: "var(--accent)" }}>Every case</summary>{rep.results.map((r) => <p key={r.id} className="small"><span className={`chip ${r.ok ? "ok" : "block"}`}>{r.ok ? "Agrees" : "Differs"}</span> <span className="mono">{r.id}</span> {r.title}</p>)}</details> : null}
     </section>
   );

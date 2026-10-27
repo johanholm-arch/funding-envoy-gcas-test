@@ -5,7 +5,7 @@ import { toNumber } from "@fe/core";
 export interface ReadDocument {
   pages: string[];
   budget?: BudgetLine[];
-  kind: "text" | "pdf" | "csv" | "xlsx" | "unknown";
+  kind: "text" | "pdf" | "docx" | "csv" | "xlsx" | "unknown";
   warnings: string[];
 }
 
@@ -133,6 +133,11 @@ export async function readDocument(buf: Buffer, name: string, mime: string, ids:
   const lower = name.toLowerCase();
   try {
     if (mime === "application/pdf" || lower.endsWith(".pdf")) return { pages: await readPdf(buf), kind: "pdf", warnings: [] };
+    if (lower.endsWith(".docx") || mime.includes("wordprocessingml")) {
+      const { default: mammoth } = await import("mammoth");
+      const { value } = await mammoth.extractRawText({ buffer: buf });
+      return { pages: [value], kind: "docx", warnings: value.trim() ? [] : ["No text was found in the Word document."] };
+    }
     if (lower.endsWith(".xlsx") || mime.includes("spreadsheetml")) {
       const r = await readXlsx(buf, ids.documentId, name);
       return { ...r, kind: "xlsx", warnings: r.budget.length ? [] : ["No budget table with Description and Amount columns was found."] };

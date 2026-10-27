@@ -3,6 +3,7 @@ import { z } from "zod";
 import { HttpError, requireRole, requireTenantUser } from "../auth.ts";
 import type { ConfigKind } from "../config.ts";
 import { ask, library } from "../services/ask.ts";
+import { checkAll, discardAll, propose, publishAll, saveRequirements, saveWords, saveWorkflow, setupView, uploadDocument } from "../services/setup.ts";
 import { autonomyView, createDraft, diff, discardDraft, draftFromSop, getVersion, LOGO_MAX_BYTES, logoFor, overview, publish, runTests, storeLogo, updateDraft, validate, versions } from "../services/studio.ts";
 
 const kind = z.enum(["catalogue", "rulebook", "workflow", "autonomy", "brand", "words", "policy", "sop", "testset"]);
@@ -39,6 +40,45 @@ export async function studioRoutes(app: FastifyInstance) {
     reply.header("cache-control", "private, max-age=86400");
     return reply.type(logo.mime).send(logo.buf);
   });
+  // The guided setup: documents first, then words, requirements and workflow, then one signature for everything.
+  app.get("/api/studio/setup", async (req) => setupView(requireRole(req, [...studioRoles])));
+  app.post("/api/studio/setup/documents/:doc", async (req) => {
+    const u = requireRole(req, [...editRoles]);
+    const { doc } = z.object({ doc: z.enum(["policy", "sop"]) }).parse(req.params);
+    if (req.isMultipart()) {
+      const part = await req.file({ limits: { fileSize: 15 * 1024 * 1024 } });
+      if (!part) throw new HttpError(400, "Choose a file to upload.");
+      const buf = await part.toBuffer();
+      const title = (part.fields.title as { value?: string } | undefined)?.value;
+      return uploadDocument(u, doc, { title, file: { buf, name: part.filename, mime: part.mimetype } });
+    }
+    const b = z.object({ title: z.string().max(200).optional(), text: z.string().min(1).max(400_000) }).parse(req.body);
+    return uploadDocument(u, doc, b);
+  });
+  app.post("/api/studio/setup/propose", async (req) => propose(requireRole(req, [...editRoles])));
+  app.post("/api/studio/setup/words", async (req) => {
+    const b = z.object({ words: z.record(z.string(), z.string().max(60)) }).parse(req.body);
+    return saveWords(requireRole(req, [...editRoles]), b.words);
+  });
+  app.post("/api/studio/setup/requirements", async (req) => {
+    const b = z.object({
+      limits: z.record(z.string(), z.number().nullable()).optional(),
+      documents: z.record(z.string(), z.enum(["always", "optional"])).optional(),
+      checks: z.record(z.string(), z.boolean()).optional(),
+    }).parse(req.body);
+    return saveRequirements(requireRole(req, [...editRoles]), b);
+  });
+  app.post("/api/studio/setup/workflow", async (req) => {
+    const b = z.object({ stages: z.array(z.object({ id: z.string(), slaBusinessDays: z.number().int().min(0).max(365).nullable().optional(), ownerRoles: z.array(z.string()).optional() })) }).parse(req.body);
+    return saveWorkflow(requireRole(req, [...editRoles]), b.stages);
+  });
+  app.get("/api/studio/setup/check", async (req) => checkAll(requireRole(req, [...studioRoles])));
+  app.post("/api/studio/setup/publish", async (req) => {
+    const b = z.object({ typedName: z.string().min(2), acceptDifferences: z.string().max(2000).optional() }).parse(req.body);
+    return publishAll(requireRole(req, ["process-owner"]), b);
+  });
+  app.post("/api/studio/setup/discard", async (req) => discardAll(requireRole(req, [...editRoles])));
+
   app.get("/api/studio/autonomy", async (req) => autonomyView(requireRole(req, [...studioRoles])));
   app.get("/api/studio/tests", async (req) => {
     const q = z.object({ rulebook: z.coerce.number().int().optional(), catalogue: z.coerce.number().int().optional() }).parse(req.query);
@@ -66,10 +106,13 @@ export async function studioRoutes(app: FastifyInstance) {
     const b = z.object({ body: z.unknown() }).parse(req.body);
     return updateDraft(requireRole(req, [...editRoles]), p.kind as ConfigKind, p.version, b.body);
   });
-  app.delete("/api/studio/:kind/:version", async (req) => {
-    const p = z.object({ kind, version: z.coerce.number().int() }).parse(req.params);
-    return discardDraft(requireRole(req, [...editRoles]), p.kind as ConfigKind, p.version);
-  });
+  // Discarding is a POST so it works the same from every browser; DELETE is kept for older clients.
+  for (const [method, path] of [["post", "/api/studio/:kind/:version/discard"], ["delete", "/api/studio/:kind/:version"]] as const) {
+    app[method](path, async (req) => {
+      const p = z.object({ kind, version: z.coerce.number().int() }).parse(req.params);
+      return discardDraft(requireRole(req, [...editRoles]), p.kind as ConfigKind, p.version);
+    });
+  }
   app.get("/api/studio/:kind/:version/validate", async (req) => {
     const p = z.object({ kind, version: z.coerce.number().int() }).parse(req.params);
     return validate(requireRole(req, [...studioRoles]), p.kind as ConfigKind, p.version);

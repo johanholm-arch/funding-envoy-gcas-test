@@ -46,6 +46,14 @@ The finished work is on `main`. `build/phase-0-1` is the branch it was built on 
 | `2bf2483` | Scale: 500,000 requests, 300 concurrent people |
 | `e0f2d8f` | Web app and the API changes it asked for |
 
+## Studio, guided setup (27 October 2026)
+
+Studio now opens on a guided setup in six steps: upload the policy and SOP (PDF, Word or text), let FundingEnvoy read
+them, then confirm the words, what requestors provide (limits, documents, checks), the time allowed at each stage, the
+look and the assistant. Every suggestion shows the clause and sentence it came from. Every step saves a draft; one
+signature publishes them all, after the same checks and test set as before. The section-by-section view is kept under
+"Advanced". Discarding a draft no longer fails with "unsupported media type" in some browsers.
+
 ## Found and fixed along the way
 
 - **Money across currencies.** Ask added dollars, pounds and euros together. Money is now reported per currency.
@@ -71,8 +79,8 @@ The finished work is on `main`. `build/phase-0-1` is the branch it was built on 
 
 - **Salesforce and other platform integrations (requirement 7).** Deferred by decision.
 - **Real DocuSign and SAP connectors.** These replace the simulated ones without changing the workflow.
-- **Field-by-field editors in Studio.** The catalogue, rulebook and workflow can be drafted, checked, compared and
-  published, but not yet edited field by field.
+- **Field-by-field editors in Studio.** The guided setup changes words, limits, required documents, checks and stage
+  times. Adding request types, fields or stages, and changing stage owners, still needs the Advanced view's drafts.
 - **Accessibility audit.** It was checked by construction and keyboard, not yet with an automated audit tool.
 - **Production hosting.** This means separate database and API hosts, a read replica for analytics, partitioned
   events, and a nightly full chain verification with external timestamping. See `docs/PERFORMANCE.md`.

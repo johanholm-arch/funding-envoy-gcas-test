@@ -1,5 +1,6 @@
 import type { AiTrace, Catalogue, FieldDef, Provenance } from "@fe/core";
 import type { Clause } from "./policy.ts";
+import type { SetupInput, SetupProposal } from "./setup.ts";
 
 export interface SourceDocument {
   id: string;
@@ -65,6 +66,8 @@ export interface AssistantProvider {
   classifyRequest(input: { text: string; proposals: FieldProposal[]; catalogue: Catalogue; country: string }): Promise<RequestClassification>;
   answerPolicy(question: string, clauses: Clause[]): Promise<PolicyAnswer>;
   /** Optional: map an analytics question onto the metrics library. Returns undefined when the library cannot answer it. */
+  /** Read a funder's policy and SOP and propose its words, limits, required documents and stage times, each with its source. */
+  proposeSetup(input: SetupInput): Promise<SetupProposal & { trace: AiTrace }>;
   planQuery?(question: string, metrics: { id: string; label: string; definition: string; synonyms: string[] }[], dimensions: { id: string; label: string }[], today: string): Promise<QueryPlanOut | undefined>;
 }
 

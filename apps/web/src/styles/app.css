@@ -466,3 +466,47 @@ mark { background: var(--mark); color: inherit; padding: 1px 0; box-shadow: 0 0 
   .regime { grid-template-columns: 1fr; }
   .doc-paper { padding: 18px 16px; }
 }
+
+/* Studio guided setup */
+.setup { width: 100%; max-width: 1180px; margin: 0 auto; padding: 40px 48px 120px; display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px; align-items: start; }
+.setup-rail { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 14px; }
+.setup-rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.setup-step { width: 100%; display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px; padding: 10px 10px 10px 12px; background: none; border: 0; border-left: 2px solid var(--rule); color: var(--ink-2); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.setup-step:hover { background: var(--sunk); }
+.setup-step[aria-current="step"] { border-left-color: var(--ink); color: var(--ink); font-weight: 500; background: var(--sunk); }
+.setup-step .n { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 12px; box-shadow: inset 0 0 0 1px var(--rule); }
+.setup-step[aria-current="step"] .n { background: var(--ink); color: var(--ground); box-shadow: none; }
+.setup-main { display: flex; flex-direction: column; gap: 24px; min-width: 0; max-width: 760px; }
+.setup-note { background: var(--warn-bg); color: var(--ink); padding: 12px 14px; font-size: 14px; }
+.setup-docs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.setup-card { border: 1px solid var(--rule); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+.setup-card label.btn { cursor: pointer; }
+.setup-field { display: flex; flex-direction: column; gap: 8px; padding-bottom: 18px; border-bottom: 1px solid var(--rule); }
+.setup-field .input { max-width: 420px; }
+.suggestion { background: var(--sunk); border-left: 3px solid var(--accent); padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+.suggestion blockquote { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+.setup-doc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.seg { display: inline-flex; border: 1px solid var(--rule); }
+.seg button { font: inherit; font-size: 13px; padding: 6px 12px; background: transparent; color: var(--ink-2); border: 0; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-checked="true"] { background: var(--ink); color: var(--ground); }
+.seg button:disabled { cursor: default; }
+.setup-checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.setup-checks li { padding: 10px 0; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 4px; }
+.setup-stages { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.setup-nav { display: flex; justify-content: space-between; gap: 12px; padding-top: 8px; }
+.setup-bar { background: var(--inv); color: var(--inv-ink); padding: 10px 12px 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; flex-wrap: wrap; }
+.setup-bar .btn { background: var(--ground); color: var(--ink); border-color: var(--ground); flex: none; }
+.agree summary { font-size: 13px; color: var(--accent); cursor: pointer; list-style: none; }
+.agree summary::-webkit-details-marker { display: none; }
+.agree blockquote { margin: 6px 0 0; padding-left: 12px; border-left: 2px solid var(--rule); font-size: 13px; color: var(--ink-2); }
+@media (max-width: 899px) {
+  .setup { grid-template-columns: minmax(0, 1fr); padding: 20px 16px 96px; gap: 20px; }
+  .setup-rail, .setup-main { min-width: 0; }
+  .setup-rail { position: static; }
+  .setup-rail ol { flex-direction: row; overflow-x: auto; gap: 4px; }
+  .setup-step { grid-template-columns: 22px auto; border-left: 0; border-bottom: 2px solid var(--rule); white-space: nowrap; }
+  .setup-step .chip { display: none; }
+  .setup-step[aria-current="step"] { border-bottom-color: var(--ink); }
+  .setup-rail .help { display: none; }
+}
