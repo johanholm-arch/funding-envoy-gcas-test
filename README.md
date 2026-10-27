@@ -62,7 +62,7 @@ disclosure submission.
 
 ```
 pnpm typecheck
-pnpm test                          # 87 tests; they reseed the demo database
+pnpm test                          # 88 tests; they reseed the demo database
 pnpm testset                       # the 46-case synthetic test set against the published rulebook
 ```
 
