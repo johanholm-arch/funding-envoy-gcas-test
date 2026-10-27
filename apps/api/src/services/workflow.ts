@@ -9,6 +9,7 @@ import { many, one, withContext, type Tx } from "@fe/db";
 import { randomUUID } from "node:crypto";
 import { actorOf, asUser, HttpError, type SessionUser } from "../auth.ts";
 import { addMessage, loadRequest, record, runChecks, saveState, tenantSettings, type Loaded } from "./requests.ts";
+import { onEnterStage } from "./contracting.ts";
 
 export interface ReviewingGroup { id: string; label: string; when: Condition }
 
@@ -153,10 +154,11 @@ export async function act(u: SessionUser, requestId: string, outcomeId: string, 
         await tx.query("insert into reviews (tenant_id, request_id, stage, reviewer_id, outcome, reason, form) values ($1,$2,$3,$4,$5,$6,$7)", [l.row.tenant_id, l.row.id, stage.id, u.id, outcomeId, input.reason ?? null, input.form ?? {}]);
       }
       await saveState(tx, l, { ...patch, stage: t.to, status: t.status, ...(t.status === "declined" ? { decidedAt: new Date().toISOString() } : {}) });
+      if (t.to !== t.from) await onEnterStage(tx, l);
       await closeTasks(tx, l.row.id);
       await record(tx, { tenantId: l.row.tenant_id, actor: me, entity: { type: "request", id: l.row.id }, action: "stage.advanced", data: { requestId: l.row.id, from: t.from, to: t.to, outcome: outcomeId, reason: input.reason, note: input.note, skipped: t.skipped, reviewingGroup: patch.reviewingGroup } });
       const next = l.cfg.workflow.stages.find((s) => s.id === t.to);
-      if (next) {
+      if (next && !["agreement", "payment"].includes(next.id)) {
         const role = next.ownerRoles[0];
         if (role) await createTask(tx, l, next.id, `${l.row.ref}: ${next.name}`, role, {}, dueDate(next, new Date().toISOString()));
       }
@@ -255,6 +257,7 @@ export async function decide(u: SessionUser, requestId: string, input: { outcome
     await tx.query("insert into decisions (tenant_id, request_id, meeting_id, outcome, amount, conditions, rationale, votes, recusals, decided_by) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
       [l.row.tenant_id, l.row.id, input.meetingId ?? null, input.outcome, amount ?? null, input.conditions ?? null, input.rationale, JSON.stringify(input.votes ?? []), JSON.stringify(input.recusals ?? []), u.id]);
     await saveState(tx, l, { stage: t.to, status: t.status, decidedAt: now, decision: { outcome: input.outcome, amount, conditions: input.conditions, rationale: input.rationale, by: me, at: now } });
+    if (t.to !== t.from) await onEnterStage(tx, l);
     await tx.query("update requests set decided_at = now() where id = $1", [l.row.id]);
     await closeTasks(tx, l.row.id);
     await record(tx, { tenantId: l.row.tenant_id, actor: me, entity: { type: "request", id: l.row.id }, action: "decision.recorded", data: { requestId: l.row.id, outcome: input.outcome, amount, conditions: input.conditions, rationale: input.rationale, votes: input.votes, recusals: input.recusals, to: t.to } });
@@ -267,7 +270,7 @@ export async function decide(u: SessionUser, requestId: string, input: { outcome
       : `The committee approved ${formatMoney(amount, cur)}${input.conditions ? ` with this condition: ${input.conditions}` : ""}. Next, the letter of agreement goes to your authorized signer for e-signature.`;
     await addMessage(tx, l, fe, text, { decision: input.outcome });
     const next = l.cfg.workflow.stages.find((x) => x.id === t.to);
-    if (next?.ownerRoles[0]) await createTask(tx, l, next.id, `${l.row.ref}: ${next.name}`, next.ownerRoles[0]);
+    if (next?.ownerRoles[0] && !["agreement", "payment"].includes(next.id)) await createTask(tx, l, next.id, `${l.row.ref}: ${next.name}`, next.ownerRoles[0]);
   });
 }
 

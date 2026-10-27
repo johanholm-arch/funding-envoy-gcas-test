@@ -101,7 +101,7 @@ export async function seed(): Promise<{ tenantId: string; counts: Record<string,
       await tx.query(
         `insert into users (id, email, name, title, kind, tenant_id, roles, attributes) values ($1,$2,$3,$4,$5,$6,$7,$8)
          on conflict (id) do update set email = excluded.email, name = excluded.name, title = excluded.title, roles = excluded.roles, attributes = excluded.attributes, tenant_id = excluded.tenant_id`,
-        [uuidFor(p.id), p.email, p.fullName ?? p.name, p.title ?? null, kind, kind === "operator" ? null : tenantId, p.roles, JSON.stringify({ contentId: p.id, shortName: p.name, region: p.region })]);
+        [uuidFor(p.id), p.email, p.fullName ?? p.name, p.title ?? null, kind, kind === "operator" ? null : tenantId, p.roles, JSON.stringify({ contentId: p.id, shortName: p.name, region: p.region, finalSignatory: /final (medical )?signatory/i.test(p.title ?? "") })]);
     }
     counts.people = tenant.people.length;
 

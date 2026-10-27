@@ -46,6 +46,12 @@ beforeAll(async () => {
   app = await buildServer();
   await login("marsh", uuidFor("rq-marsh"));
   await login("osei", uuidFor("hp-osei"));
+  await login("patel", uuidFor("hp-patel"));
+  await login("alvarez", uuidFor("hp-alvarez"));
+  await login("haddad", uuidFor("hp-haddad"));
+  await login("delgado", uuidFor("rq-delgado"));
+  await login("kowalski", uuidFor("hp-kowalski"));
+  await login("nair", uuidFor("hp-nair"));
 });
 
 afterAll(async () => {
@@ -183,5 +189,86 @@ describe("flagship request, end to end", () => {
     expect(ai.ai.gate.outcome).toBe("proposed");
     const verify = await call("osei", "GET", "/api/audit/verify");
     expect(verify.ok).toBe(true);
+  });
+
+  it("goes through review to the committee, where only a named member can decide", async () => {
+    for (let i = 0; i < 4; i++) {
+      const b = await call("osei", "GET", `/api/requests/${id}/brief`);
+      if (b.request.stage === "committee") break;
+      const who = b.request.stage === "medical-review" ? "patel" : "osei";
+      const bb = await call(who, "GET", `/api/requests/${id}/brief`);
+      const accept = bb.actions.find((a: { id: string }) => a.id === "accept");
+      expect(accept, `no accept at ${bb.request.stage}`).toBeTruthy();
+      await call(who, "POST", `/api/requests/${id}/act`, { outcome: "accept", reason: "Educational need and independence are clear." });
+    }
+    const b = await call("alvarez", "GET", `/api/requests/${id}/brief`);
+    expect(b.request.stage).toBe("committee");
+    const r = await app.inject({ method: "POST", url: `/api/requests/${id}/decision`, headers: { cookie: cookies.osei! }, payload: { outcome: "approve", rationale: "x" } });
+    expect(r.statusCode).toBe(403);
+  });
+
+  it("records the decision with votes and a recusal, and the assistant drafts the agreement with the required clauses", async () => {
+    await call("alvarez", "POST", `/api/requests/${id}/decision`, {
+      outcome: "approve-with-conditions", amount: 48500, conditions: "Agreement executed by 30 April 2027.", rationale: "Clear educational need; provider controls content; lead time accepted with condition.",
+      votes: [{ memberId: "lindqvist", vote: "for" }, { memberId: "costa", vote: "for" }, { memberId: "alvarez", vote: "for" }], recusals: [{ memberId: "brennan", reason: "Former board member of the organization" }],
+    });
+    const a = await call("haddad", "GET", `/api/requests/${id}/agreement`);
+    expect(a.agreement.status).toBe("draft");
+    expect(a.requiredClauses.every((c: { present: boolean }) => c.present)).toBe(true);
+    expect(a.agreement.body).toContain("Agreement executed by 30 April 2027");
+  });
+
+  it("is sent, signed by both sides as named people, and executed by legal", async () => {
+    await call("haddad", "POST", `/api/requests/${id}/agreement/send`);
+    const bad = await app.inject({ method: "POST", url: `/api/requests/${id}/agreement/sign`, headers: { cookie: cookies.delgado! }, payload: { typedName: "Someone Else" } });
+    expect(bad.statusCode).toBe(400);
+    await call("delgado", "POST", `/api/requests/${id}/agreement/sign`, { typedName: "R. Delgado" });
+    await call("haddad", "POST", `/api/requests/${id}/agreement/sign`, { typedName: "Rania Haddad" });
+    const a = await call("haddad", "GET", `/api/requests/${id}/agreement`);
+    expect(a.agreement.status).toBe("signed");
+    expect(a.agreement.signatures.length).toBe(2);
+    await call("haddad", "POST", `/api/requests/${id}/act`, { outcome: "complete" });
+    const b = await call("osei", "GET", `/api/requests/${id}/brief`);
+    expect(b.request.stage).toBe("payment");
+  });
+
+  it("releases payment only by finance, through the pre-payment gate, and records transfers of value", async () => {
+    let p = await call("kowalski", "GET", `/api/requests/${id}/payment`);
+    expect(p.payments.length).toBe(1);
+    const early = await app.inject({ method: "POST", url: `/api/requests/${id}/payments/${p.payments[0].id}/release`, headers: { cookie: cookies.kowalski! } });
+    expect(early.statusCode).toBe(409); // classification proposed by the assistant, not yet confirmed by Finance
+    const v = await call("kowalski", "GET", `/api/requests/${id}`);
+    await call("kowalski", "POST", `/api/requests/${id}/payment/classify`, { natureOfPayment: v.request.fields["tov.natureOfPayment"].value, disclosureCategory: v.request.fields["tov.disclosureCategory"].value });
+    p = await call("kowalski", "GET", `/api/requests/${id}/payment`);
+    expect(p.gate.blocking).toEqual([]);
+    const pid = p.payments[0].id;
+    const r = await app.inject({ method: "POST", url: `/api/requests/${id}/payments/${pid}/release`, headers: { cookie: cookies.osei! } });
+    expect(r.statusCode).toBe(403);
+    await call("kowalski", "POST", `/api/requests/${id}/payments/${pid}/release`);
+    const after = await call("kowalski", "GET", `/api/requests/${id}/payment`);
+    expect(after.payments[0].status).toBe("paid");
+    const b = await call("osei", "GET", `/api/requests/${id}/brief`);
+    expect(b.request.stage).toBe("reconciliation");
+  });
+
+  it("closes after reconciliation and outcomes, and the whole trail still verifies", async () => {
+    await call("marsh", "POST", `/api/requests/${id}/reconciliation`, { actualTotal: 47900, attendees: 334, unusedFunds: 600, notes: "Unused funds returned by cheque." });
+    await call("osei", "POST", `/api/requests/${id}/act`, { outcome: "accept" });
+    let b = await call("osei", "GET", `/api/requests/${id}/brief`);
+    if (b.request.stage === "outcomes") {
+      await call("marsh", "POST", `/api/requests/${id}/reconciliation`, { actualTotal: 47900, unusedFunds: 600, outcomesSummary: "Pre/post knowledge +18 points; 90-day survey response 41%." });
+      await call("osei", "POST", `/api/requests/${id}/act`, { outcome: "accept" });
+      b = await call("osei", "GET", `/api/requests/${id}/brief`);
+    }
+    expect(b.request.stage).toBe("close-and-disclose");
+    await call("osei", "POST", `/api/requests/${id}/act`, { outcome: "complete" });
+    const v = await call("marsh", "GET", `/api/requests/${id}`);
+    expect(v.request.status).toBe("closed");
+    const verify = await call("nair", "GET", "/api/audit/verify");
+    expect(verify.ok).toBe(true);
+    const cal = await call("nair", "GET", "/api/calendar");
+    expect(cal.length).toBeGreaterThan(3);
+    const disc = await call("nair", "GET", "/api/disclosure");
+    expect(disc.map((d: { id: string }) => d.id)).toContain("open-payments");
   });
 });
