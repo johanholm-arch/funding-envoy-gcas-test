@@ -18,7 +18,9 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState<{ demoLink?: string } | undefined>();
 
-  const [funderSlug, setFunderSlug] = useState(DEFAULT_TENANT);
+  const [funderSlug, setFunderSlug] = useState(params.get("funder") ?? DEFAULT_TENANT);
+  const wanted = params.get("funder");
+  useEffect(() => { if (wanted) setFunderSlug(wanted); }, [wanted]);
   const [companyEmail, setCompanyEmail] = useState("");
   // The API lists only tenants with a published catalogue, their people, and the requestors shared with them.
   const funders = list.data?.tenants ?? [];
@@ -28,7 +30,8 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
     return {
       requestors: people.filter((p) => p.kind === "requestor"),
       // One funder at a time: the one chosen above.
-      staff: (tenant ? [tenant] : []).map((t) => ({ tenant: t, people: people.filter((p) => p.kind === "internal" && p.tenant_id === t.id) })),
+      staff: (tenant ? [tenant] : []).map((t) => ({ tenant: t, people: people.filter((p) => p.kind === "internal" && p.tenant_id === t.id)
+        .sort((a, b) => Number(b.roles.includes("process-owner")) - Number(a.roles.includes("process-owner"))) })),
       operators: people.filter((p) => p.kind === "operator"),
     };
   }, [list.data, funders, tenant]);
@@ -134,19 +137,20 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           {list.error ? <p className="error-text">{list.error.message}</p> : null}
           {list.loading ? <p className="muted small">Loading people…</p> : null}
           {funders.length > 1 ? (
-            <div className="row">
-              <label className="small" htmlFor="funder">Funder</label>
-              <select id="funder" className="select small" style={{ width: "auto" }} value={tenant?.slug} onChange={(e) => setFunderSlug(e.target.value)}>
+            <div className="panel calm stack" style={{ gap: 6 }}>
+              <label className="label" htmlFor="funder">Which funder?</label>
+              <select id="funder" className="select" value={tenant?.slug} onChange={(e) => setFunderSlug(e.target.value)}>
                 {funders.map((t) => <option key={t.slug} value={t.slug}>{t.name}</option>)}
               </select>
+              <p className="help">The people below are this funder's staff, and the organizations asking it for funding.</p>
             </div>
           ) : null}
-          <PersonaGroup title="Requestors" note={`External organizations asking ${tenant?.name ?? "for funding"}`} people={groups.requestors} busy={busy} onPick={asPersona}
-            meta={(p) => [p.title, p.org_name].filter(Boolean).join(" · ")} />
           {groups.staff.map((g) => (
             <PersonaGroup key={g.tenant.id} title="Funder staff" note={g.tenant.name} people={g.people} busy={busy} onPick={asPersona}
               meta={(p) => [p.title, p.roles.map(roleWords).join(", ")].filter(Boolean).join(" · ")} />
           ))}
+          <PersonaGroup title="Requestors" note={`External organizations asking ${tenant?.name ?? "for funding"}`} people={groups.requestors} busy={busy} onPick={asPersona}
+            meta={(p) => [p.title, p.org_name].filter(Boolean).join(" · ")} />
           <PersonaGroup title="Operator" note="Managed service" people={groups.operators} busy={busy} onPick={asPersona}
             meta={(p) => p.title ?? "Operator"} />
         </section>

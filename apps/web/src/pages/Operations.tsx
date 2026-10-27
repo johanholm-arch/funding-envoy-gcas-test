@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, errorText } from "../lib/api";
 import { useMe, useToast } from "../lib/app";
 import { fmtDate, humanize, plural } from "../lib/format";
@@ -114,6 +115,8 @@ interface Created { id: string; slug: string; name: string; countries: string[];
 /** A new funder: its own name, colour, countries and people, starting from another funder's signed setup. */
 function AddFunder({ templates, busy, onCreated, onWorkIn }: { templates: FleetRow[]; busy: boolean; onCreated: () => void; onWorkIn: (t: FleetRow) => void }) {
   const toast = useToast();
+  const { signOut } = useMe();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [color, setColor] = useState("#1F6F8B");
   const [countries, setCountries] = useState<string[]>(["US"]);
@@ -186,8 +189,11 @@ function AddFunder({ templates, busy, onCreated, onWorkIn }: { templates: FleetR
         <div className="panel stack" style={{ gap: 8, maxWidth: 720 }} aria-live="polite">
           <h3 style={{ fontSize: 18, margin: 0 }}>{done.name} is ready</h3>
           <p className="small">Its {plural(done.people.length, "person", "people")} are in the sign-in list under {done.name}. {plural(done.organizationsShared, "requesting organization")} can apply to it. Rules for: {done.countries.join(", ")}.</p>
-          <p className="small">Next: sign out, sign in as <strong style={{ fontWeight: 500 }}>{done.people[0]?.name}</strong> (process owner) under {done.name}, and open Studio to add the logo and adjust the setup.</p>
-          <div>{(() => { const t = templates.find((x) => x.id === done.id); return t ? <button type="button" className="btn small quiet" onClick={() => onWorkIn(t)}>Work in {done.name}</button> : null; })()}</div>
+          <p className="small">Next: sign in as <strong style={{ fontWeight: 500 }}>{done.people[0]?.name}</strong> (process owner) and open Studio to add the logo and adjust the setup.</p>
+          <div className="row">
+            <button type="button" className="btn small" onClick={() => void signOut().then(() => navigate(`/sign-in?funder=${encodeURIComponent(done.slug)}`, { replace: true }))}>Go to {done.name}'s sign-in list</button>
+            {(() => { const t = templates.find((x) => x.id === done.id); return t ? <button type="button" className="btn small quiet" onClick={() => onWorkIn(t)}>Work in {done.name} as operator</button> : null; })()}
+          </div>
         </div>
       ) : null}
     </section>
