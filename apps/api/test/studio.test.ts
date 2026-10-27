@@ -85,4 +85,16 @@ describe("Studio", () => {
     expect(r.body.questions.map((q: { clause: string }) => q.clause)).toContain("SOP 6.5");
     expect(r.body.drafts.workflow).toBeGreaterThan(1);
   });
+
+  it("answers analytics questions from the metrics library, with the definition and the generated query", async () => {
+    const a = await call("osei", "POST", "/api/ask", { question: "How many requests by country?" });
+    expect(a.status).toBe(200);
+    expect(a.body.plan.metric).toBe("requests");
+    expect(a.body.plan.groupBy).toContain("country");
+    expect(a.body.how.sql).toMatch(/r.tenant_id = \$1/);
+    const b = await call("osei", "POST", "/api/ask", { question: "Which rules block most often?" });
+    expect(b.body.plan.groupBy).toContain("rule");
+    const c = await call("osei", "POST", "/api/ask", { question: "What's the weather in Boston?" });
+    expect(c.body.plan).toBeUndefined();
+  });
 });

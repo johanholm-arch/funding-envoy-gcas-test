@@ -6,6 +6,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import type { AiTrace, Catalogue, FieldDef } from "@fe/core";
 import { sha256 } from "@fe/core";
+import type { QueryPlanOut } from "./provider.ts";
 import type { AssistantProvider, DocClassification, ExtractInput, ExtractOutput, FieldProposal, MessageExtraction, PolicyAnswer, RequestClassification } from "./provider.ts";
 import { PROMPT_VERSION } from "./provider.ts";
 import type { Clause } from "./policy.ts";
@@ -127,6 +128,20 @@ export class ClaudeProvider implements AssistantProvider {
       question: data.question ? { text: data.question, options: input.catalogue.subtypes.map((s) => ({ id: s.id, label: s.name, subtype: s.id })) } : undefined,
       trace: { ...trace, scores: { confidence: data.confidence } },
     };
+  }
+
+  async planQuery(question: string, metrics: { id: string; label: string; definition: string; synonyms: string[] }[], dimensions: { id: string; label: string }[], today: string): Promise<QueryPlanOut | undefined> {
+    const schema = z.object({
+      answerable: z.boolean(),
+      metric: z.enum(metrics.map((m) => m.id) as [string, ...string[]]),
+      groupBy: z.array(z.enum(dimensions.map((d) => d.id) as [string, ...string[]])).max(2),
+      filters: z.array(z.object({ dimension: z.enum(["country", "type", "stage", "group"]), value: z.string() })),
+      period: z.object({ from: z.string(), to: z.string(), label: z.string() }).nullable(),
+    });
+    const prompt = `Map this analytics question onto the metrics library. Choose one metric and up to two dimensions to group by. Country filter values are ISO codes (US, GB, FR); type values are request type ids (ime-accredited, ime-non-accredited, charitable-contribution). Period dates are YYYY-MM-DD, "to" exclusive; today is ${today}. If no metric fits, set answerable to false.\n\nMetrics:\n${metrics.map((m) => `- ${m.id}: ${m.label}. ${m.definition}`).join("\n")}\n\nDimensions: ${dimensions.map((d) => `${d.id} (${d.label})`).join(", ")}\n\nQuestion: ${question}`;
+    const { data } = await this.call(schema, prompt, "low", 2000);
+    if (!data.answerable) return undefined;
+    return { metric: data.metric, groupBy: data.groupBy, filters: data.filters, period: data.period ?? undefined };
   }
 
   async answerPolicy(question: string, clauses: Clause[]): Promise<PolicyAnswer> {

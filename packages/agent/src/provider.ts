@@ -64,6 +64,10 @@ export interface AssistantProvider {
   classifyDocument(doc: { name: string; mime: string; pages: string[] }, knownTypes: { type: string; label: string }[]): Promise<DocClassification>;
   classifyRequest(input: { text: string; proposals: FieldProposal[]; catalogue: Catalogue; country: string }): Promise<RequestClassification>;
   answerPolicy(question: string, clauses: Clause[]): Promise<PolicyAnswer>;
+  /** Optional: map an analytics question onto the metrics library. Returns undefined when the library cannot answer it. */
+  planQuery?(question: string, metrics: { id: string; label: string; definition: string; synonyms: string[] }[], dimensions: { id: string; label: string }[], today: string): Promise<QueryPlanOut | undefined>;
 }
+
+export interface QueryPlanOut { metric: string; groupBy: string[]; filters: { dimension: string; value: string }[]; period?: { from: string; to: string; label: string } }
 
 export const PROMPT_VERSION = "fe-2026-10-27.1";

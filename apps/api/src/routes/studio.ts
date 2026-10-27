@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { requireRole } from "../auth.ts";
 import type { ConfigKind } from "../config.ts";
+import { ask, library } from "../services/ask.ts";
 import { autonomyView, createDraft, diff, discardDraft, draftFromSop, getVersion, overview, publish, runTests, updateDraft, validate, versions } from "../services/studio.ts";
 
 const kind = z.enum(["catalogue", "rulebook", "workflow", "autonomy", "brand", "words", "policy", "sop", "testset"]);
@@ -9,6 +10,13 @@ const studioRoles = ["process-owner", "operator", "compliance-auditor"] as const
 const editRoles = ["process-owner", "operator"] as const;
 
 export async function studioRoutes(app: FastifyInstance) {
+  const askRoles = ["coordinator", "medical-reviewer", "compliance-reviewer", "legal", "committee-member", "committee-chair", "finance", "tax", "compliance-auditor", "process-owner", "operator"] as const;
+  app.get("/api/ask/library", async (req) => { requireRole(req, [...askRoles]); return library(); });
+  app.post("/api/ask", async (req) => {
+    const { question } = z.object({ question: z.string().min(3).max(500) }).parse(req.body);
+    return ask(requireRole(req, [...askRoles]), question);
+  });
+
   app.get("/api/studio", async (req) => overview(requireRole(req, [...studioRoles])));
   app.get("/api/studio/autonomy", async (req) => autonomyView(requireRole(req, [...studioRoles])));
   app.get("/api/studio/tests", async (req) => {
