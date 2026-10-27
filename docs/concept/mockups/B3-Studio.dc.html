@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Console — Studio workflow from SOP</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0;background:#E9EBEF;color:#15181D;font-family:"Instrument Sans",system-ui,sans-serif;font-size:13px;line-height:1.45}
+a{color:#2B55E5}a:hover{color:#1E3FB8}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.muted{color:#5B6270}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5B6270}
+.pane{background:#FFFFFF;border:1px solid #D5D9E0;border-radius:6px;display:flex;flex-direction:column;min-width:0}
+.tag{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:4px;font-size:11.5px;font-family:"JetBrains Mono",ui-monospace,monospace;background:#EEF0F4;color:#3B4252;white-space:nowrap}
+.tag.ok{background:#E3F3EA;color:#1E7A4E}
+.tag.warn{background:#FFF1DC;color:#9A5200}
+.tag.src{background:#E8EEFF;color:#2B55E5}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border-radius:6px;border:1px solid #2B55E5;background:#2B55E5;color:#FFFFFF;font:inherit;font-weight:600;cursor:pointer}
+.btn.quiet{background:#FFFFFF;color:#15181D;border-color:#C9CED8}
+.btn.sm{height:30px;padding:0 10px;font-size:12px}
+.lane{display:grid;grid-template-columns:118px repeat(11,minmax(0,1fr));gap:6px;align-items:stretch}
+.lane .nm{font-size:11.5px;font-weight:600;color:#3B4252;display:flex;align-items:center;padding-left:4px}
+.node{border:1px solid #C9CED8;border-radius:6px;background:#FFFFFF;padding:6px 7px;font-size:11px;line-height:1.3;display:flex;flex-direction:column;gap:3px;min-height:52px;text-decoration:none;color:inherit}
+.node:hover{border-color:#2B55E5}
+.node.sel{border:2px solid #2B55E5;background:#E8EEFF}
+.node.lock{background:#F4F6FA;border-style:dashed}
+.node b{font-weight:700;font-size:11.5px}
+.node .lv{font-family:"JetBrains Mono",monospace;font-size:10px;color:#5B6270}
+.cell{min-height:52px}
+.kv{display:grid;grid-template-columns:104px 1fr;gap:8px 10px;padding:7px 0;border-bottom:1px solid #EEF0F4;font-size:12.5px}
+.kv .k{color:#5B6270}
+.seg{display:flex;border:1px solid #C9CED8;border-radius:6px;overflow:hidden}
+.seg button{flex:1 1 auto;height:32px;border:0;background:#FFFFFF;font:inherit;font-size:11.5px;cursor:pointer;color:#15181D;border-right:1px solid #C9CED8}
+.seg button:last-child{border-right:0}
+.seg button.on{background:#2B55E5;color:#FFFFFF}
+.seg button:disabled{color:#A7AEBB;background:#F4F6FA;cursor:not-allowed}
+.tr{display:grid;grid-template-columns:70px 1fr 110px;gap:10px;padding:7px 0;border-bottom:1px solid #EEF0F4;font-size:12.5px;align-items:center}
+.tab{height:34px;display:inline-flex;align-items:center;padding:0 12px;border-bottom:2px solid transparent;color:#5B6270;text-decoration:none;font-weight:500}
+.tab.on{color:#15181D;border-bottom-color:#2B55E5;font-weight:600}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;height:48px;padding:0 16px;background:#1C2027;color:#E6E9EF">
+    <div style="display:flex;align-items:center;gap:18px">
+      <div style="font-weight:700;letter-spacing:-.01em">Halden Pharma <span style="opacity:.6;font-weight:500">Studio</span></div>
+      <nav style="display:flex;gap:2px;flex-wrap:wrap">
+        <a href="#brand" style="color:#C4CAD6;text-decoration:none;padding:6px 9px">Brand</a>
+        <a href="#words" style="color:#C4CAD6;text-decoration:none;padding:6px 9px">Words</a>
+        <a href="#catalogue" style="color:#C4CAD6;text-decoration:none;padding:6px 9px">Catalogue &amp; fields</a>
+        <a href="#rulebook" style="color:#C4CAD6;text-decoration:none;padding:6px 9px">Rulebook</a>
+        <a href="#workflow" style="color:#FFFFFF;text-decoration:none;padding:6px 9px;border-radius:6px;background:#2A3140">Workflow</a>
+        <a href="#envoy" style="color:#C4CAD6;text-decoration:none;padding:6px 9px">FundingEnvoy</a>
+        <a href="#connections" style="color:#C4CAD6;text-decoration:none;padding:6px 9px">Connections</a>
+        <a href="#people" style="color:#C4CAD6;text-decoration:none;padding:6px 9px">People &amp; SSO</a>
+        <a href="#disclosure" style="color:#C4CAD6;text-decoration:none;padding:6px 9px">Disclosure</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;font-size:12.5px"><span style="opacity:.8">J. Whitfield · process owner</span></div>
+  </header>
+
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:12px;padding:12px 16px 16px;flex:1 1 auto;min-height:0">
+
+    <section class="pane">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid #D5D9E0;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <h1 style="margin:0;font-size:16px;font-weight:700">Grants and donations workflow</h1>
+          <span class="tag">v2.4 draft</span><span class="tag src">from SOP v4 · 24 Oct</span><span class="tag ok">test 44/46 agree</span><span class="tag warn">2 differ</span>
+        </div>
+        <div style="display:flex;gap:6px"><button class="btn quiet sm">Diff v2.3</button><button class="btn quiet sm">Run test set</button><button class="btn sm">Publish · sign-off required</button></div>
+      </div>
+
+      <!-- Swimlanes -->
+      <div style="padding:14px 14px 8px;display:flex;flex-direction:column;gap:6px;overflow-x:auto">
+        <div class="lane lbl" style="padding-bottom:4px">
+          <span></span><span>1 Intake</span><span>2 Complete</span><span>3 Triage</span><span>4 Medical</span><span>5 Compliance</span><span>6 Committee</span><span>7 Agreement</span><span>8 Payment</span><span>9 Reconcile</span><span>10 Outcomes</span><span>11 Close</span>
+        </div>
+        <div class="lane">
+          <span class="nm">Requestor</span>
+          <a href="#n1" class="node"><b>Describe, upload, form</b><span>resumable</span></a><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span>
+          <a href="#n7b" class="node"><b>Sign</b><span>authorized signer</span></a><span class="cell"></span>
+          <a href="#n9" class="node"><b>Report actuals</b><span>return unused</span></a>
+          <a href="#n10" class="node"><b>Outcomes report</b><span>Moore level</span></a><span class="cell"></span>
+        </div>
+        <div class="lane">
+          <span class="nm">FundingEnvoy</span>
+          <a href="#e1" class="node"><b>Extract, ask, check</b><span class="lv">L4 act</span></a>
+          <a href="#e2" class="node"><b>Checklist, screen, cap</b><span class="lv">L5 auto</span></a>
+          <a href="#e3" class="node"><b>Propose group</b><span class="lv">L4 act, reversible</span></a>
+          <a href="#e4" class="node"><b>Brief + evidence</b><span class="lv">L3 recommend</span></a>
+          <a href="#e5" class="node"><b>Flag summary</b><span class="lv">L3 recommend</span></a>
+          <a href="#e6" class="node sel"><b>Pack + recommendation</b><span class="lv">L3 · max</span></a>
+          <a href="#e7" class="node"><b>Fill template, send</b><span class="lv">L4 act</span></a>
+          <a href="#e8" class="node"><b>Prepare vendor + PO</b><span class="lv">L3 · max</span></a>
+          <a href="#e9" class="node"><b>Ask at day 90</b><span class="lv">L4 act</span></a>
+          <a href="#e10" class="node"><b>Collect, check level</b><span class="lv">L4 act</span></a>
+          <a href="#e11" class="node"><b>Queue disclosure</b><span class="lv">L4 act</span></a>
+        </div>
+        <div class="lane">
+          <span class="nm">Coordinator</span>
+          <span class="cell"></span><span class="cell"></span>
+          <a href="#c3" class="node"><b>Override</b><span>same day</span></a><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span>
+          <a href="#c9" class="node"><b>Accept reconciliation</b><span>5 bd</span></a><span class="cell"></span>
+          <a href="#c11" class="node"><b>Close</b><span>record ToV</span></a>
+        </div>
+        <div class="lane">
+          <span class="nm">Reviewers</span>
+          <span class="cell"></span><span class="cell"></span><span class="cell"></span>
+          <a href="#r4" class="node"><b>Medical review</b><span>10 bd · need, independence, budget</span></a>
+          <a href="#r5" class="node"><b>Compliance</b><span>5 bd · only if flagged</span></a><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span>
+        </div>
+        <div class="lane">
+          <span class="nm">Committee</span>
+          <span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span>
+          <a href="#k6" class="node lock"><b>Decide · people only</b><span>10 bd · minuted · recusals</span></a><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span>
+        </div>
+        <div class="lane">
+          <span class="nm">Legal · Finance</span>
+          <span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span>
+          <a href="#l7" class="node"><b>Approve wording</b><span>DocuSign</span></a>
+          <a href="#f8" class="node lock"><b>Release · people only</b><span>SAP · verified bank</span></a><span class="cell"></span><span class="cell"></span><span class="cell"></span>
+        </div>
+        <div class="muted" style="font-size:11.5px;padding-top:4px">Dashed nodes are locked by the platform: funding decisions, attestations, signatures and payment release always need a person. FundingEnvoy levels: L1 observe · L2 recommend · L3 recommend with pack · L4 act, person confirms · L5 autonomous within rulebook.</div>
+      </div>
+
+      <!-- Bottom tabs -->
+      <div style="border-top:1px solid #D5D9E0;display:flex;flex-direction:column;flex:1 1 auto">
+        <nav style="display:flex;padding:0 14px;border-bottom:1px solid #EEF0F4"><a href="#t1" class="tab on">Test set 46</a><a href="#t2" class="tab">Rules in this workflow 20</a><a href="#t3" class="tab">Variations by type · country 4</a><a href="#t4" class="tab">Change log</a></nav>
+        <div style="padding:8px 14px;display:flex;flex-direction:column">
+          <div class="tr lbl" style="border-bottom:1px solid #D5D9E0"><span>Sample</span><span>Case</span><span>Result</span></div>
+          <div class="tr"><span class="mono">#31</span><span>Ex-US accredited IME, UK audience · platform requires a company contact name; rulebook does not</span><span><span class="tag warn">Differs</span></span></div>
+          <div class="tr"><span class="mono">#40</span><span>French charitable donation · platform skips post-activity report; rulebook asks for it</span><span><span class="tag warn">Differs</span></span></div>
+          <div class="tr"><span class="mono">#12</span><span>US charitable under $5,000 · single approver path (SOP 6.5)</span><span><span class="tag ok">Agree</span></span></div>
+          <div class="tr"><span class="mono">#19</span><span>Korea congress · booth and sponsorship for the same event · blocked</span><span><span class="tag ok">Agree</span></span></div>
+          <div class="tr"><span class="mono">#44</span><span>India society grant · FCRA registration check before stage 6</span><span><span class="tag ok">Agree</span></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Inspector -->
+    <aside class="pane">
+      <div style="padding:12px 14px;border-bottom:1px solid #D5D9E0;display:flex;flex-direction:column;gap:2px">
+        <div class="lbl">FundingEnvoy at stage 6</div>
+        <h2 style="margin:0;font-size:15px;font-weight:700">Pack and recommendation · Committee decision</h2>
+        <div class="muted" style="font-size:12px">Generated from SOP 6.2–6.4 · unchanged since v2.1</div>
+      </div>
+      <div style="padding:10px 14px;display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div class="lbl" style="margin-bottom:6px">Role</div>
+          <div class="seg"><button>Off</button><button>Observe</button><button class="on">Recommend</button><button disabled>Act</button><button disabled>Auto</button></div>
+          <div class="muted" style="font-size:12px;margin-top:6px">Act and Auto are locked for funding decisions. FundingEnvoy prepares the pack and drafts a recommendation per request; it never votes.</div>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <div class="kv"><span class="k">Produces</span><span>Committee pack (PDF + data) · one recommendation per request with basis · recusal prompts from the COI register</span></div>
+          <div class="kv"><span class="k">Must show</span><span>Checks, evidence, items for judgement, comparable history. No approval probability.</span></div>
+          <div class="kv"><span class="k">Must not</span><span>Vote, approve, suggest an amount, draft the rationale for members</span></div>
+          <div class="kv"><span class="k">Confidence</span><span>Recommendation shown with basis; below 0.7 shown as "no recommendation"</span></div>
+          <div class="kv"><span class="k">Logged</span><span>Model, prompt set, rulebook version, inputs, outputs, member decision</span></div>
+          <div class="kv"><span class="k">Source clauses</span><span><span class="tag src">SOP 6.2</span> <span class="tag src">SOP 6.3</span> <span class="tag src">SOP 6.4</span></span></div>
+        </div>
+        <div>
+          <div class="lbl" style="margin-bottom:6px">Stage rules</div>
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:12.5px">
+            <div style="display:flex;justify-content:space-between;gap:8px"><span>Quorum of 4; chair votes last</span><span class="tag">6.2</span></div>
+            <div style="display:flex;justify-content:space-between;gap:8px"><span>Decide within 10 business days of pack</span><span class="tag">6.3</span></div>
+            <div style="display:flex;justify-content:space-between;gap:8px"><span>Recusals recorded before vote</span><span class="tag">6.4</span></div>
+            <div style="display:flex;justify-content:space-between;gap:8px"><span>Decline needs a typed reason</span><span class="tag">6.2</span></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px"><button class="btn quiet sm">Add variation</button><button class="btn quiet sm">Edit fields</button><button class="btn quiet sm">Open SOP 6.2</button></div>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

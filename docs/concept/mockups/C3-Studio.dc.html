@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Thread — Studio workflow from SOP</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;background:#FFFFFF;color:#1D1B26;font-family:"Manrope",system-ui,sans-serif;font-size:15px;line-height:1.55}
+a{color:#6A3FB5}a:hover{color:#4F2E8A}
+.muted{color:#67637A}
+.small{font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;background:#F4F2F8;color:#4A465C;white-space:nowrap}
+.pill.ok{background:#E4F3EB;color:#1F7A52}
+.pill.warn{background:#FFF1DC;color:#9A5200}
+.pill.you{background:#1D1B26;color:#FFFFFF}
+.pill.src{background:#EDE7F8;color:#6A3FB5}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:22px;border:0;background:#6A3FB5;color:#FFFFFF;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.btn.quiet{background:#F4F2F8;color:#1D1B26}
+.btn.sm{height:36px;padding:0 14px;font-size:13.5px}
+.ai{align-self:flex-start;max-width:94%;display:flex;flex-direction:column;gap:12px}
+.ai .txt{background:#F1ECF9;border-radius:20px 20px 20px 6px;padding:14px 18px}
+.me{align-self:flex-end;max-width:78%;background:#F4F2F8;border-radius:20px 20px 6px 20px;padding:14px 18px}
+.card{background:#FFFFFF;border:1px solid #E6E3EE;border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.who{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#67637A;margin-bottom:6px}
+.choice{display:inline-flex;align-items:center;height:40px;padding:0 16px;border:1.5px solid #6A3FB5;border-radius:20px;background:#FFFFFF;color:#6A3FB5;font:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.st{display:grid;grid-template-columns:30px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #F0EEF5}
+.st:last-child{border-bottom:0}
+.st .n{width:28px;height:28px;border-radius:50%;background:#F4F2F8;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12.5px;color:#4A465C}
+.st .t{font-weight:700;font-size:14.5px}
+.st .m{font-size:12.5px;color:#67637A}
+.dial{display:inline-flex;gap:4px;align-items:center}
+.dial i{width:10px;height:10px;border:1.5px solid #6A3FB5;border-radius:50%;display:inline-block}
+.dial i.on{background:#6A3FB5}
+.dial i.lock{background:#E6E3EE;border-color:#E6E3EE}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px;padding:0 24px;border-bottom:1px solid #E6E3EE">
+    <div style="display:flex;align-items:center;gap:14px">
+      <span style="width:34px;height:34px;border-radius:50%;background:#6A3FB5;display:inline-flex;align-items:center;justify-content:center;color:#FFFFFF;font-weight:800">H</span>
+      <div style="display:flex;flex-direction:column;line-height:1.2"><span style="font-weight:800">Halden Pharma · Studio</span><span class="muted small">Set up by talking. FundingEnvoy writes the configuration; you sign it.</span></div>
+    </div>
+    <nav style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <a href="#brand" class="pill" style="text-decoration:none">Brand</a>
+      <a href="#words" class="pill" style="text-decoration:none">Words</a>
+      <a href="#catalogue" class="pill" style="text-decoration:none">Catalogue</a>
+      <a href="#rulebook" class="pill" style="text-decoration:none">Rulebook</a>
+      <a href="#workflow" class="pill you" style="text-decoration:none">Workflow</a>
+      <a href="#connections" class="pill" style="text-decoration:none">Connections</a>
+      <a href="#people" class="pill" style="text-decoration:none">People &amp; SSO</a>
+      <span class="muted small" style="margin-left:10px">J. Whitfield</span>
+    </nav>
+  </header>
+
+  <div style="display:flex;flex:1 1 auto;min-height:0">
+
+    <!-- Thread -->
+    <main style="flex:1 1 auto;min-width:0;display:flex;justify-content:center;padding:28px 24px 120px;overflow:auto">
+      <div style="width:100%;max-width:720px;display:flex;flex-direction:column;gap:20px">
+
+        <div class="me">
+          <div class="who">You · 24 Oct</div>
+          Here's our updated SOP. Build the workflow from it.
+          <div style="display:flex;gap:8px;margin-top:10px"><span class="pill">Management of grants and donations SOP v4.pdf · 38 pages</span></div>
+        </div>
+
+        <div class="ai">
+          <div class="txt"><div class="who">FundingEnvoy</div>I read it. The SOP describes 11 stages across requestors, reviewers, the committee, legal and finance. I've drafted the workflow on the right with every stage tied to the clause it came from. Three things I'd like you to confirm.</div>
+          <div class="card">
+            <div style="font-weight:700">1 · Clause 6.1 says Compliance reviews "where any compliance flag is raised".</div>
+            <div class="muted small">I've made Compliance review conditional on a flag. Some companies make it mandatory for certain countries. Keep it conditional?</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="choice">Keep conditional</button><button class="choice">Mandatory for France, Italy, Korea</button><button class="choice">Mandatory everywhere</button></div>
+          </div>
+          <div class="card">
+            <div style="font-weight:700">2 · Clause 6.5 allows a single approver for charitable contributions under a threshold, but the threshold isn't stated.</div>
+            <div class="muted small">v2.3 used $5,000. Should I keep that, or does v4 intend something else?</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="choice">Keep $5,000</button><button class="choice">Set a new amount</button><button class="choice">Ask Legal</button></div>
+          </div>
+          <div class="card">
+            <div style="font-weight:700">3 · How much should I do at each stage?</div>
+            <div class="muted small">I've set myself to "recommend" at review and committee stages, "act" for intake, triage, agreements and reminders, and "autonomous" only for completeness checks and screening. Funding decisions, attestations, signatures and payment release are always people; I can't change those.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="choice">Use these settings</button><button class="choice">Be more cautious everywhere</button><button class="choice">Let me set each stage</button></div>
+          </div>
+        </div>
+
+        <div class="me">
+          <div class="who">You</div>
+          Make compliance mandatory for France, Italy and Korea. Keep $5,000. Use your settings.
+        </div>
+
+        <div class="ai">
+          <div class="txt"><div class="who">FundingEnvoy</div>Done. Compliance review is now required for requests from France, Italy and Korea, and conditional elsewhere. I wrote that as a variation on stage 5 and noted that it goes beyond clause 6.1, so your sign-off will record it as a company choice, not an SOP requirement.</div>
+          <div class="txt">I ran the 46 test requests. 44 agree with your grants system's sandbox. Two differ: sample 31 (UK audience needs a company contact name on the platform side) and sample 40 (a French charitable donation where the platform skips the post-activity report). Want me to fix the rulebook for both?</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="choice">Fix both</button><button class="choice">Show me sample 40</button><button class="choice">Leave for the next version</button></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Live preview -->
+    <aside style="width:460px;flex:0 0 460px;border-left:1px solid #E6E3EE;padding:24px 24px 40px;display:flex;flex-direction:column;gap:14px;overflow:auto;background:#FBFAFD">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div><div style="font-weight:800;font-size:17px">Workflow v2.4 draft</div><div class="muted small">From SOP v4 · 11 stages · 1 variation</div></div>
+        <div style="display:flex;gap:6px"><span class="pill ok">44 of 46 agree</span><span class="pill warn">2 differ</span></div>
+      </div>
+      <div class="card" style="padding:6px 18px">
+        <div class="st"><span class="n">1</span><span><div class="t">Intake</div><div class="m">Requestor with FundingEnvoy · SOP 3.1</div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
+        <div class="st"><span class="n">2</span><span><div class="t">Completeness and screening</div><div class="m">FundingEnvoy · SOP 4, 5</div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></div>
+        <div class="st"><span class="n">3</span><span><div class="t">Triage</div><div class="m">FundingEnvoy proposes, coordinator can override · SOP 5.2</div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
+        <div class="st"><span class="n">4</span><span><div class="t">Medical review</div><div class="m">10 business days · SOP 6.1</div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></div>
+        <div class="st" style="background:#F1ECF9;margin:0 -18px;padding-left:18px;padding-right:18px"><span class="n">5</span><span><div class="t">Compliance review</div><div class="m">If flagged · always for FR, IT, KR <span class="pill src">company choice</span></div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></div>
+        <div class="st"><span class="n">6</span><span><div class="t">Committee decision</div><div class="m">People only · 10 business days · SOP 6.2–6.4</div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="lock"></i><i class="lock"></i></span></div>
+        <div class="st"><span class="n">7</span><span><div class="t">Agreement</div><div class="m">DocuSign · before the activity · SOP 7.1</div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
+        <div class="st"><span class="n">8</span><span><div class="t">Payment by milestone</div><div class="m">People release · SAP · SOP 7.4</div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="lock"></i><i class="lock"></i></span></div>
+        <div class="st"><span class="n">9</span><span><div class="t">Reconciliation</div><div class="m">90 days after · SOP 8.1</div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
+        <div class="st"><span class="n">10</span><span><div class="t">Outcomes</div><div class="m">Education only · SOP 8.3</div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
+        <div class="st"><span class="n">11</span><span><div class="t">Close and disclose</div><div class="m">Open Payments, EFPIA, local · SOP 9.2</div></span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
+      </div>
+      <div class="muted small">Dots show how much FundingEnvoy does: observe · recommend · recommend with pack · act, you confirm · autonomous. Grey dots are locked by the platform.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm">Sign and publish v2.4</button><button class="btn quiet sm">Open as a table</button><button class="btn quiet sm">Compare with v2.3</button></div>
+    </aside>
+  </div>
+
+  <footer style="position:sticky;bottom:0;display:flex;justify-content:center;padding:12px 24px 20px;background:#FFFFFF;border-top:1px solid #E6E3EE;margin-right:460px">
+    <div style="width:100%;max-width:720px;display:flex;gap:8px;align-items:center">
+      <label for="say" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Tell FundingEnvoy</label>
+      <input id="say" type="text" placeholder="Change a stage, add a rule, ask what a clause means…" style="flex:1 1 auto;min-width:0;height:46px;padding:0 18px;border:1.5px solid #E6E3EE;border-radius:23px;background:#FFFFFF;font:inherit;font-size:15px;color:#1D1B26">
+      <button class="btn">Send</button>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

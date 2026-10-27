@@ -1,0 +1,1026 @@
+
+Envoy Concept Review
+
+  Concept review · Agentic grant submission assistant · 23 Oct 2026
+  Envoy: a requestor-side agent for grant requests
+
+  An assessment of the premise, what I would add to it, and a clickable walkthrough of the end-to-end flow. "Envoy" is a working name. The example throughout is an accredited independent medical education grant from a US medical society, because it has the eligibility rules, documents, attestations, dates, reconciliation and outcomes reporting that stress every part of the design. The company this is built for first is not named anywhere in this document or the prototype; everything is configurable per company.
+
+    What it doesVerdictThe grants landscapeFeasibilityArchitectureWhere review movesRulebookSalesforce connectionMockupsMissing functionalityRisksPath to buildOpen questions
+
+  In briefWhat Envoy does
+
+    Envoy sits in front of a company's grants management system and talks to the people asking for funding. A requestor describes what they need in their own words, uploads what they have, or fills in a form. Envoy works out which kind of request it is, what the company's policy requires for that kind of request in that country, asks for what is missing, checks what is there, and writes a complete, review-ready request into the system of record when the requestor says so. Afterwards it handles the follow-ups: the coordinator's questions, the reconciliation, the outcomes report. People make every funding decision.
+
+    GuidesExplains eligibility, grant types, funding rules and country requirements in plain language, grounded in the company's own policy documents and citing them. Declines to predict or promise a funding decision.
+
+    Takes any inputConversation, uploaded documents (request letter, prospectus, agenda, budget, proof of non-profit status, tax forms, financial statements) or a form. Everything extracted shows where it came from.
+
+    Checks as it goesRuns the company's rulebook continuously: required fields and documents per grant type and country, the revenue concentration cap, lead time before the activity, conflict-of-interest questions, attestations. Each finding says what to do and why.
+
+    Submits on confirmationMatches the organization to an existing record, creates the request, attaches documents and a pre-submission review summary, and submits. Nothing is written to the system of record until the requestor confirms, and the requestor's own identity is on the record.
+
+    Follows upTurns "the coordinator needs more information" into a short, focused exchange; collects reconciliation data and outcomes when they fall due; explains status in words a requestor understands.
+
+    ConfigurableEach company is a tenant: logo, colour, type, terminology, languages, grant catalogue, rulebook, policy documents and connector settings. The layout and the safety rules stay fixed.
+
+    External requestorSubmit once, completely
+Medical societies, hospitals, universities, patient groups and charities. Most submit a handful of times a year and never learn the portal. They get a guide instead of a form.
+
+    Grant coordinatorsReview, don't chase
+Requests arrive with the checklist already satisfied, evidence attached and open points flagged. Fewer "request additional information" rounds, each one shorter.
+
+    Compliance and medicalOne definition of compliant
+The rulebook the agent enforces is the same one the platform's checklist enforces. Policy changes propagate to both. Every agent action is logged on the request.
+
+    For the vendorA product, not a project
+A requestor-side companion to the existing coordinator-side review agent, sold per company, configured without code, and connected through one adapter to the Salesforce-based grants platform.
+
+  What it is not: a decision engine for funding, a replacement for the grants portal's forms (they remain the fallback and the control), or a system that trains models on requestor data.
+
+    Feasible
+
+      Buildable with today's models, if two rules hold
+
+      Every capability in the vision statement can be built now. The first rule that makes it work in a regulated setting: the agent prepares, a deterministic rulebook validates, the system of record decides. The model reads a prospectus and drafts the fields, but the rulebook, not the model, says whether the request is complete and compliant. The model explains a policy clause, but it quotes the clause. The agent writes to the grants system, but only at confirmed checkpoints, as the requestor, through the platform's own validation.
+
+      The second rule: the agent never touches a funding decision. It does not predict approval, negotiate amounts, or write the scientific rationale for the requestor. It makes the request complete and honest; the committee makes it approved or not. Requestors will try to use it as a coach for getting to yes. The design has to make that line visible.
+
+      The hard parts are not the AI. They are: writing cleanly into a packaged Salesforce application under the requestor's identity; keeping one rulebook that the agent, the portal's checklist and the vendor's coordinator-side review agent all read; the sprawl of grant subtypes, triage groups and country rules; and deciding how much review moves forward to submission time without weakening the review that happens after.
+
+  Context the agent has to carryThe grants landscape
+
+    "Grant" covers several different things with different rules. A pharmaceutical company's grants function typically handles three families, each with its own eligibility, documents, reviewers and reporting. A fourth, investigator-initiated research, usually runs in a separate process and is out of scope here.
+
+    Independent medical education
+
+      Accredited: the provider is accredited (for example by ACCME in the US) and controls content, faculty and learners. The company may fund; it may not influence. A written agreement, disclosure to learners, and outcomes reporting are standard.
+Non-accredited: education without credit. Same independence principle, but no accreditor stands behind it, so the company's own review of the programme, provider and budget is heavier.
+
+      Example in the mockups: a 2-day heart-failure symposium run by a medical society with an accredited joint provider. US audience, so it routes to the US medical education reviewers.
+
+    Other grants and donations
+
+      Academic support, scientific congresses and meetings, scientific programmes and projects
+Patient education and advocacy
+Corporate memberships of associations
+Donations of products, equipment or material; humanitarian product donations
+Public policy and legislative support; independent patient assistance (US only)
+
+      Eligibility turns on the organization type (association, hospital, university, patient group, trade association, business coalition) as much as on the activity. Several subtypes exist only for some countries.
+
+    Community and charitable contributions
+
+      Charitable donations to registered non-profits
+Humanitarian relief, global health programmes
+Company-run award schemes, STEM and community programmes
+
+      Lighter on scientific review, heavier on the charity's status, governance, sanctions and anti-bribery screening, and on the "no business benefit" test. Reconciliation often reduces to a financial statement; some countries forbid asking for a post-activity report on a pure donation.
+
+  The rules that bind a request
+Most of what the agent enforces comes from one of four layers. The company's rulebook (next section) records which layer each rule comes from, so the requestor can be told why.
+
+    Layer
+Where the rule comes from
+What it means for a request
+
+    Law and enforcement
+US anti-kickback statute and the OIG's 2003 compliance programme guidance; the Sunshine Act and Open Payments reporting; state laws; the FCPA and UK Bribery Act for government-affiliated institutions abroad; sanctions and debarment lists; local laws such as France's anti-gift regime that require declared conventions.
+Grants must be separate from sales, awarded on objective criteria, not tied to prescribing, and documented. The company must know who is being paid and whether a payment is reportable. Government-affiliated recipients need anti-bribery due diligence.
+
+    Industry codes
+PhRMA Code and AdvaMed Code in the US; the EFPIA Code in Europe and its national implementations (ABPI, FSA and others); accreditation standards such as ACCME's Standards for Integrity and Independence.
+Education grants go to organizations, never to individual professionals; the provider controls content, faculty and learners; the company's support is disclosed; in Europe, grants and donations to healthcare organizations are published yearly, by recipient.
+
+    Company policy and SOP
+The company's grants and donations policy and its operating procedure: eligible organizations, grant subtypes, triage to reviewing groups by grant type and audience geography, required documents, committee approval, agreement before the activity, payment by milestone, reconciliation and outcomes.
+This is most of the rulebook. Typical rules: a cap on the share of a recipient's annual revenue the company may fund in a year; approval and an executed agreement before the activity starts; a minimum lead time; conflict-of-interest and anti-discrimination attestations; third-party risk screening above a threshold.
+
+    Reviewing group and country practice
+Each triage group (US medical, US public affairs, US and UK charitable, global health, global committee, local affiliates) and each country adds required fields, documents and exceptions.
+The same request needs different things in different places. The rulebook scopes every rule by grant type, organization type, country and reviewing group, and the agent only asks for what applies.
+
+  Where this document names specific thresholds, lead times or documents, they are illustrative of the kind of rule a company sets, not a statement of any one company's policy.
+
+  Capability by capabilityFeasibility
+
+    Capability
+Rating
+What makes it work
+Where it gets hard
+
+    Natural-language intake ("I'd like to request $50,000 for a CME programme in Boston")
+High
+Extraction into a fixed schema per grant subtype. The agent asks for what the schema still needs, in an order that makes sense to the requestor, not in the order of the form.
+Requestors describe activities, not grant subtypes. Classification into the company's catalogue (accredited vs non-accredited, education vs congress support) has to be confirmed with the requestor, with the consequences explained, before the form shape is fixed.
+
+    Document upload and extraction
+High
+Prospectuses, agendas, budgets, request letters, tax forms and financial statements are well structured. Every extracted value carries its source (file, page, cell) and the requestor confirms before anything is saved.
+Budgets rarely add up to the amount requested; dates differ between agenda and letter. The agent must surface conflicts, not pick one. Scanned forms need OCR. Bank details should never pass through the conversation.
+
+    Dynamic compliance review
+High
+A deterministic rulebook scoped by grant type, organization type, country and reviewing group. Checks run on every change. Each finding has severity, an action and a basis.
+The rulebook must stay identical to the platform's checklist rules or requests will pass the agent and fail on submit. Treat the checklist as the source and import it; add agent-only rules on top.
+
+    Policy guidance ("Am I eligible?", "Which grant type?", country rules)
+High, with limits
+Retrieval over the company's policy, SOP and public grants pages, with the clause quoted. Eligibility is answered by running the rulebook on what is known so far, not by the model's opinion.
+Questions outside the documents ("will this be approved?", "how much do you usually give?") must be declined and routed to the coordinator mailbox. Multilingual guidance needs the policy in each language or careful translation review.
+
+    Writing structured requests to the Salesforce grants platform
+Medium
+Standard REST and composite APIs, Files upload, and the platform's own validation on save. Writes happen at a few checkpoints (organization matched, request created, documents attached, submitted) and are idempotent.
+Identity and audit: the request should be created by the requestor, not a service account. Organizations already exist twice (entity and payee), so matching beats creating. The package's custom objects, picklists and checklist rules must be read from the org, not hard-coded. See the Salesforce section.
+
+    Ongoing validation and follow-ups (additional information, reconciliation, outcomes)
+High
+Status changes and coordinator comments arrive as events. The agent shows the requestor only what is being asked, collects it, writes it, and leaves a change summary for the coordinator.
+Today's "request additional information" step reopens every field for the requestor and coordinators struggle to see what changed. The agent's change summary fixes that, but only if the coordinator reads it in the platform, which means writing it as a comment or document there.
+
+    Alternative input form
+High
+The same schema rendered as a form, section by section, with the same checks. The portal's existing forms remain the fallback and the control.
+Two forms for one request (agent's and portal's) confuse requestors if both are visible. Decide where the agent lives (inside the portal or beside it) early.
+
+    Configurable to any company
+High
+Tenant configuration: brand tokens, terminology, languages, grant catalogue, rulebook, policy corpus, connector mapping. No code per company.
+Terminology and grant catalogues differ more than branding does. The catalogue and the rulebook need an import path from each company's platform configuration, otherwise every onboarding is a consulting project.
+
+    Agent autonomy
+Medium, by design
+The agent drafts and checks on its own; it writes only on confirmation; it never submits, attests, signs or accepts terms for the requestor.
+Pressure to "just submit it for me". The attestations (conflict of interest, anti-discrimination, scope and transfer-of-value at reconciliation) are the requestor's legal statements and must be typed or ticked by them, visibly.
+
+  A note on validation: a grants process is not a GxP process, so formal computer system validation is rarely mandated. The platform it writes to is validated and audited, though, and the audit trail there must be able to show which values the agent proposed, which the requestor confirmed and which were later changed. Building that provenance in from day one costs little and answers the first question an auditor will ask.
+
+  How it fits togetherArchitecture in one picture
+
+    The working request is the centre of the agent. Everything the model produces lands there as a proposal with a source; the rulebook validates it; the requestor confirms it; the connector writes it to the system of record, which runs its own checks again. The grants platform keeps every decision, approval, agreement, payment and the audit trail.
+
+    Requestor channels
+      Portal embedChat panel inside the company's requestor portal, sharing its login
+
+      Standalone webBranded page for companies that prefer the agent beside the portal
+
+      Email intake (later)A request letter arrives by email and starts a draft
+
+      Internal organizers (later)Coordinators creating requests on behalf of an organization
+
+    →
+
+    Agent service · one tenant per company
+      Conversation orchestratorPlans the next question from what the working request still needs; explains findings; proposes values
+
+      Document readerClassifies uploads and extracts fields with page and cell references
+
+      Policy guideAnswers questions from the company's policy corpus with quoted clauses; declines outside it
+
+      Rulebook engineDeterministic checks scoped by grant type, organization, country and reviewing group. Severity, action, basis
+
+      Working requestDraft record with field-level provenance, requestor confirmations and an agent activity log. Resumable
+
+      Confirmation gateThe requestor confirms each write checkpoint and types every attestation. The agent cannot submit alone
+
+      Tenant configurationBrand tokens, terminology, languages, grant catalogue, rulebook, policy corpus, connector mapping
+
+    ↔
+
+    Grants system of record · Salesforce
+      ConnectorREST and composite APIs, Files, events. Acts as the requestor via the portal's login; search-before-create; idempotent writes
+
+      ObjectsOrganization, requestor, signers, third parties, payee; request, activities, audience; documents; comments; reconciliation and outcomes
+
+      Checklist rules and triageThe platform's own validation and routing run on every save. They are the control of record
+
+      Review and decisionCoordinators claim and review; committees and approvers decide; agreements are executed; payments released; requests closed. People only
+
+      Coordinator-side review agentThe vendor's existing agent reads the same rulebook, so "compliant" means one thing before and after submission
+
+  AI proposesDeterministic, auditableHuman decision gateLater or existing
+
+  Before and after submissionWhere compliance review moves
+
+    The brief asks the agent to take much of the completeness and compliance review off the platform, and also flags the need to balance review before and after submission. My view: move the checking forward, keep the judging where it is. The coordinator stops chasing missing documents and arithmetic and spends the review on the things that need a person: is this a legitimate educational need, is the provider independent, is the budget reasonable, is there a business benefit hiding in a charitable ask.
+
+    Review step
+Today
+With Envoy, before submission
+Stays after submission
+
+    Eligibility and grant type
+Requestor guesses; coordinator corrects, sometimes re-routes to another group
+Classified from the description and confirmed with the requestor; the predicted reviewing group and its requirements are shown up front
+Coordinator confirms triage; override stays available
+
+    Required fields and documents
+Checklist on the right panel; coordinator requests additional information, which reopens everything
+Fix list run on every change; nothing can be submitted with a blocking gap; documents classified and attached under the right category
+Platform checklist re-runs on save as the control of record
+
+    Revenue concentration cap
+Coordinator computes requested and pending amounts against annual revenue from the organization profile
+Computed from the organization's revenue and open requests; shown to the requestor with the arithmetic; exception routes explained
+Coordinator verifies the revenue evidence; exceptions decided by the committee
+
+    Key dates and lead time
+Coordinator checks dates against activity; KRIs on approval and agreement before start date are tracked after the fact
+Start and end dates taken from the agenda; lead time rule warns when the activity is too close to allow approval and an executed agreement first
+Coordinator verifies dates before approval and before uploading the executed agreement
+
+    Conflict of interest, anti-bribery, anti-discrimination
+Questions on the portal form; answered inconsistently
+Asked one at a time with plain-language help; answers typed by the requestor; a "yes" explains what review it triggers
+Compliance review of any flagged answer; third-party screening
+
+    Independence of education (accredited and non-accredited)
+Reviewer reads the prospectus
+Agent extracts provider, accreditation status, faculty selection and learner audience, and flags any clause that gives the company influence over content or faculty
+Medical reviewer judges the programme on its merits
+
+    Budget
+Reviewer reads the budget; totals checked by hand
+Itemized budget extracted, totalled, compared with the amount requested; ineligible lines (entertainment, individual payments) flagged
+Reviewer judges reasonableness and the share the company is asked to fund
+
+    Funding decision, agreement, payment, closure
+Never moves. Committee decision, approvals, letter of agreement and e-signature, budget allocation, payment release, reconciliation review and closure
+People, on the platform
+
+  The practical consequence: a submission carries a pre-submission review summary (checks run, evidence, open points, what the requestor changed) as a document on the request. The coordinator's first look starts from that summary instead of from the raw form.
+
+  Where the policy livesRulebook and grant catalogue
+
+    The rulebook is the configuration that makes the agent a product rather than a prompt. It is a list of checks, each scoped and sourced, that the agent runs deterministically. The grant catalogue describes each subtype: its fields, documents, reviewing group and the questions the agent asks to tell it apart from its neighbours. Screen 2 in the mockups shows both.
+
+    A rule hasAn identifier; a plain-language statement; its basis (law, code, company policy clause, reviewing-group practice); its scope (grant subtypes, organization types, countries, reviewing groups); a check type (field present, document present, computed, date logic, cross-reference, attestation); a severity (block, warn, inform); the message to the requestor in each language; and the action offered.
+
+    Imported from the platformThe platform's checklist rules per reviewing group are the source of truth for completeness. They are imported, not retyped, and a nightly comparison flags drift. A request that passes the agent and fails the platform's validation is a defect, logged and fixed in the rulebook.
+
+    Added in the agentChecks the platform cannot do at submission time because it does not yet have the data: budget arithmetic against the request, lead time against the agenda, independence clauses in a prospectus, document classification, cross-document consistency.
+
+    Owned and versionedA content owner per company (usually the grants process owner) approves rulebook changes. Published versions never change; every submission records the rulebook version it was checked against. A policy revision produces a diff and a list of rules affected.
+
+    1ImportGrant catalogue, picklists and checklist rules read from the company's platform configuration.
+
+    2EnrichThe vendor's grants practice adds the agent-only checks and the plain-language messages, sourced to the policy.
+
+    3TestSample requests per subtype and country run against the rulebook and against the platform sandbox; results must agree.
+
+    4PublishProcess owner signs off a version. The agent and, where adopted, the coordinator-side review agent read it.
+
+    5MonitorSubmissions rejected or returned for information are analysed against the rulebook. Frequent gaps become new checks or clearer questions.
+
+  This is also where the vendor's advantage sits. The software is the same for every company. The catalogue of checks, the questions that tell subtypes apart, and the plain-language explanations of policy are the practice's accumulated knowledge, and they transfer between clients with the company-specific parts stripped out.
+
+  IntegrationConnecting to the Salesforce grants platform
+
+    The grants system is a packaged application on the Salesforce platform with an internal coordinator app and an external requestor portal. Requestors register an organization profile, submit requests and respond to information requests, reconciliation and outcomes through the portal. The connector has to respect how that application already works. The points below come from the coordinator manual and from how packaged Salesforce applications behave.
+
+    Consideration
+What the platform does today
+What the connector must do
+
+    Identity and audit
+Requests are created by the registered requestor user. Automatic emails go to the requestor registered at creation; changing the requestor afterwards is a backend ticket. Field history and approval history are kept on every request.
+Act as the requestor: the portal's login grants the agent a user-scoped token, so created-by and the history are the requestor's. A service account with "submitted on behalf of" fields is the fallback, not the design. Every agent write adds a history entry or comment that names the agent.
+
+    Organizations exist twice
+An organization is an entity record (profile, identifiers, revenue, documents) and a payee record (bank details). Identifiers such as tax IDs are how duplicates are found.
+Search before create, by identifier and name. Never create a second entity for a known organization; never collect bank details in the conversation. Payee information stays in the portal's own secure flow, which the agent links to.
+
+    Packaged objects and rules
+Custom objects for request, activities, audience breakdown, documents with category and type, comments visible to portal users, checklist rules per reviewing group, automatic triage by grant type and audience geography.
+Read object metadata and picklists from the org at configuration time, not from a hard-coded map. Write through the platform's validation; surface its errors to the requestor in plain language. Classify documents into the platform's categories.
+
+    Checkpointed writes
+Status moves from new to submitted for review, then through approval, agreement, payment, reconciliation and closure. Only the requestor's submit moves a request out of draft.
+Write at four checkpoints: organization matched or created, request created in draft, documents attached, submit. Each write is idempotent with a correlation key held in the working request, so a retry never duplicates.
+
+    Events from the platform
+Coordinators request additional information (an email with no detail; the comment is in the portal), trigger reconciliation (automatically 90 days after the activity ends, or manually), and request outcomes for education grants.
+Subscribe to status and comment changes (platform events or change data capture; polling as fallback). Turn each into a focused task for the requestor with the coordinator's comment quoted, and write back a change summary.
+
+    Where the agent runs
+The vendor offers an agent platform; Salesforce offers Agentforce inside the org.
+Keep the agent a separate service with a Salesforce adapter. It makes the product configurable across companies and platforms, lets each company choose model hosting and residency, and keeps the grants org's licensing simple. Embed it in the portal as a component where the company wants one login and one place.
+
+    Environments and limits
+Sandboxes per company; API and storage limits; seven portal languages.
+Build and certify against each company's sandbox; respect limits with batched composite calls; test the four checkpoints end to end before go-live (screen 3).
+
+    End-to-end walkthrough · 10 screensMockups
+
+      Screens 1 to 3 are the vendor's team configuring Envoy for a company. Screens 4 to 8 are an external requestor preparing and submitting a request. Screens 9 and 10 are the follow-up: the requestor's required actions and what the coordinator sees in the grants platform. Screens are clickable where it helps: input methods, rules, fix-list items, toggles and the brand selector respond. All names, organizations and figures are fictional.
+
+    Company branding
+
+        Envoy default
+        Halden Pharma (fictional)
+        Meridian Biologics (fictional)
+
+    Configure · vendor team
+
+    Submit · external requestor
+
+    Follow up · requestor and coordinator
+
+    ← BackNext →
+
+      EEnvoy
+
+      Studio
+
+      ⌕ Search tenants, rules, test runs
+
+      JH
+
+  Tenant: Envoy
+Look, feel and words for this company's requestors. Layout and safety rules are fixed.
+
+Preview as requestorSave
+
+      Brand
+
+          LogoUpload SVG or PNG
+          Colour
+          ContrastAgainst white: 7.1 : 1 · passes WCAG AA
+          HeadingsGroteskBrand serifHumanist sans
+          CornersCrispSoftRound
+
+      Terminology
+
+        Envoy default
+This company
+
+          Request
+Request
+
+          Grants committee
+Grants and donations committee
+
+          Reviewing team
+Triage group
+
+          Reconciliation
+Financial reconciliation
+
+          Assistant name
+Envoy
+
+      Languages and regions
+
+        EnglishFrenchGermanSpanishPortugueseJapanese · policy translation pendingChinese · policy translation pending
+
+        A language is offered only when the policy corpus and rulebook messages exist in it.
+
+      Preview
+
+          EEnvoy
+
+          AssistantHello Dr. Marsh. I can help you prepare a funding request for your organization. Tell me about the activity, upload what you have, or start from a form. I'll check everything against the company's policy as we go, and nothing is sent until you confirm.
+
+          Describe itUpload documentsUse a form
+
+      Fixed for every tenant
+
+        Provenance on every field · requestor types every attestation · no submission without confirmation · no funding predictions · agent activity logged on the request · policy answers cite their source.
+
+  Grant catalogue and rulebook
+Rulebook v2.3 · 11 rules imported from the platform checklist · 9 added here · signed by the grants process owner 9 Oct 2026
+
+Import from platformRun test setPublish v2.4
+
+      Catalogue · 3 families · 17 subtypes
+
+        Independent medical educationOther grants and donationsCharitable contributions
+
+        Subtype
+Tells it apart
+Reviewed by
+
+          Accredited IME
+Provider accredited by a recognised body; credit offered
+By audience geography
+
+          Non-accredited IME
+Educational, no credit; provider independence reviewed by the company
+By audience geography
+
+      Rules in scope for accredited IME · US
+
+          R-04Requested amount within the annual revenue capPolicy 5.2Block
+          R-07Activity starts at least 60 days after submissionSOP 4.1Warn
+          R-11Proof of non-profit status on fileChecklistBlock
+          R-15Provider controls content, faculty and learnersCode · SII 4Block
+          R-18Itemized budget total equals amount requestedAdded hereWarn
+          R-21Anti-discrimination statement acknowledgedChecklistBlock
+
+        R-04 · Requested amount within the annual revenue cap
+
+          BasisCompany policy 5.2: cumulative funding to a recipient in a calendar year may not exceed 25% of its annual gross revenue. Exceptions for named programmes go to the committee.
+          ScopeAll subtypes · all countries · all reviewing groups
+          CheckComputed: (requested + pending + approved this year) ÷ annual gross revenue ≤ 0.25. Revenue from the organization profile; must be evidenced by a financial statement.
+          Requestor sees"Your request of $50,000 is 4.2% of your organization's annual revenue of $1.2M, within the 25% limit."
+          SourceImported from platform checklist · reviewed by K. Osei 2 Oct
+
+      Test set · 46 sample requests
+
+        44 agree with platform sandbox2 differ
+
+        Sample 31: platform requires a company contact name for ex-US requests in one group; rulebook v2.3 does not. Sample 40: French charitable donation, platform correctly skips the post-activity report; rulebook asks for it. Both fixed in v2.4 draft.
+
+      Policy corpus
+
+        Grants and donations policy v6 · Management of grants and donations SOP v4 · Public grants pages · Reviewing-group guides (7) · Country annexes (12). 214 clauses indexed. Answers cite clause and version.
+
+  Connector: Salesforce grants platform
+Sandbox · metadata read 21 Oct 2026 · identity: requestor login via portal
+
+Refresh metadataRun end-to-end test
+
+      Field mapping · request
+
+        Envoy field
+Platform field
+Values
+
+          Grant family
+Request.Subtype
+3 picklist values read from org
+
+          Grant subtype
+Request.Type
+17 values · 4 US-only
+
+          Audience geography
+Request.GeographicCoverage
+Mainly US · Mainly UK · Low-middle income · ≤2 countries · International
+
+          Amount, currency
+Request.RequestedAmount · CurrencyIsoCode
+Currency list read from org
+
+          Key dates
+Request.StartDateTime · EndDateTime
+Must equal first and last activity dates
+
+          Activities, audience
+Activity · AudienceBreakdown
+Child records
+
+          Documents
+ContentVersion + category/type
+Categories read from org
+
+          Review summary
+ContentVersion · type "Other"
+Generated PDF, plus a comment
+
+      Write checkpoints
+
+          Checkpoint 1MatchOrganization matched by tax identifier; existing entity used, no payee touched
+
+          Checkpoint 2CreateRequest created in draft as the requestor; correlation key stored
+
+          Checkpoint 3AttachDocuments uploaded with category and type; review summary attached
+
+          Checkpoint 4SubmitStatus moved to submitted for review by the requestor's confirmation
+
+      End-to-end test · 21 Oct 14:02
+
+          Login as requestor (portal)
+Pass
+
+          Search organization by identifier
+Pass · 1 match
+
+          Create request, 22 fields
+Pass
+
+          Platform validation errors surfaced
+0 · as expected
+
+          Upload 5 documents
+Pass
+
+          Submit → status
+Submitted for review
+
+          Automatic triage
+US medical education · as predicted
+
+          Event: additional information requested
+Received in 4 s
+
+          Retry checkpoint 2 with same key
+No duplicate
+
+      Events subscribed
+
+        Request status changes · comments visible to portal users · reconciliation requested · outcomes requested · agreement sent for signature. Polling fallback every 15 minutes.
+
+      Never through the connector
+
+        Bank details and payee records · approval fields · agreement execution · payment release · closure. These stay with the portal's own flows and the coordinators.
+
+  Good afternoon, Dr. Marsh
+New England Cardiology Society · 2 open requests · 1 action needed
+
+My requests
+
+  How would you like to start?
+
+      Describe itTell me what the activity is, who runs it, when and where, and what you're asking for. I'll ask about the rest.
+      Upload what you haveA request letter, prospectus, agenda or budget. I'll read them and fill in what I can, with page references.
+      Use a formThe same questions, section by section, with the same checks as you go. You can switch to the conversation at any point.
+
+    ✎ I'd like to request $50,000 to support a CME programme in Boston…AttachSend
+
+    DROP HERERequest letterPDF or Word
+DROP HEREProspectus or agendaPDF, Word or PowerPoint
+DROP HEREItemized budgetExcel or PDF
+
+    Section 1 of 7Your organizationOrganizationNew England Cardiology Society · matched to your profileTypeAssociation / societyCountryUnited States
+Next: the activitySwitch to conversation
+
+    Before you start: what this will probably be
+
+        Likely request typeAccredited independent medical education
+        Reviewed byThe US medical education team (audience mainly US)
+        Typical decision6 to 8 weeks after a complete submission
+        You'll needRequest letter on letterhead · prospectus or agenda · itemized budget · proof of non-profit status · W-9 · most recent financial statement · accredited provider named
+        Not fundedIndividual professionals, travel for named people, entertainment, activities that have already started
+
+      Based on your organization profile and past requests. I'll confirm the type with you once I know more about the activity. Policy 3.1
+
+    Ask me about the policy
+
+        YouCan we ask for support for the faculty dinner?
+
+        AssistantNot as a separate line. For accredited education, the company can fund the programme as a whole but cannot pay for meals or hospitality for named individuals, and entertainment is excluded altogether. A modest working meal that is part of the accredited agenda can sit inside the programme budget, as long as the provider decides on it. Policy 6.4 Code · SII 4.1
+
+      ✎ Ask a question about eligibility, grant types or country rules…
+
+  New request
+Draft · saved automatically · nothing is sent until you confirm
+
+Rulebook v2.3DocumentsChecks
+
+        Dr. MarshI'd like to request $50,000 to support a CME programme in Boston. It's our annual heart failure symposium, 14–15 May 2027. Prospectus and budget attached.📎 HF2027_Prospectus.pdf📎 HF2027_Budget.xlsx
+
+        AssistantThanks. I've read both files and filled in 14 of the 22 things this request needs; they're on the right with where each came from. Two things to confirm first, because they decide what else I ask for:
+
+The prospectus says the symposium is jointly provided with Beacon CME and offers 11 credit hours. Does that mean Beacon CME is the accredited provider and controls the content and faculty?
+          Yes, Beacon CME is the accredited providerNo credit is offeredNot sure
+
+        Dr. MarshYes. Beacon selects the faculty with our programme committee.
+
+        AssistantThen this is an accredited independent medical education request, reviewed by the US medical education team. One note for later: the company cannot have any role in choosing faculty or content, and the agreement will say so. Your programme committee can, as long as it is independent of the company.
+
+Next: the budget totals $48,500 but you're requesting $50,000. Should I use the budget total, or is there a line missing?
+          Request $48,500Add a lineUpload a revised budget
+
+      ✎ Type or attach…Attach
+
+      Your request so far
+
+        14 of 22 required answers4 documents of 6
+
+          OrganizationNew England Cardiology SocietyProfile
+
+          Request typeAccredited IMEConfirmed
+
+          TitleAdvances in Heart Failure Management 2027Prospectus p.1
+
+          ProviderBeacon CME · accreditedProspectus p.2
+
+          Dates14–15 May 2027 · Boston, MAProspectus p.1
+
+          FormatIn person · symposiumProspectus p.3
+
+          AudienceMainly US · 320 expected: 240 physicians, 60 nurses, 20 otherProspectus p.4
+
+          Requested$50,000 · USDYour message
+
+          Total budget$48,500 differsBudget B14
+
+          Therapeutic areaCardiovascular · heart failureProspectus p.1
+
+          Other fundersNot yet asked
+
+          Learning objectivesNot yet asked
+
+          Conflict of interest0 of 9 questions
+
+      Up next
+Other sources of funding · learning objectives and outcomes level · proof of non-profit status · financial statement · conflict of interest questions · attestations.
+
+  Documents
+Classified into the categories the reviewers use. Click a document to see what was read from it.
+
+Add files
+
+    PDF · 2 PAGESRequest letterNECS_Request_Letter.pdf · on letterhead · signed by the executive directorRequired · present
+
+    PDF · 6 PAGESProspectus / agendaHF2027_Prospectus.pdf · provider, faculty policy, agenda, audienceRequired · present
+
+    XLSX · 1 SHEETItemized budgetHF2027_Budget.xlsx · 11 lines · total $48,500Total differs from request
+
+    PDF · 1 PAGEW-9NECS_W9_2026.pdf · tax identifier matches your profileRequired · present
+
+    MISSINGProof of non-profit statusIRS determination letter or state equivalent. Your profile has a 2021 letter; reviewers accept it if nothing has changed.Reuse 2021 letterUpload new
+
+    MISSINGFinancial statementMost recent annual statement showing gross revenue. Needed to check the funding cap.Upload
+
+    Read from HF2027_Prospectus.pdf
+
+      Fact
+Value
+Where
+
+        Accredited provider
+Beacon CME, jointly provided with NECS
+p.2 ¶1
+
+        Credit
+11.0 AMA PRA Category 1 credits
+p.2 ¶2
+
+        Faculty selection
+"Faculty are selected by the Beacon CME planning committee with NECS programme chairs"
+p.2 ¶3
+
+        Supporter role
+"Supporters have no role in planning, faculty or content"
+p.2 ¶4
+
+        Activity dates
+14 May 2027 08:00 – 15 May 2027 16:30
+p.1 · p.5
+
+        Outcomes measured
+Pre/post knowledge test; 90-day practice survey (Moore level 5)
+p.6
+
+    Conflicts and gaps found across documents
+
+        BudgetBudget total $48,500 vs requested $50,000. You chose to request $48,500. Confirmed 14:11
+
+        DatesLetter, prospectus and agenda agree on 14–15 May 2027.
+
+        IndependenceProspectus states the provider controls planning, faculty and content.
+
+        Budget lineLine 9 "Faculty dinner, $2,400" will be reviewed as hospitality. I've noted it rather than removed it; the reviewer decides.
+
+      Nothing is changed in your documents. What I read is a proposal until you confirm it.
+
+  Checks
+Run on every change against rulebook v2.3 · 2 to fix before you can submit · 2 to decide · 11 passed
+
+Back to conversationReview and submit
+
+    2Must fix
+
+    2Your decision
+
+    11Passed
+
+    4.0%Of annual revenue · limit 25%
+
+    !Financial statement missing, so the funding cap can't be evidencedChecklist R-11
+      Reviewers need your most recent annual financial statement to confirm gross revenue. Your profile says $1.2M (2025). At $48,500 this request is 4.0% of that, well within the 25% limit, but the statement must be on file.Upload statementWhy is this needed?
+
+    !Conflict of interest questions: 6 of 9 answeredPolicy 7.3
+      Three left: whether any board member provides services to the company; whether your organization is in commercial discussions with the company; whether any officer is a government official. I'll ask them one at a time. Your answers are recorded as yours.Continue questions
+
+    ?Activity starts in 42 days; the company asks for at least 60SOP 4.1
+      Approval by the committee and a signed agreement must both happen before 14 May. The reviewing team's typical decision time is 6 to 8 weeks, so this is at risk. You can submit anyway and the reviewer will see this flag, or you can change the activity dates if that's possible.Submit with the flagChange dates
+
+    ?Budget line "Faculty dinner, $2,400" may be treated as hospitalityPolicy 6.4
+      The company does not fund entertainment or meals for named individuals. A working meal inside the accredited agenda, decided by the provider, is usually acceptable. Keep the line and the reviewer will decide, or remove it and reduce the request.Keep and explainRemove line
+
+    ✓Organization eligible: association, registered non-profit, not sanctioned or debarredPolicy 3.1Screened 21 Oct against the sanctions and exclusion lists the company uses.
+
+    ✓Requested amount is 4.0% of annual revenuePolicy 5.2$48,500 ÷ $1,200,000, plus $0 pending and $0 approved this year. Evidence pending (see above).
+
+    ✓Provider controls content, faculty and learnersCode · SII 4Stated in the prospectus; will be restated in the letter of agreement.
+
+    ✓Key dates match the activity datesChecklistStart 14 May 2027 08:00, end 15 May 2027 16:30, from the agenda.
+
+    ✓No funding of individual professionals, travel for named people, or product promotionPolicy 6.1Budget lines reviewed; none pay named individuals directly.
+
+    ✓Audience breakdown, format and expected participants recordedChecklist320 expected across 3 audience types.
+
+    ✓Five more passed: request letter, W-9, learning objectives, outcomes level, other funders disclosedChecklistExpand any item in the request panel to see its source.
+
+  Review and submit
+This is exactly what will be written to the grants system, in your name. Nothing has been sent yet.
+
+All checks passed · 1 flag for the reviewer
+
+      Request summary
+
+          OrganizationNew England Cardiology Society · existing record, matched by tax identifier
+          RequestorDr. Elena Marsh, Director of Education · you
+          Authorized signerR. Delgado, Executive Director · from your profile
+          TypeIndependent medical education · accredited
+          TitleAdvances in Heart Failure Management 2027
+          ActivitySymposium, in person, Boston MA · 14–15 May 2027 · 320 expected
+          Requested$48,500 USD · total budget $48,500 · no other funders
+          DocumentsRequest letter · prospectus · budget · W-9 · non-profit letter (2021) · financial statement 2025 · pre-submission review summary
+          Flag for reviewerLead time 42 days (policy asks 60)
+
+      Your statements
+
+        Anti-discrimination statementOur organization complies with applicable anti-discrimination laws and will not use the funds to support activities that discriminate on any legally protected basis.
+
+        AccuracyThe information in this request is accurate and complete to the best of my knowledge. I reviewed every value the assistant proposed.
+
+        IndependenceThe company will have no role in the selection of faculty, learners or content, and the activity will be free of commercial bias.
+
+        These are your statements, not the assistant's. They are recorded with your name and the time.
+
+      What happens when you submit
+
+          NowWriteRequest created in the grants system in your name and submitted for review
+
+          NowAttach7 documents attached, including a review summary for the coordinator
+
+          Within 10 daysThemA coordinator from the US medical education team claims the request
+
+          6–8 weeksThemCommittee decision. I can't predict it; I can tell you when it changes
+
+          If approvedYouLetter of agreement sent for e-signature to R. Delgado
+
+          After 15 MayYouReconciliation and outcomes report, which I'll help you prepare
+
+      Submit
+
+        Complete the independence statement above to enable submission.
+
+        Submit requestSave and come back later
+
+      After submission
+Request 2026-01642-IME · submitted for review · 21 Oct 2026 14:32 by Dr. Elena Marsh. The assistant's activity on this request is listed in its history. You'll be told when a reviewer picks it up.
+
+  My requests
+Status in plain words, and what, if anything, is needed from you
+
+New request
+
+  Needs you
+
+    Request
+Status
+What's needed
+Due
+
+      2026-01642-IME · Heart Failure 2027
+Being reviewed
+The coordinator asked 2 questions (3 Nov)
+Please answer within 10 days
+Answer
+
+      2026-00917-IME · Cardio-Renal Update 2026
+Reconciliation due
+Activity ended 12 Sep. Actuals, audience, budget use, outcomes, 2 attestations, 2 reports
+11 Dec 2026
+Start
+
+      2025-03380-OTH · Fellowship support
+Approved · agreement awaiting signature
+R. Delgado has the e-signature request since 18 Oct
+Before 1 Jan 2027
+Remind signer
+
+    Coordinator's questions · 2026-01642-IME
+
+        AssistantThe coordinator, K. Osei, wrote on 3 Nov: "Please confirm whether the programme committee includes anyone employed by or consulting for a pharmaceutical company, and provide the 2026 financial statement if available."
+
+Two things, then. First: does anyone on the NECS programme committee work for or consult to a pharmaceutical company?
+          NoYes, I'll give details
+
+        Dr. MarshOne of four members consults for two companies, not the one we're asking. The committee has a recusal policy; I can attach it.
+
+        AssistantThank you. I'll record that answer as yours and attach the recusal policy. For the second point, the 2026 statement: is it available yet?
+
+      When you're done I'll write a short "what changed" note for the coordinator, so they don't have to re-read the whole request.
+
+    Reconciliation · 2026-00917-IME
+
+        Did it happen?Yes · 11–12 Sep 2026, as planned
+        AudienceExpected 280 · actual to confirm · per audience type
+        BudgetTotal budget and use of the company's funds, from your final statement
+        AttestationsScope (funds used only as approved) · transfer of value (no reportable payments to covered recipients)
+        ReportsActivity report · financial report · outcomes summary (Moore level planned 5)
+        AcknowledgementScreenshot of the supporter acknowledgement on the activity website
+
+      Start with the activity reportUpload everything at once
+
+  2026-01642-IME · Advances in Heart Failure Management 2027
+Inside the grants platform · Submitted for review · Independent medical education · accredited · Cardiovascular
+
+More actionsRequest additional informationClaim
+
+      Pre-submission review summary · attached by the assistant
+
+        15 checks passed1 flag for youRulebook v2.3 · 21 Oct 14:32
+
+        Check
+Result
+Evidence
+
+          Eligible organization, screened
+Pass
+Profile; sanctions and exclusion lists, 21 Oct
+
+          Revenue cap 25%
+4.0%
+$48,500 ÷ $1.2M · FY2025 statement attached
+
+          Provider independence
+Pass
+Prospectus p.2 ¶3–4 quoted
+
+          Budget equals request
+Pass
+Requestor reduced request from $50,000 to $48,500
+
+          Hospitality line
+For you
+Line 9 faculty dinner $2,400, kept with requestor's explanation
+
+          Lead time
+42 days
+Policy asks 60; requestor chose to submit with the flag
+
+          Conflict of interest
+9 of 9
+All "no"; answered by Dr. Marsh 21 Oct
+
+          Attestations
+3 of 3
+Typed by Dr. Marsh 21 Oct 14:31
+
+      What changed since the information request · 5 Nov
+
+        Added: committee recusal policy (document, category "Other"). Answered: programme committee includes one member consulting for two unrelated companies; recusal policy applies. Not yet available: 2026 financial statement; requestor expects it in January. No other fields changed.
+
+      Checklist · platform
+
+          ✓ Request letter on letterhead✓ Proof of non-profit status✓ Authorized signer added✓ Only one requesting organization✓ Conflict of interest questions answered✓ Start date before end date✓ Requested amount not above estimated budget✓ Anti-discrimination statement acknowledged
+
+        The platform's own rules, run on save. The summary above is additional, not a replacement.
+
+      Triage
+OutcomeUS medical educationPredicted by assistantUS medical educationOverrideNone
+
+      History · assistant entries
+
+          21 Oct 14:32SubmitSubmitted by Dr. E. Marsh, prepared with the assistant
+
+          21 Oct 14:30Attach7 documents attached, categories set by assistant, confirmed by requestor
+
+          21 Oct 14:11ChangeRequested amount $50,000 → $48,500. Reason: "Match itemized budget". Dr. E. Marsh
+
+          21 Oct 13:58Extract14 fields proposed from prospectus and budget; each confirmed by Dr. E. Marsh
+
+  RecommendationsMissing functionality
+
+    Beyond the five requirements in the discussion deck, grouped by how soon you need them. "Must" items are ones I'd expect a grants or compliance lead to ask about in the first demo.
+
+    MustField-level provenance and a working request
+Every value shows where it came from (message, document page, profile) and whether the requestor confirmed it. Drafts are resumable across sessions. Without this the agent is a chat window, not a submission tool. Screens 5 and 6.
+
+    MustOne rulebook, imported from the platform
+The checklist rules per reviewing group are the source. The agent imports them, adds its own, and a test set proves they agree. A request that passes the agent and fails on submit is the fastest way to lose requestors. Screen 2.
+
+    MustRequestor identity and attestations
+Writes happen under the requestor's portal login. Conflict-of-interest answers, anti-discrimination and independence statements are typed or ticked by the requestor, visibly, and recorded as theirs. Screen 8.
+
+    MustAgent activity written to the request
+Every extraction, proposal, change and attachment appears in the platform's history and as a review summary document. Auditors and coordinators see it where they already look. Screen 10.
+
+    MustScope boundaries
+Declines to predict decisions, suggest amounts, or write the educational rationale. Explains why, offers the coordinator contact. The line between completeness coaching and advocacy must be enforced in the orchestrator, not left to the prompt.
+
+    MustOrganization matching
+Search by identifier and name before creating; reuse profile documents (non-profit letter, W-9, financial statement) and tell the requestor when they are stale. Duplicate organizations are a backend ticket to fix today.
+
+    ShouldRequired-actions inbox
+Additional information requests, reconciliation, outcomes and signature reminders in one list, each turned into a short exchange with the coordinator's comment quoted and a change summary written back. Screen 9.
+
+    ShouldDocument intelligence beyond extraction
+Budget arithmetic, ineligible lines, date consistency across letter, agenda and budget, independence clauses in a prospectus, and classification into the platform's document categories.
+
+    ShouldStatus in plain language with expectations
+"Being reviewed, a coordinator claimed it on 3 Nov, typical decision 6 to 8 weeks" instead of a status code. Expectations come from the company's own history, not from the model.
+
+    ShouldTenant studio with import
+Brand tokens, terminology, languages, catalogue, rulebook and connector mapping configured by the vendor's team without code, with the catalogue and picklists read from each company's org. Screens 1 to 3.
+
+    ShouldInternal organizer mode
+Coordinators who create requests on behalf of organizations (memberships, product donations, humanitarian relief) face the same completeness work and can use the same agent with internal identity.
+
+    ShouldBlocker analytics
+Which rules block most, which questions requestors abandon on, which triage predictions miss. Feeds the rulebook and the company's own policy clarity.
+
+    LaterEmail intake and reminders
+A request letter emailed to the grants mailbox starts a draft and invites the requestor into the conversation. Reconciliation reminders go out from the agent with the list of what is needed.
+
+    LaterModel governance pack
+Evaluation sets per grant subtype and language, a record of which model version did what, change control on model upgrades, and a statement on data use for each company's AI governance committee.
+
+    LaterSecond platform adapter
+The connector is an adapter. A second grants platform proves the agent is a product rather than an extension of one system, and sets the price of the first adapter.
+
+    LaterEnterprise baseline
+Single sign-on for the vendor's studio, encryption, data residency options per company, retention aligned to the company's records policy, and a security report. A gate for procurement, not a feature.
+
+  What could go wrongRisks and mitigations
+
+    The agent gives wrong policy guidanceA requestor is told something is eligible, builds a programme around it, and is declined.
+Guidance is retrieved from the company's own documents and quoted with clause and version. Eligibility is a rulebook result, not an opinion. Questions outside the corpus are declined and routed. Every answer is logged with its sources for review.
+
+    Bad data in the system of recordDuplicate organizations, wrong grant type, invented figures.
+Search-before-create; type confirmed with the requestor before the schema is fixed; every value has a source and a confirmation; writes only at checkpoints, idempotent, through the platform's validation; sandbox certification per company.
+
+    Rulebook drifts from the platformRequests pass the agent and fail on submit, or the agent asks for things the platform no longer needs.
+Import, not retype; nightly comparison; test set per subtype and country run against the sandbox; a platform validation error at submit is a logged defect with an owner.
+
+    The agent becomes an advocateRequestors use it to craft answers that get to yes, or it fills in attestations and rationale for them.
+Hard scope boundaries in the orchestrator; attestations and conflict-of-interest answers typed by the requestor; the educational rationale is extracted from their documents, never drafted; the review summary tells the coordinator exactly what the agent did.
+
+    Review after submission gets weakerCoordinators trust the summary and skip the judgement.
+The summary lists checks and evidence, not conclusions; the platform checklist still runs; the items that need judgement are labelled "for you"; the vendor's coordinator-side agent reads the same rulebook and shows the same evidence.
+
+    Privacy and sensitive dataBank details, signer identities and board members pass through a chat.
+Bank and payee details never enter the conversation; they stay in the portal's secure flow. Personal data is minimised to what the platform already holds. Per-company model hosting and residency; no training on requestor data.
+
+    Integration effort dominatesEvery company's org is configured differently.
+Metadata read from the org; mapping configured, not coded; the end-to-end test on screen 3 is the acceptance test; integration priced as a separate line.
+
+  Proposed sequencingPath to build
+
+    Built with Claude Code, writing the software is not the slow part. Each stage ends with a demo and a test of whether it is done, and you move on when that test passes. What sets the pace is sandbox access, the rulebook content, and decisions from the first company.
+
+    Build: none · paced by the company1 · Rulebook and sandbox
+One company, three subtypes: accredited and non-accredited education, charitable contribution
+Two reviewing groups: one US, one European country
+Checklist rules exported; policy corpus loaded
+Sandbox, portal test user and connected app
+Done when: the rulebook for those subtypes is signed off and the sandbox accepts a test request.
+
+    Build: about 1–2 weeks2 · Core loop
+Conversation, document reading, working request with provenance
+Rulebook engine and fix list
+Connector: four checkpoints as the requestor
+Review and submit; review summary attached
+Done when: ten real past requests, re-entered by their original requestors or coordinators, submit cleanly and the platform checklist agrees with the agent on every one.
+
+    Build: about 1–2 weeks3 · Follow-ups and the portal
+Events: additional information, reconciliation, outcomes
+Requestor home and change summaries
+Policy guide with citations and declines
+Portal embed, two languages
+Done when: a request goes through an information round and a reconciliation with the coordinator reading only the agent's summaries.
+
+    Build: about 1–2 weeks · then paced by pilots4 · Product
+Tenant studio with metadata import
+Second company configured without code
+Blocker analytics; evaluation sets
+Shared rulebook with the coordinator-side agent
+Done when: pilot data shows fewer information rounds and shorter time to a complete submission than the pre-pilot baseline.
+
+    What Claude Code speeds upThe agent service, rulebook engine, connector, screens, test harness against the sandbox, and rebuilding after feedback. A demo on the company's real policy and sandbox can happen within the first week or two of building.
+
+    What it doesn'tSandbox and portal credentials. Export of the checklist rules. The grants team answering where the policy is ambiguous. Security and procurement review. Enough pilot requests to measure anything. Legal review of the attestation wording.
+
+    What stays with peopleSigning off each rulebook version. Reviewing what gets built against the agreed rules and the growing test set. Deciding every request. Fast building is believable when every demo shows the test set that proves it works.
+
+  For our next conversationOpen questions
+
+    Where the agent lives. Embedded in the requestor portal under the portal login, or a standalone branded page beside it? Embedded gives one identity and one audit trail; standalone is easier to sell across companies and platforms. I'd build the service once and embed first.
+
+    Identity for writes. Can the connector act as the requestor through the portal's login, or will the company insist on a service account? The answer shapes audit, emails and the "created by" on every request.
+
+    Who owns the rulebook. The company's grants process owner, the vendor's grants practice, or both with a two-signature publish? Also: will the vendor's coordinator-side review agent read it, so the before and after reviews agree?
+
+    Scope of the first pilot. Education grants only, or education plus charitable contributions? The second adds the organization-screening rules and the "no business benefit" test, which are the hard cases for a chat agent.
+
+    Follow-ups in scope. Submission only, or also additional-information rounds, reconciliation and outcomes? The follow-ups are where requestors struggle most today and where the coordinator time goes.
+
+    Model and hosting. Does each company choose model and region, or does the vendor host one service? Data residency for European requestors and the company's AI governance review decide this.
+
+    Attestation wording. Legal review of how the requestor's statements are presented and recorded when an agent prepared the request. Cheap to get right early; expensive to change.
+
+    Internal organizers. Should coordinators who create requests internally (memberships, product donations) use the same agent in the first release?
+
+    Languages. Which of the portal's seven languages matter for the pilot, and does the policy corpus exist in them?
+
+    Measuring success. Baseline today for incomplete submissions, information rounds per request and days to a complete submission, so the pilot can show a change.
+
+

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Console — Coordinator desk and brief</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0;background:#E9EBEF;color:#15181D;font-family:"Instrument Sans",system-ui,sans-serif;font-size:13px;line-height:1.45}
+a{color:#2B55E5}a:hover{color:#1E3FB8}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.muted{color:#5B6270}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5B6270}
+.pane{background:#FFFFFF;border:1px solid #D5D9E0;border-radius:6px;display:flex;flex-direction:column;min-width:0}
+.tag{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:4px;font-size:11.5px;font-family:"JetBrains Mono",ui-monospace,monospace;background:#EEF0F4;color:#3B4252;white-space:nowrap}
+.tag.ok{background:#E3F3EA;color:#1E7A4E}
+.tag.warn{background:#FFF1DC;color:#9A5200}
+.tag.block{background:#FCE8EB;color:#C3283B}
+.tag.you{background:#15181D;color:#FFFFFF}
+.tag.src{background:#E8EEFF;color:#2B55E5}
+.key{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border:1px solid #C9CED8;border-bottom-width:2px;border-radius:4px;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:#3B4252;background:#FFFFFF}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border-radius:6px;border:1px solid #2B55E5;background:#2B55E5;color:#FFFFFF;font:inherit;font-weight:600;cursor:pointer}
+.btn.quiet{background:#FFFFFF;color:#15181D;border-color:#C9CED8}
+.btn.sm{height:30px;padding:0 10px;font-size:12px}
+.row{display:grid;grid-template-columns:96px 1fr 76px 52px 88px;gap:8px;padding:8px 12px;border-bottom:1px solid #EEF0F4;align-items:center;text-decoration:none;color:inherit;font-size:12.5px}
+.row:hover{background:#F4F6FA}
+.row.sel{background:#E8EEFF}
+.row .id{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:#3B4252}
+.row .amt{font-family:"JetBrains Mono",monospace;font-size:12px;text-align:right}
+.row .age{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:#5B6270;text-align:right}
+.tab{height:36px;display:inline-flex;align-items:center;padding:0 12px;border-bottom:2px solid transparent;color:#5B6270;text-decoration:none;font-weight:500}
+.tab.on{color:#15181D;border-bottom-color:#2B55E5;font-weight:600}
+.cr{display:grid;grid-template-columns:1.5fr 84px 1.4fr;gap:10px;padding:8px 14px;border-bottom:1px solid #EEF0F4;align-items:center;font-size:12.5px;text-decoration:none;color:inherit}
+.cr:hover{background:#F4F6FA}
+.cr.sel{background:#E8EEFF}
+.cr .ev{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:#3B4252}
+.jud{border:1px solid #15181D;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;height:48px;padding:0 16px;background:#1C2027;color:#E6E9EF">
+    <div style="display:flex;align-items:center;gap:18px">
+      <div style="font-weight:700;letter-spacing:-.01em">Halden Pharma <span style="opacity:.6;font-weight:500">Grants desk</span></div>
+      <nav style="display:flex;gap:4px">
+        <a href="#desk" style="color:#FFFFFF;text-decoration:none;padding:6px 10px;border-radius:6px;background:#2A3140">Desk</a>
+        <a href="#committee" style="color:#C4CAD6;text-decoration:none;padding:6px 10px">Committee</a>
+        <a href="#agreements" style="color:#C4CAD6;text-decoration:none;padding:6px 10px">Agreements</a>
+        <a href="#payments" style="color:#C4CAD6;text-decoration:none;padding:6px 10px">Payments</a>
+        <a href="#disclosure" style="color:#C4CAD6;text-decoration:none;padding:6px 10px">Disclosure</a>
+        <a href="#ask" style="color:#C4CAD6;text-decoration:none;padding:6px 10px">Ask</a>
+        <a href="B3-Studio.dc.html" style="color:#C4CAD6;text-decoration:none;padding:6px 10px">Studio</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;font-size:12.5px">
+      <span style="display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 10px;border:1px solid #3A4151;border-radius:6px;color:#C4CAD6;min-width:240px">Find a request, org, rule <span style="flex:1 1 auto"></span><span class="key" style="background:#2A3140;border-color:#3A4151;color:#C4CAD6">/</span></span>
+      <span class="tag" style="background:#2A3140;color:#9FE3BF">FundingEnvoy L2 · Recommend</span>
+      <span style="opacity:.8">K. Osei</span>
+    </div>
+  </header>
+
+  <div style="display:grid;grid-template-columns:460px minmax(0,1fr) 340px;gap:12px;padding:12px 16px 16px;flex:1 1 auto;min-height:0">
+
+    <!-- Queue -->
+    <section class="pane">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #D5D9E0;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;gap:4px">
+          <a href="#needs" class="tab on" style="height:30px">Needs me <span class="tag you" style="margin-left:6px">4</span></a>
+          <a href="#envoy" class="tab" style="height:30px">FundingEnvoy handling 6</a>
+          <a href="#waiting" class="tab" style="height:30px">Waiting 12</a>
+        </div>
+        <div style="display:flex;gap:6px"><button class="btn quiet sm">Filter</button><button class="btn quiet sm">Sort: urgency</button></div>
+      </div>
+      <div class="row lbl" style="border-bottom:1px solid #D5D9E0;padding-top:6px;padding-bottom:6px"><span>ID</span><span>Request</span><span style="text-align:right">Amount</span><span style="text-align:right">Age</span><span>FundingEnvoy</span></div>
+
+      <a href="#r1" class="row sel"><span class="id">01642-IME</span><span><div style="font-weight:600">Heart Failure 2027</div><div class="muted">NECS · US · accredited IME</div></span><span class="amt">$48,500</span><span class="age">5d</span><span><span class="tag you">2 judge</span></span></a>
+      <a href="#r2" class="row"><span class="id">01650-CHA</span><span><div style="font-weight:600">Winter relief fund</div><div class="muted">Fond. Lyon Sud · FR · charitable</div></span><span class="amt">€25,000</span><span class="age">3d</span><span><span class="tag you">Declare</span></span></a>
+      <a href="#r3" class="row"><span class="id">01655-OTH</span><span><div style="font-weight:600">Annual membership 2027</div><div class="muted">Eur. Heart Patients Alliance · BE · PO</div></span><span class="amt">€12,000</span><span class="age">2d</span><span><span class="tag you">Confirm</span></span></a>
+      <a href="#r4" class="row"><span class="id">01662-SPO</span><span><div style="font-weight:600">Seoul Cardiology Congress</div><div class="muted">KSC · KR · congress</div></span><span class="amt">₩40.0M</span><span class="age">1d</span><span><span class="tag warn">Conflict</span></span></a>
+
+      <div class="lbl" style="padding:12px 12px 6px;border-top:1px solid #D5D9E0;margin-top:4px">FundingEnvoy handling · no action needed</div>
+      <a href="#r5" class="row"><span class="id">00917-IME</span><span><div>Cardio-Renal 2026 · reconciliation</div><div class="muted">reminder sent · due 11 Dec</div></span><span class="amt">$32,000</span><span class="age">46d</span><span><span class="tag ok">On track</span></span></a>
+      <a href="#r6" class="row"><span class="id">03380-OTH</span><span><div>Fellowship · agreement</div><div class="muted">DocuSign out 4d · signer reminded</div></span><span class="amt">$60,000</span><span class="age">4d</span><span><span class="tag ok">Waiting</span></span></a>
+      <a href="#r7" class="row"><span class="id">01590-CHA</span><span><div>Rural telehealth · payment</div><div class="muted">SAP PO 4500127733 · M1 released</div></span><span class="amt">$120,000</span><span class="age">0d</span><span><span class="tag ok">Paid</span></span></a>
+      <a href="#r8" class="row"><span class="id">01638-IME</span><span><div>Stroke registry · info request</div><div class="muted">requestor day 6/10 · 1 of 2 answered</div></span><span class="amt">$18,000</span><span class="age">6d</span><span><span class="tag ok">Waiting</span></span></a>
+
+      <div style="margin-top:auto;padding:10px 12px;border-top:1px solid #D5D9E0;display:flex;gap:12px;align-items:center;font-size:12px;color:#3B4252;flex-wrap:wrap">
+        <span><span class="key">J</span><span class="key">K</span> move</span><span><span class="key">A</span> accept</span><span><span class="key">I</span> info request</span><span><span class="key">D</span> decline</span><span><span class="key">E</span> evidence</span>
+        <span style="flex:1 1 auto"></span>
+        <button class="btn quiet sm">Accept 3 FundingEnvoy recommendations</button>
+      </div>
+    </section>
+
+    <!-- Brief -->
+    <section class="pane">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 0;border-bottom:1px solid #D5D9E0;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:2px;padding-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="mono muted" style="font-size:11.5px">2026-01642-IME</span><span class="tag src">Accredited IME</span><span class="tag">US med ed</span><span class="tag">Submitted 21 Oct 14:32</span></div>
+          <h1 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em">Advances in Heart Failure Management 2027 · NECS · $48,500</h1>
+        </div>
+        <nav style="display:flex"><a href="#a" class="tab on">Assessment</a><a href="#d" class="tab">Documents 7</a><a href="#c" class="tab">Conversation</a><a href="#h" class="tab">History 41</a><a href="B1-Request.dc.html" class="tab">Requestor view</a></nav>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;padding:12px 14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:10px">
+          <div class="jud">
+            <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:700">Lead time 42d · SOP asks 60</span><span class="tag you">Judge</span></div>
+            <div class="muted">Committee 12 Nov; agreement feasible before 14 May if legal returns in 10d. ACCME: agreement before activity.</div>
+            <div style="display:flex;gap:6px;align-items:center"><span class="tag">SOP 4.1</span><span class="tag">7/9 similar approved</span></div>
+            <div style="display:flex;gap:6px"><button class="btn sm">Accept w/ condition</button><button class="btn quiet sm">Ask requestor</button></div>
+          </div>
+          <div class="jud">
+            <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:700">Line 9 · Faculty dinner $2,400</span><span class="tag you">Judge</span></div>
+            <div class="muted">Working dinner inside accredited agenda, planned by provider. Provider controls funds; no named individuals paid.</div>
+            <div style="display:flex;gap:6px;align-items:center"><span class="tag">Policy 6.4</span><span class="tag">ACCME 4.3</span></div>
+            <div style="display:flex;gap:6px"><button class="btn sm">Allow</button><button class="btn quiet sm">Exclude</button></div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:#F4F6FA;border-radius:6px;flex-wrap:wrap">
+          <div style="flex:1 1 320px;min-width:0"><div class="lbl">FundingEnvoy recommends</div><div style="font-weight:600">Route to US medical education committee · 12 Nov agenda · 2 items marked for discussion</div><div class="muted">Rule T-3 · 38 comparable since 2025 · median 31d to decision</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm">Accept <span class="key" style="background:#1E3FB8;border-color:#1E3FB8;color:#FFFFFF">A</span></button><button class="btn quiet sm">Info request <span class="key">I</span></button><button class="btn quiet sm">Decline <span class="key">D</span></button><button class="btn quiet sm">Reassign</button></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;flex:1 1 auto">
+        <div class="cr lbl" style="border-top:1px solid #D5D9E0;border-bottom:1px solid #D5D9E0"><span>Check · rulebook v2.3</span><span>Result</span><span>Evidence</span></div>
+        <a href="#c1" class="cr"><span>Eligible org, screened (LEIE, SAM, OFAC, TEOS)</span><span><span class="tag ok">Pass</span></span><span class="ev">lists 21 Oct 13:59</span></a>
+        <a href="#c2" class="cr"><span>Revenue cap 25%</span><span><span class="tag ok">4.0%</span></span><span class="ev">48,500 / 1.2M · FY25 stmt</span></a>
+        <a href="#c3" class="cr sel"><span>Provider controls content, faculty, learners</span><span><span class="tag ok">Pass</span></span><span class="ev">Prospectus p.2 ¶3–4 →</span></a>
+        <a href="#c4" class="cr"><span>Budget total = request</span><span><span class="tag ok">Pass</span></span><span class="ev">50,000 → 48,500 by requestor</span></a>
+        <a href="#c5" class="cr"><span>Hospitality / entertainment lines</span><span><span class="tag you">Judge</span></span><span class="ev">line 9 kept w/ explanation</span></a>
+        <a href="#c6" class="cr"><span>Lead time ≥ 60d</span><span><span class="tag you">Judge</span></span><span class="ev">42d · submitted flagged</span></a>
+        <a href="#c7" class="cr"><span>COI 9 questions</span><span><span class="tag ok">9/9</span></span><span class="ev">all "no" · Dr. Marsh</span></a>
+        <a href="#c8" class="cr"><span>Attestations ×3</span><span><span class="tag ok">3/3</span></span><span class="ev">typed 21 Oct 14:31</span></a>
+        <a href="#c9" class="cr"><span>Open Payments reportable?</span><span><span class="tag ok">No</span></span><span class="ev">CME grant, no direction · 403.904</span></a>
+        <a href="#c10" class="cr"><span>Sales / marketing involvement</span><span><span class="tag ok">None</span></span><span class="ev">external origin · no commercial role</span></a>
+        <a href="#c11" class="cr"><span>Agreement template</span><span><span class="tag ok">Ready</span></span><span class="ev">IME-US-2026 · independence clause 4</span></a>
+      </div>
+
+      <div style="padding:10px 14px;border-top:1px solid #D5D9E0;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label for="reason" class="lbl">Reason</label>
+        <input id="reason" placeholder="Required to decline or override · recorded with your name" style="flex:1 1 240px;min-width:0;height:32px;padding:0 10px;border:1px solid #C9CED8;border-radius:6px;font:inherit;font-size:12.5px">
+        <span class="muted" style="font-size:12px">FundingEnvoy: extracted 14 fields · classified 7 docs · ran 17 checks · drafted brief · decided nothing</span>
+      </div>
+    </section>
+
+    <!-- Evidence -->
+    <aside class="pane">
+      <div style="padding:10px 14px;border-bottom:1px solid #D5D9E0;display:flex;flex-direction:column;gap:2px">
+        <div class="lbl">Evidence · check 3</div>
+        <div style="font-weight:700">HF2027_Prospectus.pdf · page 2</div>
+      </div>
+      <div style="padding:14px;display:flex;flex-direction:column;gap:10px;font-size:12.5px">
+        <div style="padding:12px;background:#F4F6FA;border-radius:6px;line-height:1.55;font-family:Georgia,serif;color:#3B4252">
+          <p style="margin:0 0 8px">¶3 <span style="background:#FFF1DC">Faculty are selected by the Beacon CME planning committee with NECS programme chairs.</span> Faculty disclose relevant financial relationships per the Standards for Integrity and Independence.</p>
+          <p style="margin:0"><span style="background:#FFF1DC">¶4 Supporters have no role in planning, faculty or content.</span> Support is acknowledged to learners without logos.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="lbl">Why it matters</div>
+          <div class="muted">ACCME Standard 4 and the PhRMA Code require the provider, not the company, to control content, faculty and learners. The agreement restates this in clause 4.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="lbl">Also found</div>
+          <div><span class="tag">p.6</span> Outcomes: pre/post test; 90-day survey (Moore L5)</div>
+          <div><span class="tag">p.1, p.5</span> Dates agree with letter and budget</div>
+        </div>
+        <div style="display:flex;gap:6px"><button class="btn quiet sm">Open full document</button><button class="btn quiet sm">Quote in decision</button></div>
+      </div>
+      <div style="margin-top:auto;padding:12px 14px;border-top:1px solid #D5D9E0;display:flex;flex-direction:column;gap:6px">
+        <div class="lbl">Requestor</div>
+        <div><div style="font-weight:600">Dr. Elena Marsh · Director of Education</div><div class="muted">NECS · 3 prior requests · 0 overdue reconciliations · last contact 5 Nov</div></div>
+        <div style="display:flex;gap:6px"><button class="btn quiet sm">Message via FundingEnvoy</button><button class="btn quiet sm">Org profile</button></div>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

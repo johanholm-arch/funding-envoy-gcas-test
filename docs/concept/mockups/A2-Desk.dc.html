@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ledger — Coordinator desk and brief</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0;background:#FBFAF8;color:#1B1B1F;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.5}
+a{color:#176B63}a:hover{color:#0F4F49}
+.serif{font-family:"Newsreader","Iowan Old Style",Georgia,serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#5E5E66;font-weight:600}
+.muted{color:#5E5E66}
+.chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:2px;font-size:12px;font-family:"IBM Plex Mono",ui-monospace,monospace;background:#F0EEE9;color:#3E3E45;white-space:nowrap}
+.chip.ok{background:#E6F2EF;color:#176B63}
+.chip.warn{background:#FFF4DF;color:#9A5B00}
+.chip.block{background:#FBE9EC;color:#A3303F}
+.chip.you{background:#1B1B1F;color:#FBFAF8}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:2px;border:1px solid #1B1B1F;background:#1B1B1F;color:#FBFAF8;font:inherit;font-weight:500;cursor:pointer}
+.btn.quiet{background:transparent;color:#1B1B1F}
+.btn.small{height:32px;padding:0 12px;font-size:13px}
+.q{display:flex;flex-direction:column;gap:4px;padding:12px 20px;border-bottom:1px solid #ECEAE5;text-decoration:none;color:inherit}
+.q:hover{background:#F3F1EC}
+.q.sel{background:#F3F1EC;box-shadow:inset 3px 0 0 #1B1B1F}
+.q .t{font-weight:500}
+.q .m{font-size:12.5px;color:#5E5E66}
+.row{display:grid;grid-template-columns:1.4fr .6fr 1.6fr;gap:16px;padding:9px 0;border-bottom:1px solid #ECEAE5;font-size:13.5px;align-items:baseline}
+.row .r{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:24px;height:56px;padding:0 32px;border-bottom:1px solid #E3E1DC">
+    <div style="display:flex;align-items:center;gap:28px">
+      <div class="serif" style="font-size:20px;font-weight:500">Halden Pharma <span class="muted" style="font-weight:400">· Grants desk</span></div>
+      <nav style="display:flex;gap:20px;font-size:14px">
+        <a href="#desk" style="color:#1B1B1F;text-decoration:none;border-bottom:2px solid #1B1B1F;padding-bottom:2px">Desk</a>
+        <a href="#committee" style="color:#5E5E66;text-decoration:none">Committee</a>
+        <a href="#agreements" style="color:#5E5E66;text-decoration:none">Agreements &amp; payments</a>
+        <a href="#disclosure" style="color:#5E5E66;text-decoration:none">Disclosure</a>
+        <a href="A4-Ask.dc.html" style="color:#5E5E66;text-decoration:none">Ask</a>
+        <a href="A3-Studio.dc.html" style="color:#5E5E66;text-decoration:none">Studio</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;font-size:13px">
+      <span class="chip ok">FundingEnvoy · level 2 · Recommend</span>
+      <span class="muted">K. Osei · US medical education</span>
+    </div>
+  </header>
+
+  <div style="display:flex;flex:1 1 auto;min-height:0">
+
+    <!-- Queue -->
+    <aside style="width:400px;flex:0 0 400px;border-right:1px solid #E3E1DC;display:flex;flex-direction:column;overflow:auto">
+      <div style="padding:18px 20px 10px;display:flex;align-items:baseline;justify-content:space-between">
+        <h2 class="serif" style="margin:0;font-size:22px;font-weight:500">Needs you <span class="muted" style="font-size:16px">4</span></h2>
+        <span class="muted" style="font-size:12.5px">Sorted by what only a person can do</span>
+      </div>
+      <a href="#r1" class="q sel">
+        <div style="display:flex;justify-content:space-between;gap:8px"><span class="t">Advances in Heart Failure Management 2027</span><span class="mono" style="font-size:12.5px">$48,500</span></div>
+        <div class="m">New England Cardiology Society · accredited IME · submitted 21 Oct</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip you">2 for your judgement</span><span class="chip ok">15 passed</span></div>
+      </a>
+      <a href="#r2" class="q">
+        <div style="display:flex;justify-content:space-between;gap:8px"><span class="t">Winter emergency relief fund</span><span class="mono" style="font-size:12.5px">€25,000</span></div>
+        <div class="m">Fondation Hôpital Lyon Sud · charitable · France</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip you">Declare convention to the Ordre first</span><span class="chip ok">Draft ready</span></div>
+      </a>
+      <a href="#r3" class="q">
+        <div style="display:flex;justify-content:space-between;gap:8px"><span class="t">Annual membership 2027</span><span class="mono" style="font-size:12.5px">€12,000</span></div>
+        <div class="m">European Heart Patients Alliance · patient organisation · Belgium</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip you">Confirm "no business benefit"</span><span class="chip ok">Eligible · agreement drafted</span></div>
+      </a>
+      <a href="#r4" class="q">
+        <div style="display:flex;justify-content:space-between;gap:8px"><span class="t">Seoul Cardiology Congress booth &amp; sponsorship</span><span class="mono" style="font-size:12.5px">₩40,000,000</span></div>
+        <div class="m">Korean Society of Cardiology · congress · Korea</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip warn">Booth plus sponsorship: not both since Jul 2026</span></div>
+      </a>
+
+      <div style="padding:22px 20px 10px"><h2 class="serif" style="margin:0;font-size:22px;font-weight:500">FundingEnvoy is handling <span class="muted" style="font-size:16px">6</span></h2></div>
+      <a href="#r5" class="q"><div class="t">Cardio-Renal Update 2026 · reconciliation</div><div class="m">Reminder sent 20 Oct · due 11 Dec · requestor started the activity report</div></a>
+      <a href="#r6" class="q"><div class="t">Fellowship support · agreement</div><div class="m">Out for signature in DocuSign 4 days · signer reminded this morning</div></a>
+      <a href="#r7" class="q"><div class="t">Rural telehealth pilot · payment</div><div class="m">Milestone 1 released in SAP 24 Oct · PO 4500127733</div></a>
+      <a href="#r8" class="q"><div class="t">Stroke registry · information request</div><div class="m">Waiting on requestor · day 6 of 10 · 1 of 2 answered</div></a>
+
+      <div style="padding:22px 20px 10px"><h2 class="serif" style="margin:0;font-size:22px;font-weight:500">Waiting on others <span class="muted" style="font-size:16px">12</span></h2></div>
+      <a href="#r9" class="q"><div class="t">8 at committee · 12 Nov agenda</div><div class="m">Pack generated · 3 with flags</div></a>
+      <a href="#r10" class="q"><div class="t">4 with legal · agreement wording</div><div class="m">Longest 9 days</div></a>
+    </aside>
+
+    <!-- Brief -->
+    <main style="flex:1 1 auto;min-width:0;overflow:auto;padding:36px 48px 110px">
+      <div style="max-width:960px;display:flex;flex-direction:column;gap:26px">
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="eyebrow">2026-01642-IME · submitted for review · 21 Oct 14:32 by Dr. E. Marsh</div>
+          <h1 class="serif" style="margin:0;font-size:36px;line-height:1.1;font-weight:500;letter-spacing:-.015em;text-wrap:balance">Advances in Heart Failure Management 2027</h1>
+          <div class="muted">New England Cardiology Society · accredited independent medical education · cardiovascular · Boston, 14–15 May 2027 · <a href="Main.dc.html">open the request as the requestor sees it</a></div>
+        </div>
+
+        <!-- Judgement items first -->
+        <section style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:baseline;gap:12px"><h2 class="serif" style="margin:0;font-size:24px;font-weight:500">For your judgement</h2><span class="chip you">2</span></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:16px">
+            <div style="border:1px solid #1B1B1F;padding:16px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-weight:600">Lead time is 42 days; the SOP asks for 60</div>
+              <div class="muted" style="font-size:13px">Requestor chose to submit with the flag. Committee is 12 Nov; an executed agreement before 14 May is feasible if legal turns it in 10 days. ACCME requires the written agreement before the activity.</div>
+              <div class="muted mono" style="font-size:11.5px">SOP 4.1 · ACCME Standard 4.2 · 7 of 9 similar late requests approved in 2025</div>
+              <div style="display:flex;gap:8px"><button class="btn small">Accept with condition</button><button class="btn small quiet">Ask requestor</button></div>
+            </div>
+            <div style="border:1px solid #1B1B1F;padding:16px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-weight:600">Budget line 9: "Faculty dinner $2,400"</div>
+              <div class="muted" style="font-size:13px">Requestor's explanation: working dinner inside the accredited agenda, planned by Beacon CME. Provider controls the funds; no payment to named individuals. Usually acceptable.</div>
+              <div class="muted mono" style="font-size:11.5px">Policy 6.4 · PhRMA Code (CME) · ACCME 4.3</div>
+              <div style="display:flex;gap:8px"><button class="btn small">Allow line</button><button class="btn small quiet">Exclude line</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Recommendation -->
+        <section style="border-top:1px solid #1B1B1F;border-bottom:1px solid #1B1B1F;padding:18px 0;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+          <div style="flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:6px">
+            <div class="eyebrow">FundingEnvoy recommends · you decide</div>
+            <div class="serif" style="font-size:22px;line-height:1.25">Route to the US medical education committee, 12 November agenda, with the two items above marked for discussion.</div>
+            <div class="muted" style="font-size:13px">Basis: triage rule T-3 (accredited IME, audience mainly US). 38 comparable requests since 2025; median 31 days to decision. Nothing here predicts the outcome.</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:0 0 auto">
+            <button class="btn">Accept and route</button>
+            <div style="display:flex;gap:8px"><button class="btn small quiet">Request information</button><button class="btn small quiet">Decline</button><button class="btn small quiet">Reassign</button></div>
+            <label for="why" class="eyebrow" style="margin-top:4px">Your reason · recorded with your name</label>
+            <textarea id="why" rows="2" placeholder="Required for decline or override" style="width:280px;max-width:100%;padding:8px 10px;border:1px solid #1B1B1F;border-radius:2px;background:#FBFAF8;font:inherit;font-size:13px;resize:vertical"></textarea>
+          </div>
+        </section>
+
+        <!-- Checks -->
+        <section style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <h2 class="serif" style="margin:0;font-size:24px;font-weight:500">What was checked</h2>
+            <span class="muted" style="font-size:12.5px">Rulebook v2.3 · run at submission and again now · platform checklist agrees</span>
+          </div>
+          <div class="row" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#5E5E66;font-weight:600;border-bottom:1px solid #1B1B1F"><span>Check</span><span>Result</span><span>Evidence</span></div>
+          <div class="row"><span>Eligible organization, screened (LEIE, SAM, OFAC, IRS TEOS)</span><span class="chip ok">Pass</span><span class="r">Profile · lists checked 21 Oct 13:59</span></div>
+          <div class="row"><span>Revenue concentration cap 25%</span><span class="chip ok">4.0%</span><span class="r">$48,500 ÷ $1.2M · FY2025 statement attached</span></div>
+          <div class="row"><span>Provider controls content, faculty, learners</span><span class="chip ok">Pass</span><span class="r">Prospectus p.2 ¶3–4 quoted</span></div>
+          <div class="row"><span>Budget total equals amount requested</span><span class="chip ok">Pass</span><span class="r">Requestor reduced $50,000 → $48,500, 14:11</span></div>
+          <div class="row"><span>Hospitality or entertainment lines</span><span class="chip you">For you</span><span class="r">Line 9 kept with explanation</span></div>
+          <div class="row"><span>Lead time ≥ 60 days</span><span class="chip you">For you</span><span class="r">42 days · submitted with flag</span></div>
+          <div class="row"><span>Conflict of interest, 9 questions</span><span class="chip ok">9 of 9</span><span class="r">All "no" · answered by Dr. Marsh</span></div>
+          <div class="row"><span>Attestations: accuracy, anti-discrimination, independence</span><span class="chip ok">3 of 3</span><span class="r">Typed by Dr. Marsh 21 Oct 14:31</span></div>
+          <div class="row"><span>Open Payments: reportable transfer of value?</span><span class="chip ok">Not expected</span><span class="r">Grant to a CME provider, no direction to covered recipients (42 CFR 403.904)</span></div>
+          <div class="row"><span>Sales or marketing involvement</span><span class="chip ok">None</span><span class="r">Request originated externally · no commercial role on this record</span></div>
+        </section>
+
+        <section style="display:flex;flex-direction:column;gap:6px">
+          <h2 class="serif" style="margin:0;font-size:20px;font-weight:500">What FundingEnvoy did on this request</h2>
+          <div class="muted" style="font-size:13px">Extracted 14 fields from 2 documents (each confirmed by the requestor) · classified 7 documents · ran 17 checks · screened 4 lists · drafted this brief. Nothing was decided. <a href="A5-Audit.dc.html">Full trail</a></div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

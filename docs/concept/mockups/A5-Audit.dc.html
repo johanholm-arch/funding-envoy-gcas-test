@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ledger — Audit trail of one request</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0;background:#FBFAF8;color:#1B1B1F;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.5}
+a{color:#176B63}a:hover{color:#0F4F49}
+.serif{font-family:"Newsreader","Iowan Old Style",Georgia,serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#5E5E66;font-weight:600}
+.muted{color:#5E5E66}
+.chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:2px;font-size:12px;font-family:"IBM Plex Mono",ui-monospace,monospace;background:#F0EEE9;color:#3E3E45;white-space:nowrap}
+.chip.ok{background:#E6F2EF;color:#176B63}
+.chip.ai{background:#1B1B1F;color:#FBFAF8}
+.chip.sys{background:#E8EBF0;color:#3B4252}
+.chip.person{background:#FFFFFF;border:1px solid #1B1B1F;color:#1B1B1F}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:2px;border:1px solid #1B1B1F;background:#1B1B1F;color:#FBFAF8;font:inherit;font-weight:500;cursor:pointer}
+.btn.quiet{background:transparent;color:#1B1B1F}
+.btn.small{height:32px;padding:0 12px;font-size:13px}
+.ev{display:grid;grid-template-columns:132px 110px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid #ECEAE5;align-items:start}
+.ev .t{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;color:#5E5E66}
+.ev .w{font-weight:500}
+.ev .d{font-size:13px;color:#3E3E45}
+.ev .h{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;color:#9A9AA2}
+.detail{margin-top:8px;border:1px solid #E3E1DC;background:#FFFFFF;padding:12px 14px;display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:12.5px}
+.detail .k{color:#5E5E66}
+.filt{display:inline-flex;align-items:center;height:32px;padding:0 12px;border:1px solid #1B1B1F;border-radius:2px;background:transparent;color:#1B1B1F;font:inherit;font-size:13px;cursor:pointer}
+.filt.on{background:#1B1B1F;color:#FBFAF8}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:24px;height:56px;padding:0 32px;border-bottom:1px solid #E3E1DC">
+    <div style="display:flex;align-items:center;gap:28px">
+      <div class="serif" style="font-size:20px;font-weight:500">Halden Pharma <span class="muted" style="font-weight:400">· Compliance</span></div>
+      <nav style="display:flex;gap:20px;font-size:14px">
+        <a href="A2-Desk.dc.html" style="color:#5E5E66;text-decoration:none">Desk</a>
+        <a href="#trail" style="color:#1B1B1F;text-decoration:none;border-bottom:2px solid #1B1B1F;padding-bottom:2px">Audit trail</a>
+        <a href="#policy" style="color:#5E5E66;text-decoration:none">Policy versions</a>
+        <a href="#models" style="color:#5E5E66;text-decoration:none">Model register</a>
+        <a href="A4-Ask.dc.html" style="color:#5E5E66;text-decoration:none">Ask</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span class="muted">P. Nair · internal audit · read only</span></div>
+  </header>
+
+  <main style="flex:1 1 auto;min-width:0;overflow:auto;padding:36px 48px 60px">
+    <div style="max-width:1100px;display:flex;flex-direction:column;gap:22px">
+
+      <div style="display:flex;justify-content:space-between;gap:24px;align-items:flex-end;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="eyebrow">2026-01642-IME · every action by a person, the system or FundingEnvoy</div>
+          <h1 class="serif" style="margin:0;font-size:34px;font-weight:500;line-height:1.1">Advances in Heart Failure Management 2027 · trail</h1>
+          <div class="muted">41 entries · 21 Oct – 5 Nov 2026 · append-only · each entry hashed and chained · chain verified 09:00 today</div>
+        </div>
+        <div style="display:flex;gap:8px"><button class="btn quiet">Export for auditor</button><button class="btn quiet">Verify chain</button></div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="muted" style="font-size:13px">Show</span>
+        <button class="filt on">All 41</button>
+        <button class="filt">People 14</button>
+        <button class="filt">FundingEnvoy 19</button>
+        <button class="filt">System and connectors 8</button>
+        <span style="flex:1 1 auto"></span>
+        <label for="find" class="muted" style="font-size:13px">Find</label>
+        <input id="find" type="text" placeholder="field, document, rule, person" style="height:32px;padding:0 10px;border:1px solid #E3E1DC;border-radius:2px;background:#FFFFFF;font:inherit;font-size:13px;width:240px;max-width:100%">
+      </div>
+
+      <section style="display:flex;flex-direction:column">
+        <div class="ev eyebrow" style="border-bottom:1px solid #1B1B1F"><span>When</span><span>Who</span><span>What</span></div>
+
+        <div class="ev"><span class="t">21 Oct 13:58:02</span><span><span class="chip person">Dr. E. Marsh</span></span><span><div class="w">Started a request and uploaded 2 documents</div><div class="d">HF2027_Prospectus.pdf (sha256 …9f2a) · HF2027_Budget.xlsx (…41c0) · via portal login, IP country US</div><div class="h">#0007 · prev …b31e</div></span></div>
+
+        <div class="ev"><span class="t">21 Oct 13:58:19</span><span><span class="chip ai">FundingEnvoy</span></span><span>
+          <div class="w">Proposed 14 field values from 2 documents</div>
+          <div class="d">All marked "proposed" until confirmed. Open to see inputs, sources and outputs.</div>
+          <div class="detail">
+            <span class="k">Model</span><span>claude-opus-5-5 · Halden EU region · prompt set v7 · no training on this data</span>
+            <span class="k">Rulebook</span><span>v2.3 (signed 9 Oct 2026 by J. Whitfield)</span>
+            <span class="k">Inputs</span><span>2 documents (hashes above) · organization profile NECS · request type candidates</span>
+            <span class="k">Outputs</span><span>14 proposals with page/cell references · 2 questions for the requestor · classification "accredited IME" at 0.91</span>
+            <span class="k">Human outcome</span><span>14 of 14 confirmed by Dr. Marsh between 13:59 and 14:11 · 1 value changed (requested amount)</span>
+            <span class="k">Latency · cost</span><span>6.4 s · logged for the model register</span>
+          </div>
+          <div class="h">#0008 · prev …c0d4</div>
+        </span></div>
+
+        <div class="ev"><span class="t">21 Oct 13:59:40</span><span><span class="chip sys">Screening</span></span><span><div class="w">Organization screened against 4 lists</div><div class="d">OIG LEIE (file 2026-10) · SAM.gov · OFAC SDN (2026-10-20) · IRS TEOS Pub 78 · result: no match · EIN 04-…</div><div class="h">#0009</div></span></div>
+
+        <div class="ev"><span class="t">21 Oct 14:03:11</span><span><span class="chip person">Dr. E. Marsh</span></span><span><div class="w">Confirmed request type: accredited independent medical education</div><div class="d">Answered FundingEnvoy's question; consequence shown before confirming: reviewing group, required documents</div><div class="h">#0012</div></span></div>
+
+        <div class="ev"><span class="t">21 Oct 14:11:05</span><span><span class="chip person">Dr. E. Marsh</span></span><span><div class="w">Changed requested amount $50,000 → $48,500</div><div class="d">Reason typed: "Match itemized budget" · previous value kept</div><div class="h">#0015</div></span></div>
+
+        <div class="ev"><span class="t">21 Oct 14:31:48</span><span><span class="chip person">Dr. E. Marsh</span></span><span><div class="w">Typed 3 attestations</div><div class="d">Accuracy · anti-discrimination · independence · wording version 2026-03 · recorded verbatim with name and time · not editable</div><div class="h">#0023</div></span></div>
+
+        <div class="ev"><span class="t">21 Oct 14:32:30</span><span><span class="chip sys">Salesforce connector</span></span><span><div class="w">Wrote request to grants system as the requestor</div><div class="d">Checkpoint 2 of 4 · correlation key 01642-c2 · 22 fields · platform validation: 0 errors · created-by = Dr. E. Marsh (portal token)</div><div class="h">#0025</div></span></div>
+
+        <div class="ev"><span class="t">21 Oct 14:32:41</span><span><span class="chip ai">FundingEnvoy</span></span><span><div class="w">Attached pre-submission review summary</div><div class="d">17 checks · 15 pass · 2 for a person · PDF hash …7e19 · also written as a comment visible to the coordinator</div><div class="h">#0026</div></span></div>
+
+        <div class="ev"><span class="t">21 Oct 14:32:44</span><span><span class="chip person">Dr. E. Marsh</span></span><span><div class="w">Submitted</div><div class="d">Confirmation screen shown and accepted · status new → submitted for review</div><div class="h">#0027</div></span></div>
+
+        <div class="ev"><span class="t">21 Oct 14:33:02</span><span><span class="chip ai">FundingEnvoy</span></span><span><div class="w">Proposed triage: US medical education</div><div class="d">Rule T-3 · confidence 0.97 · applied at autonomy level 4 (act, reversible) · coordinator notified</div><div class="h">#0028</div></span></div>
+
+        <div class="ev"><span class="t">3 Nov 10:12:55</span><span><span class="chip person">K. Osei</span></span><span><div class="w">Requested additional information</div><div class="d">2 questions · typed by K. Osei · FundingEnvoy turned them into a focused task for the requestor, quoting the comment verbatim</div><div class="h">#0033</div></span></div>
+
+        <div class="ev"><span class="t">5 Nov 16:40:18</span><span><span class="chip ai">FundingEnvoy</span></span><span><div class="w">Wrote "what changed" note for the coordinator</div><div class="d">1 answer recorded as the requestor's · 1 document added (recusal policy) · 0 fields changed · note reviewed by Dr. Marsh before posting</div><div class="h">#0041 · chain head …a8f0 · anchored 06 Nov 00:00</div></span></div>
+      </section>
+
+      <div class="muted" style="font-size:12.5px;display:flex;gap:18px;flex-wrap:wrap">
+        <span>Retention: 10 years after closure (Halden records policy R-14)</span>
+        <span>Legal hold: none</span>
+        <span>Chain head anchored nightly to immutable storage</span>
+        <span>Exports carry the verification report</span>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

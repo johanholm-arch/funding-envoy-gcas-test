@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Console — Requestor working request</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0;background:#E9EBEF;color:#15181D;font-family:"Instrument Sans",system-ui,sans-serif;font-size:13px;line-height:1.45}
+a{color:#2B55E5}a:hover{color:#1E3FB8}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.muted{color:#5B6270}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5B6270}
+.pane{background:#FFFFFF;border:1px solid #D5D9E0;border-radius:6px;display:flex;flex-direction:column;min-width:0}
+.tag{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:4px;font-size:11.5px;font-family:"JetBrains Mono",ui-monospace,monospace;background:#EEF0F4;color:#3B4252;white-space:nowrap}
+.tag.ok{background:#E3F3EA;color:#1E7A4E}
+.tag.warn{background:#FFF1DC;color:#9A5200}
+.tag.block{background:#FCE8EB;color:#C3283B}
+.tag.src{background:#E8EEFF;color:#2B55E5}
+.key{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border:1px solid #C9CED8;border-bottom-width:2px;border-radius:4px;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:#3B4252;background:#FFFFFF}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border-radius:6px;border:1px solid #2B55E5;background:#2B55E5;color:#FFFFFF;font:inherit;font-weight:600;cursor:pointer}
+.btn.quiet{background:#FFFFFF;color:#15181D;border-color:#C9CED8}
+.btn.sm{height:30px;padding:0 10px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:default}
+.sec{display:flex;align-items:center;gap:10px;padding:9px 14px;border-left:3px solid transparent;text-decoration:none;color:#15181D;font-size:13px}
+.sec.on{border-left-color:#2B55E5;background:#F4F6FA;font-weight:600}
+.sec .dot{width:8px;height:8px;border-radius:50%;background:#C9CED8;display:inline-block}
+.sec .dot.ok{background:#1E7A4E}.sec .dot.warn{background:#9A5200}.sec .dot.block{background:#C3283B}
+.fr{display:grid;grid-template-columns:200px 1fr 170px;gap:12px;align-items:center;padding:8px 16px;border-bottom:1px solid #EEF0F4}
+.fr label{font-size:12.5px;color:#3B4252}
+.in{height:34px;padding:0 10px;border:1px solid #C9CED8;border-radius:6px;background:#FFFFFF;font:inherit;font-size:13px;color:#15181D;width:100%;box-sizing:border-box;min-width:0}
+.in.ro{background:#F4F6FA}
+.chk{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:10px 14px;border-bottom:1px solid #EEF0F4;align-items:start}
+.chk .sev{width:16px;height:16px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#FFFFFF;margin-top:2px}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;height:48px;padding:0 16px;background:#1C2027;color:#E6E9EF">
+    <div style="display:flex;align-items:center;gap:18px">
+      <div style="font-weight:700;letter-spacing:-.01em">Halden Pharma <span style="opacity:.6;font-weight:500">Funding</span></div>
+      <nav style="display:flex;gap:4px">
+        <a href="#requests" style="color:#C4CAD6;text-decoration:none;padding:6px 10px;border-radius:6px">Requests</a>
+        <a href="#new" style="color:#FFFFFF;text-decoration:none;padding:6px 10px;border-radius:6px;background:#2A3140">New request</a>
+        <a href="#policy" style="color:#C4CAD6;text-decoration:none;padding:6px 10px;border-radius:6px">Policy</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;font-size:12.5px">
+      <span style="display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 10px;border:1px solid #3A4151;border-radius:6px;color:#C4CAD6;min-width:260px">Ask FundingEnvoy or jump to a field <span style="flex:1 1 auto"></span><span class="key" style="background:#2A3140;border-color:#3A4151;color:#C4CAD6">⌘K</span></span>
+      <span style="opacity:.8">E. Marsh · NECS</span>
+      <a href="B2-Desk.dc.html" class="tag" style="text-decoration:none;background:#2A3140;color:#C4CAD6">→ Coordinator seat</a>
+    </div>
+  </header>
+
+  <!-- Title strip -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px 0;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span class="mono muted" style="font-size:12px">DRAFT · 2026-D-0419</span>
+      <h1 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-.01em">Advances in Heart Failure Management 2027</h1>
+      <span class="tag src">Accredited IME</span>
+      <span class="tag">Rulebook v2.3</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="tag ok">14/22 fields</span><span class="tag ok">4/6 docs</span><span class="tag block">2 must fix</span><span class="tag warn">2 decide</span>
+      <button class="btn quiet sm">Save</button>
+      <button class="btn sm" disabled>Review &amp; submit</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:220px minmax(0,1fr) 380px;gap:12px;padding:12px 16px 16px;flex:1 1 auto;min-height:0">
+
+    <!-- Sections -->
+    <nav class="pane" style="padding:8px 0;align-self:start">
+      <div class="lbl" style="padding:6px 14px 8px">Sections</div>
+      <a href="#s1" class="sec"><span class="dot ok"></span>Organization</a>
+      <a href="#s2" class="sec on"><span class="dot warn"></span>Activity</a>
+      <a href="#s3" class="sec"><span class="dot warn"></span>Funding &amp; budget</a>
+      <a href="#s4" class="sec"><span class="dot block"></span>Documents</a>
+      <a href="#s5" class="sec"><span class="dot block"></span>Conflict of interest</a>
+      <a href="#s6" class="sec"><span class="dot"></span>Your statements</a>
+      <a href="#s7" class="sec"><span class="dot"></span>Review &amp; submit</a>
+      <div style="border-top:1px solid #EEF0F4;margin:8px 0"></div>
+      <div class="lbl" style="padding:6px 14px 8px">Keys</div>
+      <div style="padding:0 14px;display:flex;flex-direction:column;gap:6px;font-size:12px;color:#3B4252">
+        <span><span class="key">Tab</span> next field</span>
+        <span><span class="key">⌘</span><span class="key">↵</span> confirm proposal</span>
+        <span><span class="key">⌘</span><span class="key">U</span> upload</span>
+        <span><span class="key">?</span> why is this asked</span>
+      </div>
+    </nav>
+
+    <!-- Form -->
+    <main class="pane">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #D5D9E0">
+        <div style="display:flex;align-items:center;gap:10px"><h2 style="margin:0;font-size:14px;font-weight:700">2 · Activity</h2><span class="muted">7 of 9 filled · values from your prospectus are marked; confirm or edit</span></div>
+        <button class="btn quiet sm">Confirm all proposed (6)</button>
+      </div>
+
+      <div class="fr"><label for="f1">Request type</label><input id="f1" class="in ro" value="Accredited independent medical education"><span><span class="tag ok">Confirmed 14:03</span></span></div>
+      <div class="fr"><label for="f2">Title</label><input id="f2" class="in" value="Advances in Heart Failure Management 2027"><span><span class="tag src">Prospectus p.1</span> <span class="tag">proposed</span></span></div>
+      <div class="fr"><label for="f3">Accredited provider</label><input id="f3" class="in" value="Beacon CME (joint providership)"><span><span class="tag src">Prospectus p.2 ¶1</span> <span class="tag">proposed</span></span></div>
+      <div class="fr"><label for="f4">Credits offered</label><input id="f4" class="in" value="11.0 AMA PRA Category 1"><span><span class="tag src">Prospectus p.2 ¶2</span> <span class="tag">proposed</span></span></div>
+      <div class="fr"><label for="f5">Start · end</label><span style="display:flex;gap:8px"><input id="f5" class="in" value="2027-05-14 08:00" style="width:50%"><input class="in" value="2027-05-15 16:30" aria-label="End" style="width:50%"></span><span><span class="tag src">Agenda p.5</span> <span class="tag">proposed</span></span></div>
+      <div class="fr"><label for="f6">Location · format</label><span style="display:flex;gap:8px"><input id="f6" class="in" value="Boston, MA, US" style="width:60%"><input class="in" value="In person" aria-label="Format" style="width:40%"></span><span><span class="tag src">Prospectus p.1</span> <span class="tag">proposed</span></span></div>
+      <div class="fr"><label for="f7">Audience geography</label><input id="f7" class="in ro" value="Mainly US"><span><span class="tag ok">Derived · drives triage</span></span></div>
+      <div class="fr"><label for="f8">Expected learners</label><span style="display:flex;gap:8px"><input id="f8" class="in" value="240 physicians" style="width:34%"><input class="in" value="60 nurses" aria-label="Nurses" style="width:33%"><input class="in" value="20 other" aria-label="Other" style="width:33%"></span><span><span class="tag src">Prospectus p.4</span> <span class="tag">proposed</span></span></div>
+      <div class="fr"><label for="f9">Outcomes level planned</label><input id="f9" class="in" value="Moore level 5 · performance (90-day survey)"><span><span class="tag src">Prospectus p.6</span> <span class="tag">proposed</span></span></div>
+      <div class="fr" style="background:#FFF9EF"><label for="f10">Learning objectives</label><textarea id="f10" class="in" rows="2" placeholder="Paste from your needs assessment, or say &quot;use the prospectus objectives&quot;" style="height:auto;padding:8px 10px;resize:vertical"></textarea><span><span class="tag warn">Needed</span> <span class="tag">ACCME 4.1</span></span></div>
+      <div class="fr" style="background:#FFF9EF"><label for="f11">Other funders approached</label><input id="f11" class="in" placeholder="None, or list organisations and amounts"><span><span class="tag warn">Needed</span></span></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid #D5D9E0;margin-top:auto">
+        <span class="muted">Next section: Funding &amp; budget · budget total $48,500 differs from request $50,000</span>
+        <button class="btn sm">Continue <span class="key" style="background:#1E3FB8;border-color:#1E3FB8;color:#FFFFFF">↵</span></button>
+      </div>
+    </main>
+
+    <!-- Checks -->
+    <aside class="pane" style="align-self:start">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #D5D9E0">
+        <h2 style="margin:0;font-size:14px;font-weight:700">Checks <span class="muted" style="font-weight:500">· live</span></h2>
+        <div style="display:flex;gap:6px"><span class="tag block">2</span><span class="tag warn">2</span><span class="tag ok">11</span></div>
+      </div>
+
+      <div class="chk"><span class="sev" style="background:#C3283B">!</span><span><div style="font-weight:600">Financial statement missing</div><div class="muted">Evidence for the 25% revenue cap. You're at 4.0% of $1.2M.</div><div style="display:flex;gap:6px;margin-top:6px;align-items:center"><span class="tag">R-11</span><button class="btn quiet sm">Upload</button></div></span></div>
+      <div class="chk"><span class="sev" style="background:#C3283B">!</span><span><div style="font-weight:600">Conflict of interest · 3 of 9 unanswered</div><div class="muted">Board service, commercial discussions, government officials.</div><div style="display:flex;gap:6px;margin-top:6px;align-items:center"><span class="tag">Policy 7.3</span><button class="btn quiet sm">Answer</button></div></span></div>
+      <div class="chk"><span class="sev" style="background:#9A5200">?</span><span><div style="font-weight:600">Lead time 42 days · policy asks 60</div><div class="muted">Decision + signed agreement must precede 14 May. Submit flagged or move dates.</div><div style="display:flex;gap:6px;margin-top:6px;align-items:center"><span class="tag">SOP 4.1</span><button class="btn quiet sm">Submit flagged</button><button class="btn quiet sm">Change dates</button></div></span></div>
+      <div class="chk"><span class="sev" style="background:#9A5200">?</span><span><div style="font-weight:600">"Faculty dinner $2,400" may be hospitality</div><div class="muted">Working meal in the accredited agenda, provider-planned, is usually fine.</div><div style="display:flex;gap:6px;margin-top:6px;align-items:center"><span class="tag">Policy 6.4</span><button class="btn quiet sm">Keep</button><button class="btn quiet sm">Remove</button></div></span></div>
+      <div class="chk"><span class="sev" style="background:#1E7A4E">✓</span><span><div style="font-weight:600">Organization eligible and screened</div><div class="muted">501(c)(3) · LEIE, SAM, OFAC clear · 21 Oct</div></span></div>
+      <div class="chk"><span class="sev" style="background:#1E7A4E">✓</span><span><div style="font-weight:600">Provider controls content and faculty</div><div class="muted">Prospectus p.2 ¶3–4</div></span></div>
+      <div class="chk"><span class="sev" style="background:#1E7A4E">✓</span><span><div style="font-weight:600">Dates agree across 3 documents</div><div class="muted">Letter · agenda · budget</div></span></div>
+      <div class="chk"><span class="sev" style="background:#1E7A4E">✓</span><span><div style="font-weight:600">8 more passed</div><a href="#all" style="font-size:12.5px">Show all with evidence</a></span></div>
+
+      <div style="padding:12px 14px;border-top:1px solid #D5D9E0;display:flex;flex-direction:column;gap:6px;background:#F4F6FA;border-radius:0 0 6px 6px">
+        <div class="lbl">FundingEnvoy · last message</div>
+        <div style="font-size:12.5px">Budget totals $48,500, request says $50,000. Which should I use?</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn quiet sm">Use $48,500</button><button class="btn quiet sm">Add a line</button><button class="btn quiet sm">Open conversation</button></div>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

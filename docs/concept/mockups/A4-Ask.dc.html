@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ledger — Analytics ask anything</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0;background:#FBFAF8;color:#1B1B1F;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.5}
+a{color:#176B63}a:hover{color:#0F4F49}
+.serif{font-family:"Newsreader","Iowan Old Style",Georgia,serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#5E5E66;font-weight:600}
+.muted{color:#5E5E66}
+.chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:2px;font-size:12px;font-family:"IBM Plex Mono",ui-monospace,monospace;background:#F0EEE9;color:#3E3E45;white-space:nowrap}
+.chip.ok{background:#E6F2EF;color:#176B63}
+.chip.warn{background:#FFF4DF;color:#9A5B00}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:2px;border:1px solid #1B1B1F;background:#1B1B1F;color:#FBFAF8;font:inherit;font-weight:500;cursor:pointer}
+.btn.quiet{background:transparent;color:#1B1B1F}
+.btn.small{height:32px;padding:0 12px;font-size:13px}
+.bar{display:grid;grid-template-columns:190px 1fr 48px;gap:12px;align-items:center;height:30px}
+.bar .lbl{font-size:13px;text-align:right}
+.bar .track{position:relative;height:14px;background:transparent}
+.bar .fill{position:absolute;left:0;top:0;height:14px;background:#176B63;border-radius:0 3px 3px 0}
+.bar .v{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px}
+.tr{display:grid;grid-template-columns:1.4fr .8fr .8fr 1.4fr;gap:12px;padding:8px 0;border-bottom:1px solid #ECEAE5;font-size:13px}
+.tile{border:1px solid #E3E1DC;background:#FFFFFF;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.tile .big{font-family:"Newsreader",Georgia,serif;font-size:34px;line-height:1;font-weight:500;letter-spacing:-.01em}
+.sugg{display:inline-flex;align-items:center;height:32px;padding:0 12px;border:1px solid #E3E1DC;border-radius:2px;background:#FFFFFF;color:#1B1B1F;font:inherit;font-size:13px;cursor:pointer}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:24px;height:56px;padding:0 32px;border-bottom:1px solid #E3E1DC">
+    <div style="display:flex;align-items:center;gap:28px">
+      <div class="serif" style="font-size:20px;font-weight:500">Halden Pharma <span class="muted" style="font-weight:400">· Grants desk</span></div>
+      <nav style="display:flex;gap:20px;font-size:14px">
+        <a href="A2-Desk.dc.html" style="color:#5E5E66;text-decoration:none">Desk</a>
+        <a href="#committee" style="color:#5E5E66;text-decoration:none">Committee</a>
+        <a href="#agreements" style="color:#5E5E66;text-decoration:none">Agreements &amp; payments</a>
+        <a href="#disclosure" style="color:#5E5E66;text-decoration:none">Disclosure</a>
+        <a href="#ask" style="color:#1B1B1F;text-decoration:none;border-bottom:2px solid #1B1B1F;padding-bottom:2px">Ask</a>
+        <a href="A3-Studio.dc.html" style="color:#5E5E66;text-decoration:none">Studio</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span class="muted">M. Alvarez · Head of grants</span></div>
+  </header>
+
+  <div style="display:flex;flex:1 1 auto;min-height:0">
+
+    <main style="flex:1 1 auto;min-width:0;overflow:auto;padding:36px 48px 60px">
+      <div style="max-width:880px;display:flex;flex-direction:column;gap:28px">
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <h1 class="serif" style="margin:0;font-size:34px;font-weight:500;line-height:1.1">Ask anything about your funding</h1>
+          <label for="q" class="muted" style="font-size:13px">Every answer shows how it was computed and only uses data you are allowed to see.</label>
+          <div style="display:flex;gap:8px">
+            <input id="q" type="text" value="Which request types needed the most information rounds in Q3, and in which countries?" style="flex:1 1 auto;min-width:0;height:48px;padding:0 14px;border:1px solid #1B1B1F;border-radius:2px;background:#FFFFFF;font:inherit;font-size:15px;color:#1B1B1F">
+            <button class="btn">Ask</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="sugg">Spend by country this year vs last</button>
+            <button class="sugg">Requests past SLA, by stage</button>
+            <button class="sugg">Which rules block most often?</button>
+            <button class="sugg">Open Payments totals for PY2026 so far</button>
+          </div>
+        </div>
+
+        <section style="display:flex;flex-direction:column;gap:14px;border-top:1px solid #1B1B1F;padding-top:20px">
+          <div class="serif" style="font-size:21px;line-height:1.35;text-wrap:pretty">Non-accredited education needed the most follow-up in Q3 2026: 1.4 information rounds per request across 23 requests, mostly in France and Germany, where provider-independence evidence was missing at submission. Accredited education needed 0.6 and memberships 0.2.</div>
+
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+              <div style="font-weight:600">Information rounds per request · 1 Jul – 30 Sep 2026</div>
+              <div class="muted" style="font-size:12px">n = requests submitted in period</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px;padding:6px 0">
+              <div class="bar"><span class="lbl">Non-accredited education</span><span class="track"><span class="fill" style="width:93%"></span></span><span class="v">1.4</span></div>
+              <div class="bar"><span class="lbl">Congress sponsorship</span><span class="track"><span class="fill" style="width:73%"></span></span><span class="v">1.1</span></div>
+              <div class="bar"><span class="lbl">Patient organisation support</span><span class="track"><span class="fill" style="width:60%"></span></span><span class="v">0.9</span></div>
+              <div class="bar"><span class="lbl">Accredited education</span><span class="track"><span class="fill" style="width:40%"></span></span><span class="v">0.6</span></div>
+              <div class="bar"><span class="lbl">Charitable contribution</span><span class="track"><span class="fill" style="width:20%"></span></span><span class="v">0.3</span></div>
+              <div class="bar"><span class="lbl">Membership</span><span class="track"><span class="fill" style="width:13%"></span></span><span class="v">0.2</span></div>
+              <div class="bar" style="height:20px"><span></span><span style="display:flex;justify-content:space-between;font-size:11px;color:#5E5E66;font-family:'IBM Plex Mono',monospace"><span>0</span><span>0.5</span><span>1.0</span><span>1.5</span></span><span></span></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column">
+            <div class="tr eyebrow" style="border-bottom:1px solid #1B1B1F"><span>Non-accredited education, by country</span><span>Requests</span><span>Rounds / request</span><span>Most common gap</span></div>
+            <div class="tr"><span>France</span><span class="mono">7</span><span class="mono">2.1</span><span>Convention not yet declared to the Ordre</span></div>
+            <div class="tr"><span>Germany</span><span class="mono">5</span><span class="mono">1.8</span><span>Provider independence statement</span></div>
+            <div class="tr"><span>United States</span><span class="mono">8</span><span class="mono">0.9</span><span>Financial statement for revenue cap</span></div>
+            <div class="tr"><span>United Kingdom</span><span class="mono">3</span><span class="mono">0.7</span><span>Agreement certification (ABPI 23.2)</span></div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <button class="btn small">Pin to my board</button>
+            <button class="btn small quiet">Show as table</button>
+            <button class="btn small quiet">Ask: which rules caused these rounds?</button>
+            <span class="muted" style="font-size:12px">Saved to your question history · 26 Oct 09:14</span>
+          </div>
+
+          <details style="border:1px solid #E3E1DC;background:#FFFFFF;padding:12px 16px">
+            <summary style="cursor:pointer;font-weight:500">How this was computed</summary>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;font-size:13px">
+              <div><span class="muted">Measure</span> · Information rounds per request = information requests sent ÷ requests submitted, both in the period</div>
+              <div><span class="muted">Period</span> · Q3 2026 = 1 Jul – 30 Sep 2026, by submission date</div>
+              <div><span class="muted">Grouped by</span> · request type, then requestor country</div>
+              <div><span class="muted">Your access</span> · US and EU reviewing groups; 2 requests in Japan excluded by your role</div>
+              <div><span class="muted">Definitions from</span> · metrics library v12 · <a href="#sql">show the query</a></div>
+            </div>
+          </details>
+        </section>
+      </div>
+    </main>
+
+    <!-- Board -->
+    <aside style="width:380px;flex:0 0 380px;border-left:1px solid #E3E1DC;display:flex;flex-direction:column;gap:12px;overflow:auto;padding:28px 24px 40px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 class="serif" style="margin:0;font-size:22px;font-weight:500">My board</h2><span class="muted" style="font-size:12px">Live · refreshed 09:12</span></div>
+
+      <div class="tile"><div class="eyebrow">Agreement executed before activity start</div><div class="big">94%</div><div class="muted" style="font-size:12.5px">Year to date · 3 exceptions, all with committee note · target 100%</div></div>
+      <div class="tile"><div class="eyebrow">Median days to decision</div><div class="big">31</div><div class="muted" style="font-size:12.5px">Complete submission to committee decision · was 47 in 2025</div></div>
+      <div class="tile"><div class="eyebrow">Requests needing more than one information round</div><div class="big">18%</div><div class="muted" style="font-size:12.5px">Was 41% before requestors used FundingEnvoy</div></div>
+      <div class="tile"><div class="eyebrow">Reconciliations overdue</div><div class="big">7</div><div class="muted" style="font-size:12.5px">Oldest 23 days · reminders sent by FundingEnvoy · 2 escalated</div></div>
+      <div class="tile">
+        <div class="eyebrow">Disclosure readiness</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;gap:8px"><span>Open Payments PY2026</span><span class="chip ok">All recipients matched</span></div>
+          <div style="display:flex;justify-content:space-between;gap:8px"><span>EFPIA 2026 data · due 30 Jun 2027</span><span class="chip warn">3 HCOs unmatched</span></div>
+          <div style="display:flex;justify-content:space-between;gap:8px"><span>Medicines Australia · due 31 Oct</span><span class="chip ok">Ready</span></div>
+          <div style="display:flex;justify-content:space-between;gap:8px"><span>Korea expenditure report</span><span class="chip ok">Ready</span></div>
+        </div>
+      </div>
+      <div class="muted" style="font-size:12px">Boards are per person. Shared boards live under Committee and Compliance.</div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

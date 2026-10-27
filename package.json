@@ -1,0 +1,24 @@
+{
+  "name": "fundingenvoy",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "db:reset": "node scripts/db-reset.mjs",
+    "db:migrate": "pnpm --filter @fe/db migrate",
+    "seed": "pnpm --filter @fe/api seed",
+    "dev:api": "pnpm --filter @fe/api dev",
+    "dev:web": "pnpm --filter @fe/web dev",
+    "testset": "pnpm --filter @fe/api testset"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "3.2.4",
+    "@types/node": "22.18.0",
+    "tsx": "4.20.5"
+  }
+}

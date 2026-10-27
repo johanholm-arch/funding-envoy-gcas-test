@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ledger — Operator fleet across tenants</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0;background:#FBFAF8;color:#1B1B1F;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.5}
+a{color:#176B63}a:hover{color:#0F4F49}
+.serif{font-family:"Newsreader","Iowan Old Style",Georgia,serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#5E5E66;font-weight:600}
+.muted{color:#5E5E66}
+.chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:2px;font-size:12px;font-family:"IBM Plex Mono",ui-monospace,monospace;background:#F0EEE9;color:#3E3E45;white-space:nowrap}
+.chip.ok{background:#E6F2EF;color:#176B63}
+.chip.warn{background:#FFF4DF;color:#9A5B00}
+.chip.block{background:#FBE9EC;color:#A3303F}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:2px;border:1px solid #1B1B1F;background:#1B1B1F;color:#FBFAF8;font:inherit;font-weight:500;cursor:pointer}
+.btn.quiet{background:transparent;color:#1B1B1F}
+.btn.small{height:32px;padding:0 12px;font-size:13px}
+.tr{display:grid;grid-template-columns:1.5fr .7fr .7fr .7fr 1.1fr 1fr 1.3fr .9fr;gap:12px;padding:12px 0;border-bottom:1px solid #ECEAE5;font-size:13.5px;align-items:center}
+.tr .n{font-weight:500}
+.tr .m{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px}
+.tenant{display:flex;align-items:center;gap:10px}
+.mark{width:26px;height:26px;border-radius:2px;display:inline-flex;align-items:center;justify-content:center;font-family:"Newsreader",Georgia,serif;font-size:14px;font-weight:600;color:#FBFAF8}
+.card{border:1px solid #E3E1DC;background:#FFFFFF;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.q{display:grid;grid-template-columns:150px 1fr auto;gap:12px;padding:9px 0;border-bottom:1px solid #ECEAE5;font-size:13px;align-items:center}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:24px;height:56px;padding:0 32px;border-bottom:1px solid #E3E1DC;background:#1B1B1F;color:#FBFAF8">
+    <div style="display:flex;align-items:center;gap:28px">
+      <div class="serif" style="font-size:20px;font-weight:500">FundingEnvoy <span style="opacity:.7;font-weight:400">· Operations</span></div>
+      <nav style="display:flex;gap:20px;font-size:14px">
+        <a href="#fleet" style="color:#FBFAF8;text-decoration:none;border-bottom:2px solid #FBFAF8;padding-bottom:2px">Fleet</a>
+        <a href="#queue" style="color:#C9C8C4;text-decoration:none">Queue across tenants</a>
+        <a href="#library" style="color:#C9C8C4;text-decoration:none">Rule library</a>
+        <a href="#orgs" style="color:#C9C8C4;text-decoration:none">Organizations</a>
+        <a href="#models" style="color:#C9C8C4;text-decoration:none">Models</a>
+        <a href="#billing" style="color:#C9C8C4;text-decoration:none">Service levels</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span style="opacity:.8">S. Brandt · managed service lead</span></div>
+  </header>
+
+  <main style="flex:1 1 auto;min-width:0;overflow:auto;padding:36px 48px 60px">
+    <div style="max-width:1320px;display:flex;flex-direction:column;gap:26px">
+
+      <div style="display:flex;justify-content:space-between;gap:24px;align-items:flex-end;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="eyebrow">Monday 26 October 2026 · 4 tenants · 9 coordinators on shift</div>
+          <h1 class="serif" style="margin:0;font-size:34px;font-weight:500;line-height:1.1">One desk, four funders, separate books</h1>
+          <div class="muted">Each tenant's data, rulebook, brand and models stay in its own compartment. Your team works across them from here; every switch is logged on both sides.</div>
+        </div>
+        <div style="display:flex;gap:8px"><button class="btn quiet">Add a tenant</button><button class="btn">Open today's queue</button></div>
+      </div>
+
+      <section style="display:flex;flex-direction:column">
+        <div class="tr eyebrow" style="border-bottom:1px solid #1B1B1F"><span>Tenant</span><span>Open</span><span>Needs a person</span><span>Past SLA</span><span>FundingEnvoy profile</span><span>Region · residency</span><span>Next disclosure deadline</span><span>Rulebook</span></div>
+
+        <div class="tr">
+          <span class="tenant"><span class="mark" style="background:#176B63">H</span><span><div class="n">Halden Pharma</div><div class="muted" style="font-size:12px">Pharma · US, EU, UK, KR · Salesforce</div></span></span>
+          <span class="m">214</span><span class="m">11</span><span><span class="chip ok">0</span></span>
+          <span style="font-size:12.5px">Standard · committee Recommend</span>
+          <span style="font-size:12.5px">US + EU (Frankfurt) · models EU</span>
+          <span style="font-size:12.5px">Medicines Australia · 31 Oct</span>
+          <span><span class="chip">v2.3 · v2.4 draft</span></span>
+        </div>
+        <div class="tr">
+          <span class="tenant"><span class="mark" style="background:#3B4252">M</span><span><div class="n">Meridian Biologics</div><div class="muted" style="font-size:12px">Biotech · EU, UK · own ledger, DocuSign, SAP</div></span></span>
+          <span class="m">68</span><span class="m">4</span><span><span class="chip warn">2</span></span>
+          <span style="font-size:12.5px">Cautious · Observe at triage</span>
+          <span style="font-size:12.5px">EU only (Dublin) · models EU</span>
+          <span style="font-size:12.5px">Disclosure UK · 30 Jun 2027 · 3 HCOs unmatched</span>
+          <span><span class="chip">v1.8</span></span>
+        </div>
+        <div class="tr">
+          <span class="tenant"><span class="mark" style="background:#9A5B00">N</span><span><div class="n">Northwind Devices</div><div class="muted" style="font-size:12px">Medtech · US, EU · AdvaMed and MedTech Europe codes</div></span></span>
+          <span class="m">131</span><span class="m">6</span><span><span class="chip ok">0</span></span>
+          <span style="font-size:12.5px">Standard · education grants only for events</span>
+          <span style="font-size:12.5px">US (Virginia) · models US</span>
+          <span style="font-size:12.5px">MedTech Europe educational grants · 31 Aug 2027</span>
+          <span><span class="chip">v3.0</span></span>
+        </div>
+        <div class="tr">
+          <span class="tenant"><span class="mark" style="background:#A3303F">K</span><span><div class="n">Kestrel Therapeutics</div><div class="muted" style="font-size:12px">Pharma · JP, AU, KR, SG · onboarding</div></span></span>
+          <span class="m">19</span><span class="m">2</span><span><span class="chip ok">0</span></span>
+          <span style="font-size:12.5px">Cautious · Recommend everywhere</span>
+          <span style="font-size:12.5px">APAC (Sydney) · models APAC</span>
+          <span style="font-size:12.5px">JPMA transparency · categories A–E · FY end</span>
+          <span><span class="chip warn">v0.9 · 3 of 5 packs tested</span></span>
+        </div>
+      </section>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:18px">
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 class="serif" style="margin:0;font-size:22px;font-weight:500">Needs a person today</h2><span class="muted" style="font-size:12px">23 across tenants</span></div>
+          <div style="display:flex;flex-direction:column">
+            <div class="q"><span><span class="chip" style="background:#E6F2EF;color:#176B63">Halden</span></span><span>Heart Failure 2027 · 2 judgement items · committee 12 Nov</span><a href="A2-Desk.dc.html" style="font-size:13px">Open</a></div>
+            <div class="q"><span><span class="chip" style="background:#E8EBF0;color:#3B4252">Meridian</span></span><span>Lyon Sud relief fund · declare convention to the Ordre · past SLA 1 day</span><a href="#m1" style="font-size:13px">Open</a></div>
+            <div class="q"><span><span class="chip" style="background:#FFF4DF;color:#9A5B00">Northwind</span></span><span>EuroSpine congress grant · conference vetting result pending (CVS) · event in 48 days</span><a href="#n1" style="font-size:13px">Open</a></div>
+            <div class="q"><span><span class="chip" style="background:#FBE9EC;color:#A3303F">Kestrel</span></span><span>Osaka University scholarship donation · needs university COI committee letter</span><a href="#k1" style="font-size:13px">Open</a></div>
+          </div>
+          <div class="muted" style="font-size:12.5px">Assignment follows each tenant's roster and your team's licences per country. Nobody sees two tenants in one screen except here.</div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 class="serif" style="margin:0;font-size:22px;font-weight:500">Rule library</h2><span class="muted" style="font-size:12px">Shared practice, tenant-specific values</span></div>
+          <div style="display:flex;flex-direction:column">
+            <div class="q"><span class="muted">Updated 24 Oct</span><span>Korea · KPBMA July 2026: no booth plus sponsorship plus donation for one event</span><span class="chip ok">3 of 4 adopted</span></div>
+            <div class="q"><span class="muted">Updated 15 Oct</span><span>Australia · Medicines Australia Edition 20 HCO grant reporting fields</span><span class="chip ok">2 of 4 adopted</span></div>
+            <div class="q"><span class="muted">Updated 2 Oct</span><span>France · convention declaration vs authorisation thresholds, IDAHE filing</span><span class="chip ok">4 of 4 adopted</span></div>
+            <div class="q"><span class="muted">Draft</span><span>EU · AI Act Article 50 notice wording for requestor conversations</span><span class="chip warn">Review by legal</span></div>
+          </div>
+          <div class="muted" style="font-size:12.5px">A pack is a proposal. Each tenant's process owner adopts, edits or declines it in their Studio, and signs their own version.</div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 class="serif" style="margin:0;font-size:22px;font-weight:500">Organizations</h2><span class="muted" style="font-size:12px">Registered once, shared by consent</span></div>
+          <div style="display:flex;gap:28px;flex-wrap:wrap">
+            <div><div class="serif" style="font-size:30px;line-height:1">1,240</div><div class="muted" style="font-size:12.5px">organizations with a passport</div></div>
+            <div><div class="serif" style="font-size:30px;line-height:1">312</div><div class="muted" style="font-size:12.5px">request from 2 or more funders</div></div>
+            <div><div class="serif" style="font-size:30px;line-height:1">96%</div><div class="muted" style="font-size:12.5px">documents reused instead of re-uploaded</div></div>
+          </div>
+          <div class="muted" style="font-size:12.5px">An organization's profile, tax status and statements belong to the organization. It chooses which funder sees them. Funders never see each other's requests or decisions.</div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 class="serif" style="margin:0;font-size:22px;font-weight:500">Models and evaluations</h2><span class="muted" style="font-size:12px">Per tenant, per region</span></div>
+          <div style="display:flex;flex-direction:column">
+            <div class="q"><span class="muted">Extraction</span><span>Field accuracy on the 46-request test set</span><span class="mono">98.1%</span></div>
+            <div class="q"><span class="muted">Classification</span><span>Request type agrees with coordinator</span><span class="mono">96.4%</span></div>
+            <div class="q"><span class="muted">Triage</span><span>Reviewing group agrees with coordinator</span><span class="mono">99.0%</span></div>
+            <div class="q"><span class="muted">Guidance</span><span>Policy answers with a correct citation</span><span class="mono">97.5%</span></div>
+          </div>
+          <div class="muted" style="font-size:12.5px">A model upgrade runs the test set per tenant first; the process owner sees the diff before it goes live.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

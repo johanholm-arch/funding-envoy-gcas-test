@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Thread — Requestor working request</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;background:#FFFFFF;color:#1D1B26;font-family:"Manrope",system-ui,sans-serif;font-size:16px;line-height:1.55}
+a{color:#6A3FB5}a:hover{color:#4F2E8A}
+.muted{color:#67637A}
+.small{font-size:13.5px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;font-size:12.5px;font-weight:600;background:#F4F2F8;color:#4A465C;white-space:nowrap}
+.pill.ok{background:#E4F3EB;color:#1F7A52}
+.pill.warn{background:#FFF1DC;color:#9A5200}
+.pill.block{background:#FBE7EA;color:#BF2F45}
+.pill.src{background:#EDE7F8;color:#6A3FB5}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 20px;border-radius:23px;border:0;background:#6A3FB5;color:#FFFFFF;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.btn.quiet{background:#F4F2F8;color:#1D1B26}
+.btn.sm{height:38px;padding:0 14px;font-size:14px}
+.btn:disabled{opacity:.45;cursor:default}
+.me{align-self:flex-end;max-width:78%;background:#F4F2F8;border-radius:20px 20px 6px 20px;padding:14px 18px}
+.ai{align-self:flex-start;max-width:92%;display:flex;flex-direction:column;gap:12px}
+.ai .txt{background:#F1ECF9;border-radius:20px 20px 20px 6px;padding:14px 18px}
+.card{background:#FFFFFF;border:1px solid #E6E3EE;border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.kv{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:7px 0;border-bottom:1px solid #F0EEF5;font-size:15px}
+.kv:last-child{border-bottom:0}
+.kv .k{color:#67637A;flex:0 0 150px}
+.kv .v{flex:1 1 auto;min-width:0}
+.choice{display:inline-flex;align-items:center;height:40px;padding:0 16px;border:1.5px solid #6A3FB5;border-radius:20px;background:#FFFFFF;color:#6A3FB5;font:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.choice.on{background:#6A3FB5;color:#FFFFFF}
+.who{font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#67637A;margin-bottom:6px}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px;padding:0 24px;border-bottom:1px solid #E6E3EE">
+    <div style="display:flex;align-items:center;gap:14px">
+      <span style="width:34px;height:34px;border-radius:50%;background:#6A3FB5;display:inline-flex;align-items:center;justify-content:center;color:#FFFFFF;font-weight:800">H</span>
+      <div style="display:flex;flex-direction:column;line-height:1.2"><span style="font-weight:800">Halden Pharma funding</span><span class="muted small">with FundingEnvoy, an AI assistant</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="pill">14 of 22 answered</span>
+      <span class="pill block">2 to fix</span>
+      <a href="#requests" class="small" style="text-decoration:none;font-weight:600">My requests</a>
+      <a href="C2-Desk.dc.html" class="pill" style="text-decoration:none">→ Coordinator seat</a>
+    </div>
+  </header>
+
+  <main style="flex:1 1 auto;display:flex;justify-content:center;padding:28px 24px 140px;overflow:auto">
+    <div style="width:100%;max-width:760px;display:flex;flex-direction:column;gap:22px">
+
+      <div class="muted small" style="text-align:center">Today · 13:58 · nothing is sent to Halden until you confirm it</div>
+
+      <div class="me">
+        <div class="who">You</div>
+        I'd like to request $50,000 to support a CME programme in Boston. It's our annual heart failure symposium, 14–15 May 2027. Prospectus and budget attached.
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><span class="pill">HF2027_Prospectus.pdf</span><span class="pill">HF2027_Budget.xlsx</span></div>
+      </div>
+
+      <div class="ai">
+        <div class="txt">
+          <div class="who">FundingEnvoy</div>
+          Thanks, Dr. Marsh. I read both files and filled in 14 of the 22 things this request needs. Everything below shows where it came from; tap any line to change it.
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-weight:800">What I read</span><span class="pill src">from your prospectus and budget</span></div>
+          <div class="kv"><span class="k">Title</span><span class="v">Advances in Heart Failure Management 2027</span><span class="pill">p.1</span></div>
+          <div class="kv"><span class="k">Provider</span><span class="v">Beacon CME · 11.0 credits · joint providership</span><span class="pill">p.2</span></div>
+          <div class="kv"><span class="k">When · where</span><span class="v">14–15 May 2027 · Boston, in person</span><span class="pill">p.1, p.5</span></div>
+          <div class="kv"><span class="k">Who attends</span><span class="v">320 expected · 240 physicians, 60 nurses, 20 other · mainly US</span><span class="pill">p.4</span></div>
+          <div class="kv"><span class="k">Budget</span><span class="v">$48,500 across 11 lines</span><span class="pill">B14</span></div>
+          <div class="kv"><span class="k">Outcomes</span><span class="v">Pre/post test and 90-day practice survey</span><span class="pill">p.6</span></div>
+          <a href="#all" class="small" style="font-weight:600">See all 14</a>
+        </div>
+        <div class="txt">
+          Two things to confirm, because they decide what else I ask for. <strong>Is Beacon CME the accredited provider that controls the content and faculty?</strong>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="choice on">Yes, Beacon is the provider</button><button class="choice">No credit is offered</button><button class="choice">Not sure</button></div>
+      </div>
+
+      <div class="me">
+        <div class="who">You</div>
+        Yes. Beacon selects the faculty with our programme committee.
+      </div>
+
+      <div class="ai">
+        <div class="txt">
+          <div class="who">FundingEnvoy</div>
+          Then this is an <strong>accredited independent medical education</strong> request, reviewed by Halden's US medical education team. One thing to know now: Halden can have no role in choosing faculty or content, and the agreement will say so. Your committee can, as long as it's independent of Halden.
+        </div>
+        <div class="txt">
+          <strong>Your budget totals $48,500, but you asked for $50,000.</strong> Use the budget total, or is a line missing?
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="choice on">Request $48,500</button><button class="choice">Add a line</button><button class="choice">Upload a revised budget</button></div>
+      </div>
+
+      <div class="ai">
+        <div class="txt">
+          <div class="who">FundingEnvoy</div>
+          Done. Here's where the request stands. Two things must be fixed before you can submit, and two are your call.
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-weight:800">Checks</span><span class="muted small">Halden's rulebook v2.3 · runs every time something changes</span></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F0EEF5"><span class="pill block">Fix</span><div style="flex:1 1 auto;min-width:0"><div style="font-weight:700">Financial statement</div><div class="muted small">Your most recent annual statement, to evidence the 25% revenue cap. You're at about 4%.</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn sm">Upload</button><button class="btn quiet sm">Why is this needed?</button></div></div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F0EEF5"><span class="pill block">Fix</span><div style="flex:1 1 auto;min-width:0"><div style="font-weight:700">3 conflict of interest questions</div><div class="muted small">I'll ask them one at a time. Your answers are recorded as yours.</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn sm">Start</button></div></div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F0EEF5"><span class="pill warn">Your call</span><div style="flex:1 1 auto;min-width:0"><div style="font-weight:700">The symposium is in 42 days; Halden asks for 60</div><div class="muted small">Approval and a signed agreement both have to happen before 14 May. You can submit with this flag, or change dates.</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn quiet sm">Submit with the flag</button><button class="btn quiet sm">Change dates</button></div></div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0"><span class="pill warn">Your call</span><div style="flex:1 1 auto;min-width:0"><div style="font-weight:700">"Faculty dinner, $2,400" may count as hospitality</div><div class="muted small">A working meal inside the accredited agenda, planned by Beacon, is usually fine. Keep it and the reviewer decides, or remove it.</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn quiet sm">Keep and explain</button><button class="btn quiet sm">Remove it</button></div></div></div>
+          <div class="muted small" style="display:flex;justify-content:space-between;gap:8px"><span>11 checks passed, including eligibility, screening and provider independence.</span><a href="#passed" style="font-weight:600">Show them</a></div>
+        </div>
+        <div class="muted small">Up next: other funders · learning objectives · proof of non-profit status · your statements. About 6 minutes.</div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="position:sticky;bottom:0;display:flex;justify-content:center;padding:12px 24px 20px;background:#FFFFFF;border-top:1px solid #E6E3EE">
+    <div style="width:100%;max-width:760px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn quiet" aria-label="Attach a file" style="width:46px;padding:0">+</button>
+        <label for="say" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Message FundingEnvoy</label>
+        <input id="say" type="text" placeholder="Reply, ask about the policy, or say what to change…" style="flex:1 1 auto;min-width:0;height:46px;padding:0 18px;border:1.5px solid #E6E3EE;border-radius:23px;background:#FFFFFF;font:inherit;font-size:15px;color:#1D1B26">
+        <button class="btn">Send</button>
+      </div>
+      <div class="muted" style="font-size:12.5px;text-align:center">FundingEnvoy is an AI assistant. It cites Halden's policy, never predicts a decision, and cannot submit or sign for you.</div>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

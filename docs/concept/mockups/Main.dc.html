@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ledger — Requestor working request</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0;background:#FBFAF8;color:#1B1B1F;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.5}
+a{color:#176B63}a:hover{color:#0F4F49}
+.serif{font-family:"Newsreader","Iowan Old Style",Georgia,serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#5E5E66;font-weight:600}
+.muted{color:#5E5E66}
+.chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:2px;font-size:12px;font-family:"IBM Plex Mono",ui-monospace,monospace;background:#F0EEE9;color:#3E3E45;white-space:nowrap}
+.chip.ok{background:#E6F2EF;color:#176B63}
+.chip.warn{background:#FFF4DF;color:#9A5B00}
+.chip.block{background:#FBE9EC;color:#A3303F}
+.field{display:grid;grid-template-columns:168px 1fr auto;gap:16px;align-items:baseline;padding:10px 0;border-bottom:1px solid #ECEAE5}
+.field .lbl{color:#5E5E66;font-size:13px}
+.field .val{font-size:15px;min-width:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:2px;border:1px solid #1B1B1F;background:#1B1B1F;color:#FBFAF8;font:inherit;font-weight:500;cursor:pointer}
+.btn.quiet{background:transparent;color:#1B1B1F}
+.btn.small{height:32px;padding:0 12px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.note{border-left:2px solid #1B1B1F;padding:4px 0 4px 14px;display:flex;flex-direction:column;gap:6px}
+.note.warn{border-color:#9A5B00}.note.block{border-color:#A3303F}.note.ok{border-color:#176B63}
+.bubble{padding:10px 12px;border-radius:2px;background:#F3F1EC;font-size:13.5px}
+.bubble.me{background:transparent;border:1px solid #E3E1DC}
+.opt{display:inline-flex;align-items:center;height:32px;padding:0 10px;border:1px solid #1B1B1F;border-radius:2px;background:#FBFAF8;color:#1B1B1F;font:inherit;font-size:13px;cursor:pointer}
+.opt.on{background:#1B1B1F;color:#FBFAF8}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+
+  <!-- Top bar -->
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:24px;height:56px;padding:0 32px;border-bottom:1px solid #E3E1DC;background:#FBFAF8">
+    <div style="display:flex;align-items:center;gap:28px">
+      <div class="serif" style="font-size:20px;font-weight:500;letter-spacing:-.01em">Halden Pharma <span class="muted" style="font-weight:400">· Funding</span></div>
+      <nav style="display:flex;gap:20px;font-size:14px">
+        <a href="#requests" style="color:#5E5E66;text-decoration:none">My requests</a>
+        <a href="#new" style="color:#1B1B1F;text-decoration:none;border-bottom:2px solid #1B1B1F;padding-bottom:2px">New request</a>
+        <a href="#policy" style="color:#5E5E66;text-decoration:none">Policy</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;font-size:13px">
+      <span class="muted">Dr. Elena Marsh · New England Cardiology Society</span>
+      <a href="A2-Desk.dc.html" class="chip" style="text-decoration:none">→ Coordinator seat</a>
+    </div>
+  </header>
+
+  <div style="display:flex;flex:1 1 auto;min-height:0">
+
+    <!-- FundingEnvoy rail -->
+    <aside style="width:340px;flex:0 0 340px;border-right:1px solid #E3E1DC;display:flex;flex-direction:column;background:#FBFAF8">
+      <div style="padding:20px 20px 12px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid #ECEAE5">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="width:10px;height:10px;border-radius:50%;background:#176B63;display:inline-block"></span>
+          <span style="font-weight:600">FundingEnvoy</span>
+          <span class="chip">AI assistant</span>
+        </div>
+        <div class="muted" style="font-size:12.5px">Reads your documents, checks Halden's policy, never decides funding. Everything it proposes is marked until you confirm it.</div>
+      </div>
+
+      <div style="flex:1 1 auto;overflow:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+        <div class="bubble me">
+          <div class="eyebrow" style="margin-bottom:4px">You · 13:58</div>
+          I'd like to request $50,000 to support a CME programme in Boston. It's our annual heart failure symposium, 14–15 May 2027. Prospectus and budget attached.
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><span class="chip">HF2027_Prospectus.pdf</span><span class="chip">HF2027_Budget.xlsx</span></div>
+        </div>
+
+        <div class="bubble">
+          <div class="eyebrow" style="margin-bottom:4px">FundingEnvoy · 13:58</div>
+          I read both files and filled in 14 of the 22 things this request needs. Each one shows where it came from, in the document. Two things to confirm first, because they decide what else I ask for.
+          <div style="margin-top:10px;font-weight:500">The prospectus says the symposium is jointly provided with Beacon CME and offers 11 credit hours. Is Beacon CME the accredited provider that controls content and faculty?</div>
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+            <button class="opt on">Yes, Beacon is the accredited provider</button>
+            <button class="opt">No credit is offered</button>
+            <button class="opt">Not sure</button>
+          </div>
+        </div>
+
+        <div class="bubble me">
+          <div class="eyebrow" style="margin-bottom:4px">You · 14:03</div>
+          Yes. Beacon selects the faculty with our programme committee.
+        </div>
+
+        <div class="bubble">
+          <div class="eyebrow" style="margin-bottom:4px">FundingEnvoy · 14:03</div>
+          Then this is an accredited independent medical education request, reviewed by the US medical education team. Halden can have no role in choosing faculty or content, and the agreement will say so.
+          <div style="margin-top:10px;font-weight:500">Your budget totals $48,500 but you're requesting $50,000. Use the budget total, or is a line missing?</div>
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+            <button class="opt on">Request $48,500</button>
+            <button class="opt">Add a line</button>
+            <button class="opt">Revised budget</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:14px 20px 20px;border-top:1px solid #ECEAE5;display:flex;flex-direction:column;gap:8px">
+        <label for="say" class="eyebrow">Tell FundingEnvoy or ask about the policy</label>
+        <div style="display:flex;gap:8px">
+          <input id="say" type="text" placeholder="Can we include the faculty dinner?" style="flex:1 1 auto;min-width:0;height:44px;padding:0 12px;border:1px solid #1B1B1F;border-radius:2px;background:#FBFAF8;font:inherit;color:#1B1B1F">
+          <button class="btn" aria-label="Send">Send</button>
+        </div>
+        <div class="muted" style="font-size:12px">Answers cite Halden's policy clause. FundingEnvoy won't predict a decision.</div>
+      </div>
+    </aside>
+
+    <!-- The document -->
+    <main style="flex:1 1 auto;min-width:0;display:flex;justify-content:center;padding:40px 48px 120px;overflow:auto">
+      <div style="display:flex;gap:40px;width:100%;max-width:1040px;align-items:flex-start">
+
+        <article style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:28px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="eyebrow">Request · draft · nothing has been sent</div>
+            <h1 class="serif" style="margin:0;font-size:40px;line-height:1.1;font-weight:500;letter-spacing:-.015em;text-wrap:balance">Advances in Heart Failure Management 2027</h1>
+            <div class="muted" style="font-size:14px">Accredited independent medical education · New England Cardiology Society · saved 14:11 · checked against rulebook v2.3</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+              <span class="chip">14 of 22 answers</span>
+              <span class="chip">4 of 6 documents</span>
+              <span class="chip block">2 to fix</span>
+              <span class="chip warn">2 to decide</span>
+              <span class="chip ok">11 passed</span>
+            </div>
+          </div>
+
+          <section id="org" style="display:flex;flex-direction:column">
+            <h2 class="serif" style="margin:0 0 4px;font-size:22px;font-weight:500">1 · Your organization</h2>
+            <div class="field"><span class="lbl">Organization</span><span class="val">New England Cardiology Society</span><span class="chip ok">Profile · matched by EIN</span></div>
+            <div class="field"><span class="lbl">Type · country</span><span class="val">Association / society · United States</span><span class="chip ok">Profile</span></div>
+            <div class="field"><span class="lbl">Screening</span><span class="val">Not on LEIE, SAM, OFAC lists · IRS 501(c)(3) in good standing</span><span class="chip ok">Checked 21 Oct</span></div>
+            <div class="field"><span class="lbl">Authorized signer</span><span class="val">R. Delgado, Executive Director</span><span class="chip ok">Profile</span></div>
+          </section>
+
+          <section id="activity" style="display:flex;flex-direction:column">
+            <h2 class="serif" style="margin:0 0 4px;font-size:22px;font-weight:500">2 · The activity</h2>
+            <div class="field"><span class="lbl">Request type</span><span class="val">Accredited independent medical education</span><span class="chip ok">Confirmed by you · 14:03</span></div>
+            <div class="field"><span class="lbl">Accredited provider</span><span class="val">Beacon CME · jointly provided · 11.0 AMA PRA Category 1 credits</span><span class="chip">Prospectus p.2 ¶1–2</span></div>
+            <div class="field"><span class="lbl">Independence</span><span class="val">"Supporters have no role in planning, faculty or content"</span><span class="chip">Prospectus p.2 ¶4</span></div>
+            <div class="field"><span class="lbl">Dates · place</span><span class="val">14–15 May 2027 · Boston, MA · in person</span><span class="chip">Prospectus p.1, p.5</span></div>
+            <div class="field"><span class="lbl">Audience</span><span class="val">Mainly US · 320 expected: 240 physicians, 60 nurses, 20 other</span><span class="chip">Prospectus p.4</span></div>
+            <div class="field"><span class="lbl">Outcomes planned</span><span class="val">Pre/post knowledge test · 90-day practice survey (Moore level 5)</span><span class="chip">Prospectus p.6</span></div>
+            <div class="field"><span class="lbl">Learning objectives</span><span class="val muted">Not yet asked</span><span class="chip">Up next</span></div>
+          </section>
+
+          <section id="funding" style="display:flex;flex-direction:column">
+            <h2 class="serif" style="margin:0 0 4px;font-size:22px;font-weight:500">3 · Funding</h2>
+            <div class="field"><span class="lbl">Requested</span><span class="val"><span class="mono">$48,500</span> USD <span class="muted">· was $50,000</span></span><span class="chip ok">Changed by you · 14:11</span></div>
+            <div class="field"><span class="lbl">Itemized budget</span><span class="val"><span class="mono">$48,500</span> · 11 lines · line 9 "Faculty dinner $2,400"</span><span class="chip">Budget B14</span></div>
+            <div class="field"><span class="lbl">Share of your revenue</span><span class="val"><span class="mono">4.0%</span> of $1.2M (FY2025) · limit 25%</span><span class="chip warn">Statement needed</span></div>
+            <div class="field"><span class="lbl">Other funders</span><span class="val muted">Not yet asked</span><span class="chip">Up next</span></div>
+          </section>
+
+          <section id="docs" style="display:flex;flex-direction:column">
+            <h2 class="serif" style="margin:0 0 4px;font-size:22px;font-weight:500">4 · Documents</h2>
+            <div class="field"><span class="lbl">Request letter</span><span class="val">NECS_Request_Letter.pdf · on letterhead · signed</span><span class="chip ok">Present</span></div>
+            <div class="field"><span class="lbl">Prospectus / agenda</span><span class="val">HF2027_Prospectus.pdf · 6 pages</span><span class="chip ok">Present</span></div>
+            <div class="field"><span class="lbl">Itemized budget</span><span class="val">HF2027_Budget.xlsx</span><span class="chip ok">Present</span></div>
+            <div class="field"><span class="lbl">W-9</span><span class="val">NECS_W9_2026.pdf · EIN matches profile</span><span class="chip ok">Present</span></div>
+            <div class="field"><span class="lbl">Proof of non-profit status</span><span class="val">2021 IRS determination letter on your profile</span><span class="chip warn">Reuse or upload new</span></div>
+            <div class="field"><span class="lbl">Financial statement</span><span class="val muted">Most recent annual statement showing gross revenue</span><span class="chip block">Missing</span></div>
+          </section>
+
+          <section id="statements" style="display:flex;flex-direction:column;gap:8px">
+            <h2 class="serif" style="margin:0 0 4px;font-size:22px;font-weight:500">5 · Your statements</h2>
+            <div class="muted" style="font-size:13px">Typed by you, recorded with your name and the time. FundingEnvoy cannot write these.</div>
+            <div class="field"><span class="lbl">Conflict of interest</span><span class="val">6 of 9 questions answered</span><span class="chip warn">3 left</span></div>
+            <div class="field"><span class="lbl">Anti-discrimination</span><span class="val muted">Not yet acknowledged</span><span class="chip">Up next</span></div>
+            <div class="field"><span class="lbl">Independence</span><span class="val muted">Not yet typed</span><span class="chip">Up next</span></div>
+          </section>
+        </article>
+
+        <!-- Margin notes -->
+        <aside style="width:300px;flex:0 0 300px;display:flex;flex-direction:column;gap:22px;padding-top:120px">
+          <div class="eyebrow">In the margin · checks run on every change</div>
+
+          <div class="note block">
+            <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:600">Financial statement missing</span><span class="chip block">Must fix</span></div>
+            <div class="muted" style="font-size:13px">Needed to evidence the 25% revenue cap. Your profile says $1.2M (2025); this request is 4.0% of that.</div>
+            <div class="muted mono" style="font-size:11.5px">Checklist R-11 · Policy 5.2</div>
+            <div style="display:flex;gap:6px"><button class="btn small">Upload statement</button><button class="btn small quiet">Why?</button></div>
+          </div>
+
+          <div class="note block">
+            <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:600">3 conflict questions left</span><span class="chip block">Must fix</span></div>
+            <div class="muted" style="font-size:13px">Board members serving Halden; commercial discussions; government officials. Asked one at a time; answers are yours.</div>
+            <div class="muted mono" style="font-size:11.5px">Policy 7.3</div>
+            <div style="display:flex;gap:6px"><button class="btn small">Continue</button></div>
+          </div>
+
+          <div class="note warn">
+            <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:600">Starts in 42 days; policy asks 60</span><span class="chip warn">Your call</span></div>
+            <div class="muted" style="font-size:13px">Approval and a signed agreement must both come before 14 May. Typical decision 6–8 weeks. Submit with the flag, or change dates.</div>
+            <div class="muted mono" style="font-size:11.5px">SOP 4.1 · ACCME Standard 4.2</div>
+            <div style="display:flex;gap:6px"><button class="btn small quiet">Submit with flag</button><button class="btn small quiet">Change dates</button></div>
+          </div>
+
+          <div class="note warn">
+            <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:600">"Faculty dinner $2,400" reads as hospitality</span><span class="chip warn">Your call</span></div>
+            <div class="muted" style="font-size:13px">A working meal inside the accredited agenda, decided by the provider, is usually fine. Keep it and the reviewer decides, or remove it.</div>
+            <div class="muted mono" style="font-size:11.5px">Policy 6.4 · PhRMA Code §3</div>
+            <div style="display:flex;gap:6px"><button class="btn small quiet">Keep and explain</button><button class="btn small quiet">Remove</button></div>
+          </div>
+
+          <div class="note ok">
+            <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:600">11 checks passed</span><span class="chip ok">Passed</span></div>
+            <div class="muted" style="font-size:13px">Eligible organization · screened · provider independence stated · dates agree across letter, agenda and budget · no payments to named individuals.</div>
+            <a href="#passed" style="font-size:13px">Show each with its evidence</a>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- Bottom bar -->
+  <footer style="position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:16px;height:72px;padding:0 32px 0 372px;border-top:1px solid #E3E1DC;background:#FBFAF8">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="font-weight:500">Up next: other funders · learning objectives · proof of non-profit status · 3 conflict questions · your statements</div>
+      <div class="muted" style="font-size:12.5px">When everything is in, you'll see exactly what will be written to Halden's grants system, in your name, before you submit.</div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn quiet">Save and come back</button>
+      <button class="btn" disabled>Review and submit</button>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

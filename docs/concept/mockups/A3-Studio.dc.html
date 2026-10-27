@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ledger — Studio workflow from SOP</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0;background:#FBFAF8;color:#1B1B1F;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.5}
+a{color:#176B63}a:hover{color:#0F4F49}
+.serif{font-family:"Newsreader","Iowan Old Style",Georgia,serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#5E5E66;font-weight:600}
+.muted{color:#5E5E66}
+.chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:2px;font-size:12px;font-family:"IBM Plex Mono",ui-monospace,monospace;background:#F0EEE9;color:#3E3E45;white-space:nowrap}
+.chip.ok{background:#E6F2EF;color:#176B63}
+.chip.warn{background:#FFF4DF;color:#9A5B00}
+.chip.you{background:#1B1B1F;color:#FBFAF8}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:2px;border:1px solid #1B1B1F;background:#1B1B1F;color:#FBFAF8;font:inherit;font-weight:500;cursor:pointer}
+.btn.quiet{background:transparent;color:#1B1B1F}
+.btn.small{height:32px;padding:0 12px;font-size:13px}
+.stage{display:grid;grid-template-columns:28px 1fr 150px 120px;gap:14px;align-items:center;padding:12px 14px;border:1px solid #E3E1DC;background:#FFFFFF;text-decoration:none;color:inherit}
+.stage:hover{border-color:#1B1B1F}
+.stage.sel{border-color:#1B1B1F;box-shadow:inset 3px 0 0 #1B1B1F}
+.stage .n{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;color:#5E5E66}
+.stage .t{font-weight:500}
+.stage .s{font-size:12.5px;color:#5E5E66}
+.dial{display:inline-flex;gap:3px;align-items:center}
+.dial i{width:9px;height:9px;border:1px solid #1B1B1F;border-radius:50%;display:inline-block}
+.dial i.on{background:#176B63;border-color:#176B63}
+.dial i.lock{background:#E3E1DC;border-color:#E3E1DC}
+.clause{padding:8px 10px;font-size:13px;line-height:1.5;border-left:2px solid transparent}
+.clause.hit{background:#E6F2EF;border-left-color:#176B63}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:10px;font-size:13px;padding:8px 0;border-bottom:1px solid #ECEAE5}
+.kv .k{color:#5E5E66}
+.seg{display:flex;border:1px solid #1B1B1F;border-radius:2px;overflow:hidden}
+.seg button{flex:1 1 auto;height:36px;border:0;background:transparent;font:inherit;font-size:12px;cursor:pointer;color:#1B1B1F}
+.seg button.on{background:#1B1B1F;color:#FBFAF8}
+.seg button:disabled{color:#9A9AA2;cursor:not-allowed}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:24px;height:56px;padding:0 32px;border-bottom:1px solid #E3E1DC">
+    <div style="display:flex;align-items:center;gap:28px">
+      <div class="serif" style="font-size:20px;font-weight:500">Halden Pharma <span class="muted" style="font-weight:400">· Studio</span></div>
+      <nav style="display:flex;gap:18px;font-size:14px;flex-wrap:wrap">
+        <a href="#brand" style="color:#5E5E66;text-decoration:none">Brand</a>
+        <a href="#words" style="color:#5E5E66;text-decoration:none">Words</a>
+        <a href="#catalogue" style="color:#5E5E66;text-decoration:none">Catalogue &amp; fields</a>
+        <a href="#rulebook" style="color:#5E5E66;text-decoration:none">Rulebook</a>
+        <a href="#workflow" style="color:#1B1B1F;text-decoration:none;border-bottom:2px solid #1B1B1F;padding-bottom:2px">Workflow</a>
+        <a href="#agent" style="color:#5E5E66;text-decoration:none">FundingEnvoy</a>
+        <a href="#connections" style="color:#5E5E66;text-decoration:none">Connections</a>
+        <a href="#people" style="color:#5E5E66;text-decoration:none">People &amp; SSO</a>
+        <a href="#disclosure" style="color:#5E5E66;text-decoration:none">Disclosure</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span class="muted">J. Whitfield · process owner</span></div>
+  </header>
+
+  <!-- Version strip -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 32px;border-bottom:1px solid #E3E1DC;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <h1 class="serif" style="margin:0;font-size:28px;font-weight:500;line-height:1.1">Grants and donations workflow <span class="muted">· v2.4 draft</span></h1>
+      <div class="muted" style="font-size:13px">Drafted by FundingEnvoy from "Management of grants and donations SOP v4" on 24 Oct · 11 stages · 2 changes since v2.3 · every request records the version it ran on</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="chip ok">Test set: 44 of 46 agree with sandbox</span>
+      <span class="chip warn">2 differ · open</span>
+      <button class="btn quiet">Compare with v2.3</button>
+      <button class="btn">Publish v2.4 · needs your sign-off</button>
+    </div>
+  </div>
+
+  <div style="display:flex;flex:1 1 auto;min-height:0">
+
+    <!-- SOP source -->
+    <aside style="width:360px;flex:0 0 360px;border-right:1px solid #E3E1DC;display:flex;flex-direction:column;overflow:auto">
+      <div style="padding:18px 20px 8px;display:flex;flex-direction:column;gap:4px">
+        <div class="eyebrow">Source · SOP v4 · 38 pages</div>
+        <div class="muted" style="font-size:12.5px">Clauses that produced the selected stage are highlighted. Edit the workflow and FundingEnvoy tells you which clause you are departing from.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;padding:8px 10px 20px">
+        <div class="clause"><span class="mono muted">6.1</span> Requests triaged to a reviewing group shall be assessed by at least one medical reviewer and, where any compliance flag is raised, by Compliance.</div>
+        <div class="clause hit"><span class="mono muted">6.2</span> Funding decisions are made by the Grants and Donations Committee, which meets twice monthly. No request may be approved by an individual. Decisions and their rationale are minuted.</div>
+        <div class="clause hit"><span class="mono muted">6.3</span> The Committee shall decide within 10 business days of a complete pack being circulated. Deferred items return to the next meeting with the open question recorded.</div>
+        <div class="clause hit"><span class="mono muted">6.4</span> Members declare any interest in the requesting organization and recuse themselves; recusals are recorded.</div>
+        <div class="clause"><span class="mono muted">7.1</span> No activity may begin before approval and a fully executed written agreement. The agreement names the provider's control of content, faculty and learners for educational grants.</div>
+        <div class="clause"><span class="mono muted">7.4</span> Payment is released against milestones in the agreement, never before signature, to the organization's verified bank account.</div>
+        <div class="clause"><span class="mono muted">8.1</span> Reconciliation is requested 90 days after the activity ends. Unused funds are returned within 60 days of reconciliation.</div>
+        <div class="clause"><span class="mono muted">8.3</span> Education grants require an outcomes report at the level stated in the request.</div>
+        <div class="clause"><span class="mono muted">9.2</span> Transfers of value are recorded for disclosure under Open Payments, EFPIA and local law at the time of payment.</div>
+      </div>
+    </aside>
+
+    <!-- Stages -->
+    <main style="flex:1 1 auto;min-width:0;overflow:auto;padding:24px 32px 40px">
+      <div style="display:flex;flex-direction:column;gap:8px;max-width:760px">
+        <div style="display:grid;grid-template-columns:28px 1fr 150px 120px;gap:14px;padding:0 14px 6px" class="eyebrow"><span>#</span><span>Stage · who · time allowed</span><span>FundingEnvoy's role</span><span>From</span></div>
+
+        <a href="#s1" class="stage"><span class="n">1</span><span><div class="t">Intake</div><div class="s">Requestor with FundingEnvoy · no limit · resumable draft</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span> <span class="s">Act</span></span><span class="chip">SOP 3.1</span></a>
+        <a href="#s2" class="stage"><span class="n">2</span><span><div class="t">Completeness and screening</div><div class="s">FundingEnvoy · at submission · checklist, lists, revenue cap</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span> <span class="s">Autonomous</span></span><span class="chip">SOP 4, 5</span></a>
+        <a href="#s3" class="stage"><span class="n">3</span><span><div class="t">Triage to reviewing group</div><div class="s">FundingEnvoy proposes · coordinator can override · same day</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span> <span class="s">Act, reversible</span></span><span class="chip">SOP 5.2</span></a>
+        <a href="#s4" class="stage"><span class="n">4</span><span><div class="t">Medical review</div><div class="s">Medical reviewer · 10 business days · educational need, independence, budget reasonableness</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span> <span class="s">Recommend</span></span><span class="chip">SOP 6.1</span></a>
+        <a href="#s5" class="stage"><span class="n">5</span><span><div class="t">Compliance review <span class="muted">· only if a flag is raised</span></div><div class="s">Compliance · 5 business days · COI, anti-bribery, government affiliation</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span> <span class="s">Recommend</span></span><span class="chip">SOP 6.1</span></a>
+        <a href="#s6" class="stage sel"><span class="n">6</span><span><div class="t">Committee decision</div><div class="s">Grants and Donations Committee · 10 business days from pack · minuted</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="lock"></i><i class="lock"></i></span> <span class="s">Recommend · max</span></span><span class="chip">SOP 6.2–6.4</span></a>
+        <a href="#s7" class="stage"><span class="n">7</span><span><div class="t">Agreement</div><div class="s">Legal drafts from template · DocuSign to the authorized signer · before the activity</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span> <span class="s">Act</span></span><span class="chip">SOP 7.1</span></a>
+        <a href="#s8" class="stage"><span class="n">8</span><span><div class="t">Payment by milestone</div><div class="s">Finance · SAP vendor and PO · verified bank account · after signature</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="lock"></i><i class="lock"></i></span> <span class="s">Recommend · max</span></span><span class="chip">SOP 7.4</span></a>
+        <a href="#s9" class="stage"><span class="n">9</span><span><div class="t">Reconciliation</div><div class="s">FundingEnvoy asks 90 days after the activity · actuals, attendance, unused funds</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span> <span class="s">Act</span></span><span class="chip">SOP 8.1</span></a>
+        <a href="#s10" class="stage"><span class="n">10</span><span><div class="t">Outcomes report <span class="muted">· education only</span></div><div class="s">Requestor with FundingEnvoy · at the Moore level stated in the request</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span> <span class="s">Act</span></span><span class="chip">SOP 8.3</span></a>
+        <a href="#s11" class="stage"><span class="n">11</span><span><div class="t">Close and disclose</div><div class="s">Coordinator closes · transfer of value queued for Open Payments, EFPIA, local reports</div></span><span><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span> <span class="s">Act</span></span><span class="chip">SOP 9.2</span></a>
+
+        <div class="muted" style="font-size:12.5px;padding:10px 14px">FundingEnvoy's role, left to right: Off · Observe · Recommend · Act with a person confirming · Autonomous within the rulebook. Grey stops are locked by the platform: funding decisions, attestations, signatures and payment release always need a person.</div>
+      </div>
+    </main>
+
+    <!-- Inspector -->
+    <aside style="width:360px;flex:0 0 360px;border-left:1px solid #E3E1DC;display:flex;flex-direction:column;overflow:auto;padding:20px 22px 30px;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div class="eyebrow">Stage 6</div>
+        <h2 class="serif" style="margin:0;font-size:24px;font-weight:500">Committee decision</h2>
+        <div class="muted" style="font-size:12.5px">From SOP 6.2, 6.3, 6.4 · unchanged since v2.1</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column">
+        <div class="kv"><span class="k">Decided by</span><span>Grants and Donations Committee · quorum 4 · chair votes last</span></div>
+        <div class="kv"><span class="k">Time allowed</span><span>10 business days from pack circulation</span></div>
+        <div class="kv"><span class="k">Enters when</span><span>Medical review done · Compliance done if flagged · pack generated</span></div>
+        <div class="kv"><span class="k">Outcomes</span><span>Approve · Approve with conditions · Decline with reason · Defer with question</span></div>
+        <div class="kv"><span class="k">Must record</span><span>Rationale · recusals · vote · rulebook version · minutes</span></div>
+        <div class="kv"><span class="k">If late</span><span>Chair notified at day 8 · KRI "decisions past SLA"</span></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="eyebrow">FundingEnvoy at this stage</div>
+        <div class="seg">
+          <button>Off</button><button>Observe</button><button class="on">Recommend</button><button disabled>Act</button><button disabled>Auto</button>
+        </div>
+        <div class="muted" style="font-size:12.5px">FundingEnvoy prepares the pack, summarises evidence and drafts a recommendation per request. It never votes, never approves. Act and Auto are locked by the platform for funding decisions.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="eyebrow">Fields and documents at this stage</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip">Committee pack</span><span class="chip">Recusal register</span><span class="chip">Vote record</span><span class="chip">Minute entry</span><span class="chip">Conditions</span></div>
+        <a href="#fields" style="font-size:13px">Edit fields in Catalogue &amp; fields</a>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #E3E1DC;padding-top:14px">
+        <div class="eyebrow">Applies to</div>
+        <div style="font-size:13px">All request types · all countries. Charitable contributions under €5,000 skip to stage 7 (SOP 6.5) with a single approver.</div>
+        <button class="btn small quiet" style="align-self:flex-start">Add a variation by type or country</button>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

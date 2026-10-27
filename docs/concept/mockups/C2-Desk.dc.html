@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Thread — Coordinator desk and brief</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;background:#FFFFFF;color:#1D1B26;font-family:"Manrope",system-ui,sans-serif;font-size:15px;line-height:1.55}
+a{color:#6A3FB5}a:hover{color:#4F2E8A}
+.muted{color:#67637A}
+.small{font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;background:#F4F2F8;color:#4A465C;white-space:nowrap}
+.pill.ok{background:#E4F3EB;color:#1F7A52}
+.pill.warn{background:#FFF1DC;color:#9A5200}
+.pill.block{background:#FBE7EA;color:#BF2F45}
+.pill.you{background:#1D1B26;color:#FFFFFF}
+.pill.src{background:#EDE7F8;color:#6A3FB5}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:22px;border:0;background:#6A3FB5;color:#FFFFFF;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.btn.quiet{background:#F4F2F8;color:#1D1B26}
+.btn.sm{height:36px;padding:0 14px;font-size:13.5px}
+.ai{align-self:flex-start;max-width:94%;display:flex;flex-direction:column;gap:12px}
+.ai .txt{background:#F1ECF9;border-radius:20px 20px 20px 6px;padding:14px 18px}
+.me{align-self:flex-end;max-width:78%;background:#F4F2F8;border-radius:20px 20px 6px 20px;padding:14px 18px}
+.card{background:#FFFFFF;border:1px solid #E6E3EE;border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.who{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#67637A;margin-bottom:6px}
+.conv{display:flex;flex-direction:column;gap:4px;padding:12px 16px;border-radius:14px;text-decoration:none;color:inherit}
+.conv:hover{background:#F4F2F8}
+.conv.on{background:#F1ECF9}
+.conv .t{font-weight:700;font-size:14px}
+.conv .m{font-size:12.5px;color:#67637A}
+.choice{display:inline-flex;align-items:center;height:40px;padding:0 16px;border:1.5px solid #6A3FB5;border-radius:20px;background:#FFFFFF;color:#6A3FB5;font:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.kv{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:6px 0;border-bottom:1px solid #F0EEF5;font-size:14px}
+.kv:last-child{border-bottom:0}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;min-height:100vh">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px;padding:0 24px;border-bottom:1px solid #E6E3EE">
+    <div style="display:flex;align-items:center;gap:14px">
+      <span style="width:34px;height:34px;border-radius:50%;background:#6A3FB5;display:inline-flex;align-items:center;justify-content:center;color:#FFFFFF;font-weight:800">H</span>
+      <div style="display:flex;flex-direction:column;line-height:1.2"><span style="font-weight:800">Halden Pharma · Grants desk</span><span class="muted small">FundingEnvoy at level 2 · it recommends, you decide</span></div>
+    </div>
+    <nav style="display:flex;gap:6px;align-items:center">
+      <a href="#desk" class="pill you" style="text-decoration:none">Desk</a>
+      <a href="#committee" class="pill" style="text-decoration:none">Committee</a>
+      <a href="#agreements" class="pill" style="text-decoration:none">Agreements</a>
+      <a href="#ask" class="pill" style="text-decoration:none">Ask</a>
+      <a href="C3-Studio.dc.html" class="pill" style="text-decoration:none">Studio</a>
+      <span class="muted small" style="margin-left:10px">K. Osei</span>
+    </nav>
+  </header>
+
+  <div style="display:flex;flex:1 1 auto;min-height:0">
+    <!-- Conversations -->
+    <aside style="width:320px;flex:0 0 320px;border-right:1px solid #E6E3EE;padding:16px 10px;display:flex;flex-direction:column;gap:4px;overflow:auto">
+      <div class="muted small" style="padding:4px 16px 8px;font-weight:700">Today</div>
+      <a href="#t0" class="conv on"><span class="t">FundingEnvoy · your morning round-up</span><span class="m">4 need you · 6 handled · 12 waiting</span></a>
+      <a href="#t1" class="conv"><span class="t">Heart Failure 2027 · NECS</span><span class="m">$48,500 · 2 for your judgement</span></a>
+      <a href="#t2" class="conv"><span class="t">Winter relief fund · Lyon Sud</span><span class="m">€25,000 · convention to declare</span></a>
+      <a href="#t3" class="conv"><span class="t">Membership 2027 · EHPA</span><span class="m">€12,000 · confirm no business benefit</span></a>
+      <a href="#t4" class="conv"><span class="t">Seoul Cardiology Congress</span><span class="m">₩40M · booth plus sponsorship conflict</span></a>
+      <div class="muted small" style="padding:14px 16px 8px;font-weight:700">FundingEnvoy is handling</div>
+      <a href="#t5" class="conv"><span class="t">Cardio-Renal 2026 · reconciliation</span><span class="m">Reminder sent · due 11 Dec</span></a>
+      <a href="#t6" class="conv"><span class="t">Fellowship · agreement</span><span class="m">DocuSign out 4 days</span></a>
+      <a href="#t7" class="conv"><span class="t">Stroke registry · info request</span><span class="m">Requestor day 6 of 10</span></a>
+    </aside>
+
+    <!-- Thread -->
+    <main style="flex:1 1 auto;min-width:0;display:flex;justify-content:center;padding:28px 24px 120px;overflow:auto">
+      <div style="width:100%;max-width:760px;display:flex;flex-direction:column;gap:20px">
+
+        <div class="ai">
+          <div class="txt"><div class="who">FundingEnvoy · 08:30</div>Morning, Kwame. Four requests need a person today; I've handled six and twelve are waiting on others. Let's start with the one closest to its date.</div>
+        </div>
+
+        <div class="ai">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+              <div><div style="font-weight:800;font-size:17px">Advances in Heart Failure Management 2027</div><div class="muted small">2026-01642-IME · New England Cardiology Society · $48,500 · accredited IME · Boston, 14–15 May</div></div>
+              <a href="C1-Request.dc.html" class="pill src" style="text-decoration:none">Requestor's view</a>
+            </div>
+            <div class="kv"><span class="muted">Checked</span><span>17 checks · 15 passed · 2 for you</span><span class="pill ok">Platform checklist agrees</span></div>
+            <div class="kv"><span class="muted">Screened</span><span>LEIE, SAM, OFAC, IRS TEOS · clear · 21 Oct</span><span class="pill ok">Pass</span></div>
+            <div class="kv"><span class="muted">Revenue cap</span><span>4.0% of $1.2M · FY2025 statement attached</span><span class="pill ok">Pass</span></div>
+            <div class="kv"><span class="muted">Independence</span><span>"Supporters have no role in planning, faculty or content"</span><span class="pill src">Prospectus p.2</span></div>
+            <div class="kv"><span class="muted">Attestations</span><span>3 of 3 typed by Dr. Marsh · COI 9 of 9 "no"</span><span class="pill ok">Pass</span></div>
+            <div class="kv"><span class="muted">Open Payments</span><span>Grant to a CME provider with no direction of funds</span><span class="pill ok">Not reportable</span></div>
+          </div>
+          <div class="txt">Two things only a person can decide.</div>
+          <div class="card">
+            <div style="font-weight:700">1 · The symposium is in 42 days; the SOP asks for 60.</div>
+            <div class="muted small">Dr. Marsh submitted with the flag. Committee is 12 Nov. An executed agreement before 14 May works if legal returns within 10 days. Seven of nine similar late requests were approved in 2025.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="choice">Accept, condition: agreement by 30 Apr</button><button class="choice">Ask Dr. Marsh about moving dates</button></div>
+          </div>
+          <div class="card">
+            <div style="font-weight:700">2 · Budget line 9, "Faculty dinner $2,400".</div>
+            <div class="muted small">Her explanation: a working dinner inside the accredited agenda, planned by Beacon CME. The provider controls the funds; nobody is paid by name. Policy 6.4 usually allows this.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="choice">Allow the line</button><button class="choice">Exclude it and reduce the grant</button></div>
+          </div>
+          <div class="txt">When you've answered both, I'll route it to the US medical education committee for 12 November with your notes attached. I recommend that route (rule T-3); I can't tell you how they'll decide.</div>
+        </div>
+
+        <div class="me">
+          <div class="who">You · 08:41</div>
+          Accept with the condition. Allow the dinner line but note it for the committee.
+        </div>
+
+        <div class="ai">
+          <div class="txt"><div class="who">FundingEnvoy · 08:41</div>Recorded under your name: lead-time exception with condition "agreement executed by 30 April 2027"; line 9 allowed with a note for the committee. Routed to US medical education, 12 November agenda. Dr. Marsh will see "Being reviewed · on the committee agenda for 12 November" and nothing about the condition until the decision.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="choice">Next: Winter relief fund · Lyon Sud</button><button class="choice">Show me the pack you'll send</button><button class="choice">Undo</button></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <footer style="position:sticky;bottom:0;display:flex;justify-content:center;padding:12px 24px 20px;background:#FFFFFF;border-top:1px solid #E6E3EE;margin-left:320px">
+    <div style="width:100%;max-width:760px;display:flex;gap:8px;align-items:center">
+      <label for="say" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Tell FundingEnvoy</label>
+      <input id="say" type="text" placeholder="Decide, ask, or tell FundingEnvoy what to do next…" style="flex:1 1 auto;min-width:0;height:46px;padding:0 18px;border:1.5px solid #E6E3EE;border-radius:23px;background:#FFFFFF;font:inherit;font-size:15px;color:#1D1B26">
+      <button class="btn">Send</button>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

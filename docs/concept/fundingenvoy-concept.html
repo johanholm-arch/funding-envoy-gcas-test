@@ -1,0 +1,386 @@
+<title>FundingEnvoy Concept</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single reading column with a sticky section nav; tables and the architecture picture may run wider. */
+:root{
+  --bg:#FBFAF8; --fg:#1B1B1F; --muted:#5E5E66; --rule:#E3E1DC; --panel:#FFFFFF;
+  --accent:#176B63; --accent-soft:#E6F2EF; --warn:#9A5B00; --warn-soft:#FFF4DF; --block:#A3303F; --block-soft:#FBE9EC;
+  --ink-chip:#F0EEE9; --ink-chip-fg:#3E3E45;
+  --serif:"Newsreader","Iowan Old Style",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#17181B; --fg:#ECEAE4; --muted:#A3A39B; --rule:#33343A; --panel:#1F2024;
+  --accent:#6CC5B8; --accent-soft:#1D3330; --warn:#E3B45E; --warn-soft:#3A2E14; --block:#F08A98; --block-soft:#3C1F25;
+  --ink-chip:#2A2B30; --ink-chip-fg:#C9C8C2; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#17181B; --fg:#ECEAE4; --muted:#A3A39B; --rule:#33343A; --panel:#1F2024;
+  --accent:#6CC5B8; --accent-soft:#1D3330; --warn:#E3B45E; --warn-soft:#3A2E14; --block:#F08A98; --block-soft:#3C1F25;
+  --ink-chip:#2A2B30; --ink-chip-fg:#C9C8C2; color-scheme:dark }
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15.5px;line-height:1.6;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding-block:0 96px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--serif);font-weight:500;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:clamp(34px,5vw,52px);line-height:1.05}
+h2{font-size:30px;line-height:1.15;margin-top:72px;padding-top:28px;border-top:1px solid var(--fg)}
+h3{font-size:21px;margin-top:34px}
+p{margin:12px 0;max-width:72ch}
+ul,ol{max-width:76ch;padding-left:22px}li{margin:6px 0}
+a{color:var(--accent)}
+.eyebrow{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.lead{font-family:var(--serif);font-size:22px;line-height:1.4;max-width:60ch}
+.chip{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:2px;font-size:12px;font-family:var(--mono);background:var(--ink-chip);color:var(--ink-chip-fg);white-space:nowrap;vertical-align:middle}
+.chip.ok{background:var(--accent-soft);color:var(--accent)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.block{background:var(--block-soft);color:var(--block)}
+.chip.fixed{background:var(--fg);color:var(--bg)}
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--rule);margin:0 0 28px;padding:10px 0;display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px}
+nav.toc a{color:var(--muted);text-decoration:none}nav.toc a:hover{color:var(--fg)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:16px 0}
+th{text-align:left;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 10px 8px 0;border-bottom:1px solid var(--fg);vertical-align:bottom}
+td{padding:9px 10px 9px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.tbl{overflow-x:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:16px;margin:18px 0}
+.card{border:1px solid var(--rule);background:var(--panel);padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card .t{font-weight:600}
+.card .s{font-size:13.5px;color:var(--muted)}
+.item{margin-top:40px;padding-top:20px;border-top:1px solid var(--rule)}
+.item .n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 16px;font-size:14px;margin:12px 0;max-width:80ch}
+.kv .k{color:var(--muted)}
+.gate{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:14.5px}
+.gate .g{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:3px}
+.arch{display:flex;flex-direction:column;gap:10px;margin:18px 0;font-size:13px}
+.lane{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.lane .lbl{flex:0 0 120px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding-top:10px}
+.box{flex:1 1 140px;min-width:0;border:1px solid var(--rule);background:var(--panel);padding:9px 11px;display:flex;flex-direction:column;gap:2px}
+.box b{font-weight:600;font-size:13px}
+.box span{color:var(--muted);font-size:12px}
+.box.fixed{border-color:var(--fg)}
+.dial{display:inline-flex;gap:3px;align-items:center;vertical-align:middle}
+.dial i{width:9px;height:9px;border:1px solid var(--fg);border-radius:50%;display:inline-block}
+.dial i.on{background:var(--accent);border-color:var(--accent)}
+.dial i.lock{background:var(--rule);border-color:var(--rule)}
+.phase{display:grid;grid-template-columns:150px 1fr;gap:8px 18px;padding:12px 0;border-bottom:1px solid var(--rule);font-size:14.5px}
+.phase .p{font-weight:600}
+.phase .done{color:var(--muted);font-size:13.5px}
+.callout{border-left:2px solid var(--accent);padding:4px 0 4px 16px;margin:18px 0;max-width:72ch}
+@media (max-width:640px){.kv{grid-template-columns:1fr}.phase{grid-template-columns:1fr}.lane .lbl{flex-basis:100%;padding-top:0}}
+</style>
+
+<div class="wrap">
+  <header style="padding:40px 0 8px;display:flex;flex-direction:column;gap:14px">
+    <div class="eyebrow">Design concept · FundingEnvoy · external funding platform for pharma and medtech · 26 Oct 2026 · decisions recorded 27 Oct 2026</div>
+    <h1>One request, one truth, for the people who ask and the people who decide</h1>
+    <p class="lead">A platform where an external organization registers once and asks any funder in its own words; where coordinators, reviewers and committees see the same request with the evidence beside every claim; where an agent prepares everything and people decide everything; and where a company's SOP, policy and brand become the product without a line of code, whether it runs for one company or for a managed service running many.</p>
+    <p class="muted" style="font-size:13.5px">FundingEnvoy is both the product and the assistant inside it; a tenant can rename the assistant. Builds on the Envoy concept review of 23 Oct 2026 (the requestor-side agent) and on the research report delivered with this document. Companies, people and figures are fictional; Halden Pharma is the example tenant throughout. Mockups: <a href="https://claude.ai/artifact/GPFunu1H8w7fpCY2F96Dxu">Funding Platform UI Options</a> (three directions, twelve screens).</p>
+  </header>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#brief">In brief</a><a href="#research">What the research changes</a><a href="#principles">Principles</a><a href="#product">The product</a><a href="#twelve">The twelve requirements</a><a href="#core">Rule core and overlays</a><a href="#arch">Architecture</a><a href="#tenancy">Tenancy and managed service</a><a href="#ui">UI direction</a><a href="#build">Path to build</a><a href="#risks">Risks</a><a href="#decisions">Decisions made</a>
+  </nav>
+
+  <!-- IN BRIEF -->
+  <section id="brief">
+    <h2 style="margin-top:0;border-top:0;padding-top:0">In brief</h2>
+    <p>Today a grants function is a portal, an internal app, a contracting tool, a payments system and a transparency-reporting vendor, stitched together by coordinators who chase documents and re-key data. Requestors face a dozen different portals with overlapping document lists and clocks. Nobody publishes how long decisions take. The research found that the rules themselves are far more uniform than the tools: six prohibitions hold everywhere, and roughly forty jurisdictional overlays differ only in thresholds, prior-approval steps, deadlines and retention. That is a configuration problem, not a software problem, and it is the opening.</p>
+    <div class="grid">
+      <div class="card"><div class="t">One request, one truth</div><div class="s">The requestor's working request and the coordinator's brief are the same object seen from two seats. Every value carries its source; every check carries its rule and clause; every decision carries its reason. There is no portal and no back office, only roles on one record.</div></div>
+      <div class="card"><div class="t">Agents prepare, people decide</div><div class="s">FundingEnvoy reads, extracts, checks, screens, drafts, routes and reminds. It never approves, declines, attests, signs, pays or submits a disclosure. A dial sets how much it does at each stage; five outcomes are locked to people by the platform and cannot be dialled.</div></div>
+      <div class="card"><div class="t">Configure by reading, not coding</div><div class="s">Upload the SOP and FundingEnvoy drafts the workflow, each stage tied to a clause. Load the policy and it drafts the rulebook. Upload a logo and the requestor portal is branded. The process owner edits, tests against a sample set, signs and publishes a version.</div></div>
+      <div class="card"><div class="t">Register once, ask anyone</div><div class="s">An organization owns a passport: identity, tax status, screening results, governing documents, signers. It chooses which funders may see it. Funders never see each other's requests or decisions. In a managed service this is the network effect; in a single-tenant deployment it is still the profile.</div></div>
+    </div>
+    <p><strong>Who it is for.</strong> Grants, donations, sponsorship and patient-organization support functions at pharma and medtech companies of any size; the external organizations that ask them for funding (societies, hospitals, universities, patient groups, charities, congress organizers); and a managed-service operator running the grants office for several companies at once.</p>
+    <p><strong>What it is not.</strong> A decision engine for funding; a replacement for a company's own judgement about educational need or reasonableness; a system that trains models on requestor or funder data; or a transparency-reporting vendor of record (it produces every disclosure file and reconciles them, but a company may still submit through its existing channel).</p>
+  </section>
+
+  <!-- RESEARCH -->
+  <section id="research">
+    <h2>What the research changes about the design</h2>
+    <p>The full report covers US federal and state law, the industry codes and accreditors, Europe and the UK, the rest of the world, enforcement since 2004, industry operating practice, the vendor market, and AI, security and audit expectations. These are the findings that moved the design, each with the design consequence. Figures are as of October 2026; the report lists the items that still need primary-source verification before they become rules.</p>
+    <div class="tbl"><table>
+      <tr><th style="width:46%">Finding</th><th>Consequence for the design</th></tr>
+      <tr><td>Six rules hold in every jurisdiction examined: fund organizations never individuals; keep decisions separate from sales; use objective stored criteria; execute a written agreement before the activity; never link support to purchasing, prescribing or formulary status; acknowledge support and disclose annually.</td><td>These are platform gates, not tenant settings. A tenant can add rules; it cannot remove these. The permission model, not a policy document, keeps sales roles away from requests.</td></tr>
+      <tr><td>Around forty overlays vary only in thresholds, prior-approval steps, filing windows, lawful bases and retention: Open Payments 2026 thresholds of $13.82 and $138.13; seven US state clocks; French declaration versus authorisation thresholds; Netherlands €500; Korean booth caps; EFPIA publication by 30 June; MedTech Europe grants by 31 August; Korea's report three months after year end.</td><td>A versioned, effective-dated regulatory parameter store and a compliance calendar. A CPI change, the lapse of OIG advisory opinion 24-02 on 1 January 2027, or the Italian Sunshine Act switching on is a data change, not a release.</td></tr>
+      <tr><td>The 2025–2026 UK rulings (Moderna, Roche, Novartis UK, CSL Seqirus on 8 October 2026) and Medtronic's 2020 Sunshine finding were process defects: a grant not certified by the final signatory, an agreement missing the "acknowledged and apparent from the start" clause, a three-year grant never disclosed.</td><td>Hard stops a workflow can enforce: clause libraries per jurisdiction, a certification gate before payment, multi-year grants re-validated each disclosure cycle, and a reconciliation of grants records against accounts payable and the transparency file.</td></tr>
+      <tr><td>Enforcement since 2004 reduces to four control failures: grants initiated or conditioned by sales (Olympus, Merit); charity funds earmarked to the donor's product with donation sizing driven by product forecasts (the copay-charity series, Teva's $425 million in 2024); utilisation data flowing back from charities; and undocumented or mis-booked payments (Alexion, Novartis).</td><td>Role separation in permissions; a patient-assistance donation module with disease-fund breadth, an earmarking block, a no-data-feedback attestation and a budget rationale independent of forecasts; accurate general-ledger coding on every payment; an audit trail that can reconstruct who approved what, when, against which criteria.</td></tr>
+      <tr><td>Open Payments treats a grant to a CME provider as not reportable unless the funder directs the provider to pay a specific physician; a grant paid to a teaching hospital is directly reportable; non-physician practitioners have been covered since 2021.</td><td>A non-direction attestation on every education grant, a log of when and how any HCP identity became known, and an automatic match against the CMS teaching-hospital list at intake and at payment.</td></tr>
+      <tr><td>ACCME's Standards (in force since 2022, adopted by nursing, pharmacy and from June 2026 dentistry) require the provider to control funds, the agreement to be executed before the education starts, no learner expenses, an accounting on request and learner disclosure without logos. ACCME opened an in-kind support compliance theme in August 2026.</td><td>The agreement-before-activity gate checks both signature dates against the start date. Budget lines are validated against a block list. In-kind support needs a mandatory "nature" text. Reconciliation produces the accounting.</td></tr>
+      <tr><td>France requires a convention declared or authorised through the Ordre before the benefit; Belgium requires an Mdeon visa for overnight events; MedTech Europe and Mecomed require a Conference Vetting System decision at least 50 days before an event; China limits donations to public-welfare entities with institutional review; India's FCRA requires registration, a single designated bank account and no onward transfer.</td><td>Country packs insert stages before approval or payment, hold the record number, and block execution until the lead time has run. These are the first thing a managed service accumulates and reuses.</td></tr>
+      <tr><td>The requestor's pain is structural rather than surveyed: a dozen-plus portals with non-identical document lists, duplicate applications for joint calls, intake frozen during migrations (Novartis closed its portal to new submissions on 1 October 2026 for a 16 November relaunch).</td><td>The organization passport and a standard application package. Migration-safe intake: the platform accepts a draft even while a tenant's system of record is changing.</td></tr>
+      <tr><td>No pharma-specific grants vendor advertises AI; the market is consolidating (MediSpend and RLDatix with Porzio in 2025; Veeva Grants listed as "Early" with no customers in September 2026); outsourced grants-office services are thin.</td><td>The differentiators are the shared requestor experience, auditable AI triage, and the managed-service model. Parity features (screening, completeness, routing, e-signature, AP hand-off) are table stakes and must be complete.</td></tr>
+      <tr><td>DOJ's September 2024 compliance-program guidance asks how companies prevent "false approvals and documentation generated by AI" and how they measure the accuracy, precision and recall of their analytics. The EU AI Act's Article 50 transparency duties have applied since 2 August 2026; Annex III high-risk duties were deferred to 2 December 2027 and do not obviously cover corporate grants to organizations.</td><td>Every AI action is a first-class event on the same tamper-evident chain as human actions, with the human's accept, modify or reject attached. Per-tenant evaluation sets measure extraction, classification and triage accuracy; a model upgrade runs them first. Requestor-facing FundingEnvoy says it is an AI.</td></tr>
+      <tr><td>Raw text-to-SQL scores around 21% on the Spider 2.0 benchmark; approaches over a governed semantic layer report 87–98% on curated metrics.</td><td>Natural-language analytics run only over a metrics library with tenant and role context propagated, show the definition used, and log every question and query.</td></tr>
+      <tr><td>Industry practice is already a de facto SOP: 60-day lead time (90 or 120 in variants), decisions in 60–90 days, payment only after a signed agreement, reconciliation at 45, 60 or 90 days with return of unused funds, outcomes at Moore levels. No funder publishes its own performance.</td><td>These become tenant defaults with configurable values, and the platform instruments the metrics nobody publishes: time to decision, agreements executed before start, information rounds, overdue reconciliations, disclosure accuracy.</td></tr>
+    </table></div>
+  </section>
+
+  <!-- PRINCIPLES -->
+  <section id="principles">
+    <h2>Principles every screen must pass</h2>
+    <p>These are the tests a screen is judged by before it ships. They are deliberately few, and they apply to the requestor, the coordinator, the committee member, the auditor and the operator alike.</p>
+    <div class="grid">
+      <div class="card"><div class="t">1 · Lead with the next thing</div><div class="s">The first line of any screen says what this person should do now. A home page is "needs you", not a dashboard. A request opens on its open points, not on section one.</div></div>
+      <div class="card"><div class="t">2 · Evidence beside every claim</div><div class="s">A value shows its source (page, cell, profile, message). A finding shows its rule and the clause behind it. A recommendation shows its basis. A decision shows its reason, typed by the person who made it.</div></div>
+      <div class="card"><div class="t">3 · Status in sentences, with dates</div><div class="s">"A reviewer picked this up on 3 November; decisions for this type usually take six weeks" instead of a status code. Expectations come from the tenant's own history, never from the model.</div></div>
+      <div class="card"><div class="t">4 · Nothing an agent does is hidden; nothing a person must sign is done by an agent</div><div class="s">FundingEnvoy's work is listed on the request and in the trail. Attestations, conflict answers, decisions, signatures and payment releases are typed or clicked by a named person.</div></div>
+      <div class="card"><div class="t">5 · Every blocker comes with its fix</div><div class="s">"Financial statement missing" is followed by the upload control and the reason. A check that cannot be resolved on the spot says who can resolve it and when.</div></div>
+      <div class="card"><div class="t">6 · Words and colours change per tenant; the arrangement does not</div><div class="s">Terminology, brand, languages and catalogue are the tenant's. Layout, the safety rules and the locked outcomes are the platform's. This is what makes the product a product.</div></div>
+      <div class="card"><div class="t">7 · Density follows the seat</div><div class="s">A requestor who submits twice a year reads; a coordinator who handles three hundred requests works. The same design language, two densities, one object.</div></div>
+    </div>
+  </section>
+
+  <!-- PRODUCT -->
+  <section id="product">
+    <h2>The product: seats on one record</h2>
+    <p>Everyone works on the same request. What differs is which layers they see and which actions they hold. The table is the whole surface area; nothing else needs to exist.</p>
+    <div class="tbl"><table>
+      <tr><th>Seat</th><th>Surfaces</th><th>Holds</th></tr>
+      <tr><td><strong>Requestor</strong><br><span class="muted">external organization</span></td><td>Home (needs you · my requests) · New request (describe, upload, or form) · The request (working document with margin checks) · Follow-ups (information requests, reconciliation, outcomes, signatures) · Organization passport</td><td>Every statement about their own organization; attestations; confirmation of each write; submission</td></tr>
+      <tr><td><strong>Coordinator</strong></td><td>Desk (queue sorted by what only a person can do) · Brief (assessment, evidence, items for judgement, recommendation) · Agreements and payments · Disclosure readiness · Ask</td><td>Triage override, information requests, routing, closure, exception notes</td></tr>
+      <tr><td><strong>Reviewers</strong><br><span class="muted">medical, compliance, legal</span></td><td>Brief with the review form for their stage; evidence pane; comparables</td><td>Their review outcome and reason</td></tr>
+      <tr><td><strong>Committee</strong></td><td>Agenda · Pack (one page per request) · Vote with recusals · Minutes drafted from the record</td><td>The funding decision and its rationale</td></tr>
+      <tr><td><strong>Finance and tax</strong></td><td>Payment queue · Vendor and purchase-order status from the ERP · Tax classification · 1099 exposure</td><td>Payment release; tax classification</td></tr>
+      <tr><td><strong>Compliance and audit</strong><br><span class="muted">read only unless named in a stage</span></td><td>Trail (every action by person, system or FundingEnvoy) · Policy and rulebook versions · Model register · Compliance calendar · Compliance analytics</td><td>Exports; legal hold; nothing else</td></tr>
+      <tr><td><strong>Process owner</strong></td><td>Studio: Brand · Words · Languages · Catalogue and fields · Rulebook · Workflow · FundingEnvoy · Connections · People and SSO · Disclosure</td><td>Sign-off and publication of each configuration version</td></tr>
+      <tr><td><strong>Operator</strong><br><span class="muted">managed service only</span></td><td>Fleet · Queue across tenants · Rule library · Organizations · Models and evaluations · Service levels</td><td>Tenant provisioning; proposing packs; switching into a tenant seat (logged on both sides)</td></tr>
+    </table></div>
+
+    <h3>The lifecycle, and where the agent sits</h3>
+    <p>Eleven stages, drafted from a typical SOP. The dots show how much FundingEnvoy does at each: <span class="dial"><i class="on"></i><i></i><i></i><i></i><i></i></span> observe, through recommend and act-with-confirmation, to <span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span> autonomous within the rulebook. Grey dots are locked by the platform.</p>
+    <div class="tbl"><table>
+      <tr><th>#</th><th>Stage</th><th>Who</th><th>FundingEnvoy</th><th>What it must enforce (from the research)</th></tr>
+      <tr><td class="mono">1</td><td>Intake</td><td>Requestor with FundingEnvoy</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></td><td>Lead time (60-day default), prospective only, request type confirmed before the schema is fixed, AI disclosure</td></tr>
+      <tr><td class="mono">2</td><td>Completeness and screening</td><td>FundingEnvoy</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></td><td>Checklist per subtype and country; LEIE, SAM, OFAC, EU and UK sanctions, IRS tax status, PEP for officers; revenue-concentration cap; teaching-hospital match</td></tr>
+      <tr><td class="mono">3</td><td>Triage</td><td>FundingEnvoy proposes; coordinator overrides</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></td><td>Routing by type, audience geography and country; sales roles excluded by permission</td></tr>
+      <tr><td class="mono">4</td><td>Medical review</td><td>Medical reviewer</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></td><td>Educational need, provider independence, budget reasonableness; no purchase or prescribing inputs anywhere on the form</td></tr>
+      <tr><td class="mono">5</td><td>Compliance review</td><td>Compliance, when flagged or by country</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></td><td>Conflicts, government affiliation (FCPA tier), patient-assistance safeguards, country prior approvals (France convention, Belgium visa, CVS decision)</td></tr>
+      <tr><td class="mono">6</td><td>Committee decision</td><td>Committee</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="lock"></i><i class="lock"></i></span></td><td>Quorum, recusals, typed rationale, no approval by an individual where the SOP forbids it</td></tr>
+      <tr><td class="mono">7</td><td>Agreement</td><td>Legal; authorized signer</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></td><td>Template with mandatory clauses per jurisdiction; executed before the activity; UK final-signatory certification before payment</td></tr>
+      <tr><td class="mono">8</td><td>Payment by milestone</td><td>Finance</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="lock"></i><i class="lock"></i></span></td><td>Payee is the organization; W-9/W-8 on file; verified bank account never passes through conversation; correct GL and tax class; FCRA account for India</td></tr>
+      <tr><td class="mono">9</td><td>Reconciliation</td><td>Requestor with FundingEnvoy; coordinator accepts</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></td><td>Actuals by category, attendance, unused funds returned, acknowledgement evidence; the accounting ACCME can ask for</td></tr>
+      <tr><td class="mono">10</td><td>Outcomes</td><td>Requestor with FundingEnvoy</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></td><td>Moore level as stated in the request; expected versus actual learners</td></tr>
+      <tr><td class="mono">11</td><td>Close and disclose</td><td>Coordinator; disclosure owner submits</td><td><span class="dial"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></td><td>Transfer of value recorded with every disclosure attribute; multi-year grants re-validated each cycle; file reconciled against AP</td></tr>
+    </table></div>
+  </section>
+
+  <!-- TWELVE -->
+  <section id="twelve">
+    <h2>The twelve requirements, one by one</h2>
+    <p>In the order they were given. Each says what it is, how it works, what the research requires of it, and what is fixed by the platform versus configured by the tenant.</p>
+
+    <div class="item"><div class="n">1</div><h3 style="margin-top:4px">A rethought grants experience for organizations and funders</h3>
+      <p><strong>For the organization.</strong> Three ways in: describe the activity in your own words, upload what you have, or use a form; switch between them at any point. FundingEnvoy classifies the request, confirms the type with the consequences explained, and asks only for what applies to that type in that country. The request is a living document: every field carries its source and its confirmation; checks run on every change and appear as margin notes with the fix attached. Nothing is written to the funder's record until the requestor confirms. After submission, status is a sentence with a date, and follow-ups (a coordinator's question, reconciliation, outcomes, a signature reminder) arrive as short, focused tasks with the coordinator's words quoted. The passport means the second request anywhere takes minutes.</p>
+      <p><strong>For the funder.</strong> The Desk is sorted by what only a person can do, with FundingEnvoy's pre-assessment attached: items for judgement first, then the recommendation with its basis, then the checks with their evidence. A coordinator's first look starts from the assessment, not the raw form. Committee packs, minutes, agreements, payment status and disclosure readiness are produced from the record rather than assembled by hand. The function finally gets its own numbers: time to decision, agreements before activity start, information rounds, overdue reconciliations, disclosure accuracy.</p>
+      <p><strong>Deliberately removed.</strong> The "request additional information" step that reopens every field (replaced by a focused exchange and a "what changed" note); the separate portal and internal app; free-text status codes; the PDF application package re-keyed by a coordinator; declined requests without a reason category.</p>
+    </div>
+
+    <div class="item"><div class="n">2</div><h3 style="margin-top:4px">Agentic requestor interface for registration and submission</h3>
+      <p>This is the FundingEnvoy of the concept review, kept whole: guides from the funder's own policy with clauses quoted; takes conversation, documents or a form; checks continuously against a deterministic rulebook; writes at confirmed checkpoints as the requestor; follows up. Registration becomes a conversation too: legal name and identifiers, matched against existing records before anything is created; screening run and shown; governing documents, tax status and financial statements uploaded once into the passport; signers named. The research adds five obligations.</p>
+      <ul>
+        <li><strong>It says it is an AI</strong> at the start of every conversation and labels generated text (EU AI Act Article 50, in force since August 2026; Colorado and California automated-decision notices from January 2027).</li>
+        <li><strong>It never writes a statement that is legally the requestor's</strong>: conflict-of-interest answers, anti-discrimination, independence and non-direction attestations are typed or ticked by the requestor, recorded verbatim with name and time.</li>
+        <li><strong>It declines to predict or advocate.</strong> Questions outside the policy corpus ("will this be approved?", "how much do you usually give?") are declined and routed. The educational rationale is extracted from the requestor's documents, never drafted.</li>
+        <li><strong>Bank details never enter the conversation.</strong> Payee information lives in the secure vendor flow, linked to.</li>
+        <li><strong>Everything it proposes carries provenance</strong> (file, page, cell, message) and is marked proposed until confirmed. Its activity is listed on the request.</li>
+      </ul>
+      <p>Languages are offered only where the policy corpus and rulebook messages exist in them. Email intake (a request letter starts a draft) and internal organizers (coordinators requesting on behalf of an organization, for memberships and product donations) use the same agent with different identity.</p>
+    </div>
+
+    <div class="item"><div class="n">3</div><h3 style="margin-top:4px">Agentic interface for coordinator and approver decisions, with a dial</h3>
+      <p><strong>What the assessing agent produces</strong> for every submitted request: completeness against the checklist; screening results with list versions; every rulebook check with severity, evidence and basis; cross-document consistency (dates, totals, names); budget analysis (arithmetic, ineligible lines, overhead share); independence analysis (who selects content, faculty and learners, quoted); country gate status (convention declared, visa issued, vetting decision); transparency classification (reportable under which regime, which category); comparables from the tenant's own history; and a recommendation with its basis, or "no recommendation" when confidence is below the tenant's floor. It writes none of this as a conclusion; it writes checks and evidence, and labels the items that need judgement "for you".</p>
+      <p><strong>The dial.</strong> Five levels, set per stage, per request type, per country and per amount band in Studio: Off · Observe (annotates only) · Recommend (drafts, a person decides) · Act with confirmation (does the routine step, a person confirms, singly or in batch) · Autonomous within the rulebook (acts, logs, a person can reverse). Changing a level shows its consequence from history ("at level 4 for triage, 96% of last quarter's requests would have routed without a person; 4% would have waited for you"). Five outcomes cannot be dialled: the funding decision, attestations, agreement signature, payment release and disclosure submission always require a named person. Confidence is a secondary signal, never the gate: the gate is the action's reversibility and impact.</p>
+      <p><strong>Why this shape.</strong> DOJ's 2024 guidance asks how a company prevents false approvals generated by AI and how it measures its models; the UK rulings show sanctions follow process defects. An agent that prepares, with every action logged and a person's decision attached, is the artefact that answers both. Over-gating produces rubber-stamping, so the Desk shows judgement items first and makes "accept recommendation" a deliberate act with a visible basis, with batch acceptance only for level-4 routine steps.</p>
+      <p><strong>Evaluation.</strong> Each tenant holds a test set (the research suggests 46 past requests as a starting size) measuring extraction accuracy, classification agreement, triage agreement and citation correctness. A model or prompt upgrade runs the set first and shows the diff to the process owner before going live. Results live in the model register, which is what an auditor or an AI governance committee asks for.</p>
+    </div>
+
+    <div class="item"><div class="n">4</div><h3 style="margin-top:4px">Fully front-end configurable, including branding, single- and multi-tenant</h3>
+      <p>Studio is the only configuration surface and is built for a grants process owner, not an administrator. Every section previews its effect as the requestor or coordinator would see it.</p>
+      <div class="kv">
+        <span class="k">Brand</span><span>Logo, colour with a live contrast check, heading face (three choices), corner style, requestor-facing domain and email sender, accessibility statement. Preview as requestor.</span>
+        <span class="k">Words</span><span>Terminology pairs (request, committee, reviewing team, reconciliation, assistant name) applied everywhere including FundingEnvoy's messages and documents.</span>
+        <span class="k">Languages</span><span>Offered only where policy corpus and rulebook messages exist; translation status shown per language.</span>
+        <span class="k">Catalogue and fields</span><span>Request families and subtypes, the questions that tell them apart, fields, documents, attestations and review forms per subtype, with country variations. Item 6.</span>
+        <span class="k">Rulebook</span><span>Checks with scope, severity, basis and requestor message; imported from the system of record where one exists; versioned and signed. Section "Rule core and overlays".</span>
+        <span class="k">Workflow</span><span>Stages, owners, time allowed, entry and exit conditions, variations; drafted from the SOP. Item 5.</span>
+        <span class="k">FundingEnvoy</span><span>Autonomy dial by stage, type, country and amount; confidence floor; scope boundaries; policy corpus; the test set and its results.</span>
+        <span class="k">Connections</span><span>Grants platform, e-signature, ERP, identity provider, screening lists. Items 7 and 8.</span>
+        <span class="k">People and SSO</span><span>Identity provider, provisioning, roles, separation-of-duties rules, committee membership, delegations. Item 11.</span>
+        <span class="k">Disclosure</span><span>Country packs switched on, lawful basis per country, calendar, award-list publication, file formats.</span>
+      </div>
+      <p><strong>Fixed for every tenant</strong>: the layout; provenance on every field; requestor-typed attestations; no submission without confirmation; no funding predictions; the five locked outcomes; FundingEnvoy's activity on the record; cited policy answers; the six global gates. <strong>Multi-tenant</strong>: the operator provisions a tenant (region, residency, model region, code family, initial packs); the tenant's process owner owns its Studio and signs its versions; the operator can propose packs and switch into a seat, logged on both sides. A single-tenant enterprise deployment is the same code with one tenant and its own database, keys and region.</p>
+    </div>
+
+    <div class="item"><div class="n">5</div><h3 style="margin-top:4px">SOP-driven workflow design</h3>
+      <p>The SOP is the source; the workflow is a derived, signed artefact. Upload the SOP and FundingEnvoy drafts the stages, owners, time limits, entry and exit conditions and the fields each stage needs, each tied to the clause it came from, and lists what the SOP leaves unsaid (a threshold without a number, a "where appropriate"). The process owner answers those questions in conversation or in the editor, adds variations by type or country (which are recorded as company choices, not SOP requirements), runs the test set against the system of record's sandbox, and signs. Published versions never change; every request records the version it started on and finishes on it; a new version applies to new requests, or to in-flight requests at a stage boundary when the owner chooses. Uploading SOP v5 produces a clause diff and the stages it affects.</p>
+      <p>Underneath: a durable workflow engine (Temporal-style) executing a versioned JSON definition, with a visual editor that shows stages as a list (direction A) or as swimlanes (direction B). Generating workflows from SOPs with a language model is research-grade in the literature, so the draft is always reviewed stage by stage and validated for soundness (every stage reachable, every outcome handled, every locked outcome owned by a person) before it can be signed.</p>
+    </div>
+
+    <div class="item"><div class="n">6</div><h3 style="margin-top:4px">Dynamic field and workflow design across request types</h3>
+      <p>The catalogue uses the mutually exclusive taxonomy the codes require, because each type has its own sales-involvement rule, payee rule and disclosure category: accredited education, non-accredited education, research (including investigator-initiated), charitable contribution, patient-organization support, independent-charity patient assistance, corporate membership, congress and commercial sponsorship, fellowship and scholarship, product or in-kind donation, public policy, and company-controlled activities (satellite symposia, exhibits) that are routed out of the grants channel with a "company-controlled" flag.</p>
+      <p>A subtype inherits from its family and may be varied by country: fields (schema plus display rules, with provenance support built in so FundingEnvoy can propose values), documents and their categories, attestations, the review form per stage, the disclosure category mapping, the payee rule and the sales rule. The field designer is a form, not code: add a field, choose its kind, say when it appears, say which rule needs it. Where a grants platform is the system of record, picklists and objects are read from it and mapped, not retyped. Definitions are versioned like workflows; a request pins the version it started on.</p>
+    </div>
+
+    <div class="item"><div class="n">7</div><h3 style="margin-top:4px">Front-end configuration for Salesforce and other grants platforms</h3>
+      <p><em>Decision, 27 October 2026: FundingEnvoy is the system of record. The adapter mode described below is kept in the design and built in a later phase.</em></p>
+      <p>Two deployment modes, one connector model. <strong>FundingEnvoy as the system of record</strong>: requests, decisions, agreements, payments and disclosures live here, and connections carry contracting and payment to the outside systems in item 8. <strong>FundingEnvoy in front of an existing grants platform</strong> (the concept review's mode): the platform keeps decisions, approvals and the audit of record; FundingEnvoy reads its metadata, writes at four idempotent checkpoints under the requestor's own identity, subscribes to status and comment events, and attaches its review summary where the coordinator already looks.</p>
+      <p>The connector studio is the same in both modes: choose the system (Salesforce packaged grants apps, Experience Cloud portals, other grants platforms through an adapter contract), authenticate with a connected app, read objects and picklists, map fields with FundingEnvoy's suggestions and a sample record, choose checkpoints and events, run the end-to-end test (login as requestor, match organization, create, attach, submit, receive event, retry without duplicate), and go live. The adapter contract is small and canonical: Organization, Payee, Request, Documents, Comments, Status events, Agreement, Payment. A second platform adapter proves the product is not an extension of one system.</p>
+    </div>
+
+    <div class="item"><div class="n">8</div><h3 style="margin-top:4px">Front-end configuration for DocuSign, SAP and other contracting and payment systems</h3>
+      <p>Contracting and payment are recipes the process owner reads in plain words: <em>when a request is approved, generate the agreement from template IME-US-2026 with the clauses this jurisdiction requires, send it through DocuSign to the organization's authorized signer and our legal signatory, and when both have signed, certify it (UK final signatory where required), create or match the vendor in SAP with the verified bank account, raise the purchase order, release milestone one on finance's confirmation, and record the transfer of value for disclosure.</em> Each step in the recipe is a connector action with a mapped payload; each has a test with a sample; each failure returns to the Desk as a task, never to a log nobody reads.</p>
+      <p>Connectors ship for DocuSign and Adobe Sign (envelopes, templates, embedded signing, signed-event webhooks), SAP S/4HANA and ECC (business partner, purchase order, payment status through the standard APIs), Coupa, Workday and Oracle through the same payment contract, and an iPaaS escape hatch for anything else. What stays with people: payment release (a finance role), bank-account verification (the vendor-onboarding flow of the ERP, never the platform's conversation), and the agreement's execution. Separation of duties is enforced by the permission model: the person who routed a request cannot release its payment.</p>
+    </div>
+
+    <div class="item"><div class="n">9</div><h3 style="margin-top:4px">An architecture and database for hundreds of concurrent users and 500k rows</h3>
+      <p>The stated scale is modest for a relational database; the design target is set higher so that the managed service never hits it: fifty million rows across tenants, two thousand concurrent users, desk queries under 300 milliseconds at the 95th percentile, document retrieval under a second. The decisions that matter are isolation, auditability and residency, not raw throughput.</p>
+      <ul>
+        <li><strong>PostgreSQL</strong>, pool model: every tenant table carries the tenant key first in its indexes; row-level security on every tenant table with the tenant context set from a validated token on every request, as a safety net behind application scoping; large tables partitioned by tenant; read replicas for analytics; an enterprise tenant may take a dedicated database with the same schema.</li>
+        <li><strong>The request as a ledger</strong>: an append-only event stream per request (field proposed, confirmed, changed; check run; document attached; stage entered; decision made) with projections for the working request, the brief and the trail. The audit trail is not a side table; it is the primary record.</li>
+        <li><strong>Documents</strong> in object storage with per-tenant keys, content hashes on every version, and a search index for text and metadata.</li>
+        <li><strong>Workflow engine</strong> (durable, versioned) and <strong>agent runtime</strong> (tool contracts for extraction, checks, screening, drafting; per-tenant model region; prompt and output logging; no training on customer data) as separate services.</li>
+        <li><strong>Connector service</strong> with idempotent writes and correlation keys; <strong>calendar engine</strong> for every regulatory date; <strong>disclosure engine</strong> producing per-country files; <strong>semantic layer</strong> for analytics.</li>
+        <li><strong>Regions</strong>: US, EU, UK, APAC, with a China-resident option and PIPL export-volume tracking; models hosted in the tenant's region; residency chosen per tenant at provisioning.</li>
+      </ul>
+    </div>
+
+    <div class="item"><div class="n">10</div><h3 style="margin-top:4px">Natural-language analytics: everything reportable</h3>
+      <p>Every object and every event is reportable, and the way to ask is to ask. A question ("which request types needed the most information rounds in Q3, and in which countries?") is planned against a governed metrics library, not against raw tables; the answer is a sentence, a chart or table, and a "how this was computed" panel naming the measure, period, grouping, and the rows the person's role excluded. Answers can be pinned to a personal or shared board. Every question, generated query and result hash is logged. The metrics library is versioned and owned by the process owner; the platform ships with the ones the industry does not publish: time to decision, agreements executed before activity start, information rounds per request, overdue reconciliations, disclosure-feed accuracy, revenue-concentration utilisation, patient-organization dependency, and compliance analytics such as grants correlated with sales territories, used for monitoring and never for scoring. Row-level security propagates into the semantic layer so natural language cannot bypass it. Exports are plain files with the definitions attached.</p>
+    </div>
+
+    <div class="item"><div class="n">11</div><h3 style="margin-top:4px">SSO and user management</h3>
+      <p>Two identity realms. <strong>Internal users</strong> sign in through the tenant's identity provider (SAML or OIDC) and are provisioned and deprovisioned through SCIM with a stable external identifier; roles arrive from groups or are assigned in Studio. <strong>Requestors</strong> sign in passwordlessly (email link or passkey) with MFA step-up for submission, attestation and signature, and optionally through their institution's identity provider; an organization admin invites colleagues and names signers. Roles are tenant-scoped and combined with attributes (therapeutic area, country, request type, amount band) that drive routing and visibility. Separation of duties is a rule set, not a convention: sales and marketing roles cannot create, score, approve or see the status of requests; a router cannot release payment; a committee member with a declared interest is recused automatically and the recusal recorded. Operators hold per-tenant, per-country licences; switching into a tenant seat is a logged event. Sessions, consents, delegations and break-glass access are in the trail.</p>
+    </div>
+
+    <div class="item"><div class="n">12</div><h3 style="margin-top:4px">A full audit trail of every user, system and AI action</h3>
+      <p>Every action is an event with who, what, when, why, the prior and new values, and the version of the rulebook and workflow in force. Events are hash-chained per tenant, the chain head is anchored nightly to immutable storage with a trusted timestamp, and verification runs continuously and on demand. An AI event additionally records the agent, model name and version, prompt set version, the inputs and retrieved sources by hash, the output or its hash, score components, the policy evaluated and the gate outcome, the human's accept, modify or reject with name, time and reason, and the downstream action identifiers. Connector events record the correlation key and the remote identifier. Attestations and certifications carry the signature manifestation (name, time, meaning). Retention defaults to ten years after closure with per-tenant policy and legal hold; erasure requests are handled by export-then-tombstone so the chain stays intact. The trail is readable by people: a timeline per request filterable by people, FundingEnvoy, and systems, with an export that carries its own verification report. The same events feed the model register and the compliance analytics, so there is one source for "what happened".</p>
+    </div>
+  </section>
+
+  <!-- CORE -->
+  <section id="core">
+    <h2>The rule core and the overlays</h2>
+    <p>The research's central finding is that the substantive rules are the same everywhere and the procedure differs. The platform mirrors this: six gates no tenant can remove, and country packs that are data.</p>
+    <h3>Six gates, fixed</h3>
+    <div style="margin:12px 0 24px">
+      <div class="gate"><span class="g">G1</span><span><strong>Organizations only.</strong> A natural person cannot be a recipient of a grant, donation or sponsorship. Fellowships and scholarships are paid to institutions that select the individual.</span></div>
+      <div class="gate"><span class="g">G2</span><span><strong>Decisions separate from sales.</strong> Sales and marketing roles cannot create, score, approve or see the status of requests. Donation workflows may allow sales input without control, where a tenant's code allows it, and the input is recorded as such.</span></div>
+      <div class="gate"><span class="g">G3</span><span><strong>Objective, stored criteria.</strong> Scoring fields are structured and versioned, with no input for purchase volume, formulary position or prescribing. Requestor and reviewer each confirm that support is not conditioned on business.</span></div>
+      <div class="gate"><span class="g">G4</span><span><strong>Written agreement before the activity.</strong> Both signature dates precede the start date; mandatory clauses for the jurisdiction are present; certification by a named signatory where required; no payment before execution.</span></div>
+      <div class="gate"><span class="g">G5</span><span><strong>No linkage, no earmarking, no data back.</strong> Patient-assistance donations capture disease-fund breadth, block product earmarking, forbid utilisation or patient-level data from the charity and require a budget rationale independent of forecasts.</span></div>
+      <div class="gate"><span class="g">G6</span><span><strong>Acknowledge and disclose.</strong> Every transfer of value is recorded with its disclosure attributes at payment, reconciled against accounts payable and the transparency file, and multi-year grants are re-validated each cycle.</span></div>
+    </div>
+    <h3>Country packs, as data</h3>
+    <p>A pack holds recipient-eligibility rules, purpose categories, prior-approval steps with lead times and record numbers, mandatory agreement clauses, product-name screening, disclosure outputs with their formats and deadlines, lawful basis for publication, retention, and the calendar entries. Packs are effective-dated and versioned; a tenant adopts, edits or declines a pack in Studio and signs its own version. The managed service accumulates packs and proposes them; it never applies them to a tenant unasked.</p>
+    <div class="tbl"><table>
+      <tr><th>Pack</th><th>What it inserts</th><th>Example parameters held as data</th></tr>
+      <tr><td>US federal</td><td>Non-conditioning attestations; PAP module; teaching-hospital match; Open Payments classification and file; W-9 and 1099 exposure; FCPA tier for foreign public institutions</td><td>$13.82 / $138.13 for 2026; 1099 at $2,000 for 2026 payments; AO 24-02 expiry 1 Jan 2027</td></tr>
+      <tr><td>US states</td><td>Per-transaction rules keyed on recipient state: exports, caps, certification evidence packs</td><td>Vermont 1 April; Massachusetts 1 July at $50; Nevada 1 May–1 June; Connecticut 1 July; California per-HCP cap; New Jersey $10,000</td></tr>
+      <tr><td>Accredited education</td><td>Provider-controls attestations; learner-disclosure text; in-kind nature; budget block list; agreement-before-start; Standard 5 separation</td><td>Accreditor identity as metadata on one rule set</td></tr>
+      <tr><td>EFPIA and UK</td><td>HCO and PO templates; written PO agreement fields; ABPI clause set and certification gate; lawful basis and consent handling</td><td>Publication by 30 June; public 3 years; records 5 years; PO template from the 2026 cycle; searchable publication from 2027</td></tr>
+      <tr><td>France</td><td>Convention stage before approval with declaration-or-authorisation routing and execution block; Transparence Santé semester files</td><td>Thresholds per the 7 August 2020 arrêtés (to be verified against the primary text); benefits from €10</td></tr>
+      <tr><td>Belgium · Netherlands · Portugal · Nordics</td><td>Mdeon visa stage; Transparantieregister recipient pre-approval; Infarmed 30-working-day filing by both parties; LIF three-month rolling submission</td><td>€500 per recipient per year (NL); 1 July recipient check</td></tr>
+      <tr><td>MedTech Europe · Mecomed · APACMed</td><td>Educational grants only for events; HCO selects attendees; Conference Vetting System decision before approval; use-verification clause; no-de-minimis disclosure</td><td>CVS at least 50 days before the event; disclosure by 31 August</td></tr>
+      <tr><td>Japan · Korea · Australia</td><td>JPMA category tagging; scholarship-donation controls; Korean conference eligibility and expenditure report; Medicines Australia section 14.2 period cuts</td><td>Korea: three hours, three credits, 50 participants; booth caps ₩3m / ₩1m; report three months after year end; Australia next file 31 Oct 2026</td></tr>
+      <tr><td>China · India</td><td>Public-welfare entity check with institutional-review evidence and purpose code; FCRA registration, designated account, no onward transfer, admin-expense cap; PIPL export tracking</td><td>Security assessment above 1 million individuals or 10,000 sensitive records exported per year</td></tr>
+      <tr><td>Canada · Latin America</td><td>Grant, donation, sponsorship, collaboration categories; voluntary aggregate disclosure; Brazil physician-declaration data within 60 days; legal-entity recipients and not-sole-funder checks</td><td>Individual disclosure off by default in Canada</td></tr>
+    </table></div>
+    <div class="callout"><strong>Verification before encoding.</strong> The research was built from search extracts because primary sites were blocked; its gaps section lists every expected value, single-source claim and unsearched topic. No expected value becomes a rule until the primary text has been read. The first managed-service deliverable is the verified pack set.</div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section id="arch">
+    <h2>Architecture in one picture</h2>
+    <p>Boxes with a dark border are fixed by the platform; the rest is configured per tenant. The request ledger is the centre; everything else reads from it or writes to it.</p>
+    <div class="arch">
+      <div class="lane"><span class="lbl">Seats</span><div class="box"><b>Requestor app</b><span>branded per tenant · passport</span></div><div class="box"><b>Desk and review</b><span>coordinator, reviewers, committee, finance</span></div><div class="box"><b>Studio</b><span>process owner</span></div><div class="box"><b>Operations</b><span>managed-service operator</span></div><div class="box"><b>Ask</b><span>analytics for every seat</span></div></div>
+      <div class="lane"><span class="lbl">Services</span><div class="box fixed"><b>Request ledger</b><span>append-only events · projections · provenance</span></div><div class="box"><b>Workflow engine</b><span>durable · versioned definitions</span></div><div class="box"><b>Rulebook engine</b><span>deterministic checks · scoped · versioned</span></div><div class="box"><b>FundingEnvoy runtime</b><span>extraction, checks, drafting · tool contracts · region-pinned models</span></div><div class="box fixed"><b>Gatekeeper</b><span>six gates · locked outcomes · separation of duties</span></div></div>
+      <div class="lane"><span class="lbl">Services</span><div class="box"><b>Screening</b><span>LEIE, SAM, OFAC, EU/UK, tax status, PEP · list versions</span></div><div class="box"><b>Disclosure engine</b><span>per-country files · reconciliation with AP</span></div><div class="box"><b>Calendar</b><span>every regulatory date · effective-dated parameters</span></div><div class="box"><b>Connectors</b><span>grants platforms · e-signature · ERP · idempotent</span></div><div class="box"><b>Semantic layer</b><span>metrics library · RLS propagated</span></div></div>
+      <div class="lane"><span class="lbl">Foundations</span><div class="box fixed"><b>Audit chain</b><span>hash-chained · WORM-anchored · AI events first-class</span></div><div class="box"><b>Identity</b><span>SAML/OIDC + SCIM · passwordless requestor realm</span></div><div class="box"><b>PostgreSQL</b><span>pool model · RLS · tenant-leading indexes · partitions · replicas</span></div><div class="box"><b>Documents</b><span>object storage · per-tenant keys · hashes · search</span></div><div class="box"><b>Regions</b><span>US · EU · UK · APAC · China option</span></div></div>
+    </div>
+    <h3>Canonical objects</h3>
+    <p>Organization (legal identity, type, country, government-control flag, officers and beneficial owners, tax status, income, screening history, documents) · Payee (vendor identity in the ERP, verified account, W-9/W-8) · Person (requestor, signer, internal user; covered-recipient attributes where an individual benefits indirectly) · Request (family, subtype, country, audience geography, fields with provenance, documents, attestations, checks, stage, version pins) · Review (stage, reviewer, form, outcome, reason) · Decision (body, quorum, recusals, votes, rationale, conditions) · Agreement (template version, clauses, parties, signature events, certification) · Payment (milestone, amount, currency, GL, tax class, status, remote identifiers) · Transfer of value (regime, category, recipient identity attributes, reporting period, publication state) · Event (the trail).</p>
+  </section>
+
+  <!-- TENANCY -->
+  <section id="tenancy">
+    <h2>Single-tenant, multi-tenant, managed service</h2>
+    <p>Three ways to run the same code. The difference is who holds the Studio and who sits at the Desk.</p>
+    <div class="tbl"><table>
+      <tr><th>Shape</th><th>Who configures</th><th>Who operates</th><th>Isolation</th></tr>
+      <tr><td><strong>Enterprise, single tenant</strong></td><td>The company's process owner in Studio</td><td>The company's own grants team</td><td>Dedicated database, keys and region; same schema and releases</td></tr>
+      <tr><td><strong>SaaS, multi-tenant</strong></td><td>Each company's process owner</td><td>Each company's own team</td><td>Pool model with row-level security, tenant keys, region per tenant; no cross-tenant visibility of requests, decisions or configuration</td></tr>
+      <tr><td><strong>Managed service</strong></td><td>Each company's process owner signs; the operator proposes packs and can be delegated Studio rights per tenant</td><td>The operator's coordinators across tenants from Operations, with per-tenant licences and logged seat switches; committees and approvers remain the company's people</td><td>As SaaS, plus the operator's own compartment: the rule library, cross-tenant queue, organization passports and the model register</td></tr>
+    </table></div>
+    <h3>The organization passport</h3>
+    <p>An organization registers once: identity and identifiers, screening results with list versions, tax and accreditation evidence, governing documents, financial statements, signers and contacts. The organization owns it and chooses, funder by funder, what to share; stale documents are flagged before a request needs them. A funder sees only what has been shared with it and never another funder's requests, decisions or amounts. In a managed service this is the reason an organization prefers the network; in a single-tenant deployment it is the profile. The legal structure (who is controller of what, consent wording, the funder's duty not to infer a competitor's activity from a shared document's existence) is a decision for counsel listed below.</p>
+    <h3>What the operator sees and does</h3>
+    <p>Fleet (tenants, open requests, what needs a person, past service level, FundingEnvoy profile, region, next disclosure deadline, rulebook version); the cross-tenant queue sorted the same way as any Desk; the rule library of packs with adoption state; organizations; models and evaluation results per tenant; service levels and their evidence. The operator never sees two tenants' requests on one screen except in the queue, and every switch into a tenant seat is an event on both the operator's and the tenant's trail.</p>
+  </section>
+
+  <!-- UI -->
+  <section id="ui">
+    <h2>UI direction: three options and a recommendation</h2>
+    <p>The canvas shows three genuinely different directions on the same product and the same example request. Analytics, audit and operator screens are shown once, in direction A, because their content is identical in all three. Open the canvas: <a href="https://claude.ai/artifact/GPFunu1H8w7fpCY2F96Dxu">Funding Platform UI Options</a>.</p>
+    <div class="grid">
+      <div class="card"><div class="eyebrow">Direction A</div><div class="t">Ledger · the request is a signed document</div><div class="s">A typed document with provenance on every line and checks as margin notes. A quiet rail holds the conversation; the desk opens as a brief with judgement items first. Serif headings, hairline rules, one green for passed. It reads as a record, which is what committees and auditors trust.</div><div class="s"><strong>Tradeoff.</strong> Less dense than a workbench; a coordinator handling three hundred requests needs the queue to work harder than a document does.</div></div>
+      <div class="card"><div class="eyebrow">Direction B</div><div class="t">Console · a workbench for volume</div><div class="s">Three panes: queue, brief, evidence. Keyboard-first (J/K, A, I, D), dense tables, a dark chrome bar, cobalt accent. Studio shows the workflow as swimlanes. Built for people who live in it eight hours a day.</div><div class="s"><strong>Tradeoff.</strong> The requestor's screen becomes a form again, which is what a twice-a-year requestor never learns; the instrument feel can read as cold to a charity director.</div></div>
+      <div class="card"><div class="eyebrow">Direction C</div><div class="t">Thread · the conversation is the spine</div><div class="s">One centred thread with structured cards inside it; big friendly type, violet accent, pill buttons; works on a phone unchanged. The coordinator's morning is a round-up from FundingEnvoy; Studio is set up by talking, with a live preview.</div><div class="s"><strong>Tradeoff.</strong> A thread hides the table. Coordinators and committees compare, sort and scan; chat makes them scroll. It is the best intake and the weakest desk.</div></div>
+    </div>
+    <p><strong>Recommendation: build on A, and take two things from each of the others.</strong> Ledger makes the product's central idea visible: the requestor and the reviewer are looking at the same document, and the evidence sits next to the claim. It scales down to calm for the requestor and up to density for the desk without changing its grammar, and a record-like interface is what a compliance function will defend to an auditor. From Console, take the keyboard-driven queue and the evidence pane that opens to the quoted page (the Ledger desk mockup already carries the queue; the evidence pane is the next addition). From Thread, take the three ways in and the question-at-a-time intake on a phone, which the Ledger requestor screen keeps in its rail and should promote to full width on small screens. Reject chat as the primary surface for anyone who decides, and reject the dense form for anyone who requests.</p>
+    <p><strong>What was cut on purpose.</strong> Dashboards as home pages; status badges without sentences; wizards with step counters; AI "sparkle" affordances; confidence percentages shown to requestors; any control that explains the system rather than the request.</p>
+  </section>
+
+  <!-- BUILD -->
+  <section id="build">
+    <h2>Path to build</h2>
+    <p>Writing the software is not the slow part. What sets the pace is primary-source verification of the packs, sandbox access, the first tenant's SOP and policy, and legal review of attestation and passport wording. Each phase ends with a test of whether it is done.</p>
+    <div style="margin:14px 0 24px">
+      <div class="phase"><span class="p">0 · Demo tenant and verified packs</span><span>Create the demo tenant (Halden Pharma, fictional) with a synthetic SOP, policy and rulebook for accredited education, non-accredited education and charitable contributions in the US, UK and France; verify the pack values for those countries against primary texts; build a synthetic test set of about 46 requests with known expected outcomes; set up demo connections (an e-signature developer sandbox and a simulated ERP adapter). <span class="done">Done when the three packs are signed and the test set runs end to end in the demo environment.</span></span></div>
+      <div class="phase"><span class="p">1 · Core loop</span><span>Requestor intake in three modes, working request with provenance, rulebook engine, FundingEnvoy extraction and checks, the request ledger as the system of record, review summary on the request, the audit chain from day one. <span class="done">Done when every request in the synthetic test set submits cleanly and the rulebook produces the expected outcome on every one.</span></span></div>
+      <div class="phase"><span class="p">2 · Desk and decisions</span><span>Desk, brief, judgement items, recommendation with basis, information-request exchange with "what changed" notes, committee pack and vote with recusals, the dial at levels 2–4. <span class="done">Done when a request goes through an information round and a committee decision with the coordinator reading only FundingEnvoy's summaries, and the trail reconstructs it.</span></span></div>
+      <div class="phase"><span class="p">3 · Studio and SOP</span><span>Brand, Words, Catalogue and fields, Rulebook import, Workflow from SOP with test set and sign-off, FundingEnvoy settings with consequence preview. <span class="done">Done when a second tenant is configured without code by its own process owner.</span></span></div>
+      <div class="phase"><span class="p">4 · Connections</span><span>DocuSign or Adobe Sign agreements with clause libraries and certification gate against the developer sandbox; the payment contract against a simulated ERP adapter, swapped for SAP, Coupa or Workday with the first real tenant; finance seat; separation of duties. <span class="done">Done when an approved request reaches a paid milestone with no re-keying and the ERP-side record matches the ledger.</span></span></div>
+      <div class="phase"><span class="p">5 · Disclosure and calendar</span><span>Transfer-of-value capture at payment, country files (Open Payments, EFPIA templates, one national register), reconciliation against AP, the calendar, multi-year re-validation. <span class="done">Done when a year's file reconciles to the ledger with zero unexplained differences.</span></span></div>
+      <div class="phase"><span class="p">6 · Operations and passport</span><span>Fleet, cross-tenant queue, rule library, organization passport with consent model, model register with per-tenant evaluations, SOC 2 and ISO 27001 programme. <span class="done">Done when a third tenant is onboarded from packs in days, and an organization reuses its passport across two funders.</span></span></div>
+    </div>
+    <p><strong>Continuous:</strong> evaluation sets grow with every pilot; security review; accessibility (WCAG 2.2 AA, the European Accessibility Act applies since June 2025); language coverage as policy corpora are translated.</p>
+  </section>
+
+  <!-- RISKS -->
+  <section id="risks">
+    <h2>Risks and mitigations</h2>
+    <div class="tbl"><table>
+      <tr><th style="width:34%">Risk</th><th>Mitigation</th></tr>
+      <tr><td>A rule encoded from an unverified figure (a French threshold, an Italian deadline) misleads a requestor or blocks a legitimate request.</td><td>Expected values are marked as such in the pack and cannot be published without a primary-source citation; the process owner signs each pack version; a nightly comparison against the system of record flags drift.</td></tr>
+      <tr><td>Coordinators rubber-stamp FundingEnvoy's recommendations.</td><td>Judgement items come first and are separate from the recommendation; acceptance is a deliberate act with the basis visible; batch acceptance is limited to routine level-4 steps; the acceptance rate and override rate are themselves monitored metrics.</td></tr>
+      <tr><td>The AI layer is classified as high-risk under the EU AI Act in a Member State's reading, or a US state notice regime applies to requestors.</td><td>Per-deployment classification record; Article 50 notices from day one; the design already meets most Annex III duties (human oversight, logging, accuracy testing, documentation) so reclassification is paperwork, not redesign.</td></tr>
+      <tr><td>The organization passport creates a cross-tenant data question (who is controller, what a funder may infer).</td><td>The organization is controller of its passport; sharing is explicit per funder; funders receive copies, not links to a shared record; counsel reviews the consent wording before the feature ships (decision below).</td></tr>
+      <tr><td>Integration sprawl: every ERP is configured differently.</td><td>A small canonical contract; native connectors for the common four; professional services or iPaaS for the rest, priced separately; the end-to-end test is the acceptance test.</td></tr>
+      <tr><td>Sales influence enters through a side door (a commercial colleague "helping" a society apply).</td><td>Role separation in permissions; origin-of-request recorded; compliance analytics correlate grants with territories for monitoring; the FCPA tier adds an origin check for public institutions.</td></tr>
+      <tr><td>Bank or personal data passes through a conversation.</td><td>Payee data lives only in the ERP vendor flow; personal data is minimised to what the record needs; model hosting in the tenant's region; no training on customer data, contractually.</td></tr>
+      <tr><td>A tenant's rulebook and the grants platform's checklist diverge, so requests pass FundingEnvoy and fail on submit.</td><td>Import, not retype; the test set runs against the sandbox before each publication; any validation error at submit is a logged defect with an owner.</td></tr>
+    </table></div>
+  </section>
+
+  <!-- DECISIONS -->
+  <section id="decisions">
+    <h2>Decisions made, 27 October 2026</h2>
+    <p>Eight decisions were open at the end of the first draft. All are now settled; the build can start from them.</p>
+    <div class="tbl"><table>
+      <tr><th style="width:30%">Decision</th><th>Settled as</th></tr>
+      <tr><td>First shape</td><td>Managed service for a mid-size company. The operator seat and the country packs are built early, because the packs are the resellable asset.</td></tr>
+      <tr><td>System of record</td><td><strong>FundingEnvoy is the system of record.</strong> Requests, decisions, agreements, payments and disclosures live here. The adapter mode and the connector studio for other grants platforms (requirement 7) move to a later phase; the canonical objects are designed so that adapter needs no rework.</td></tr>
+      <tr><td>Request families in the pilot</td><td>Accredited education, non-accredited education and charitable contributions. Charitable contributions bring in screening and the "no business benefit" test.</td></tr>
+      <tr><td>Countries for the first pack set</td><td>United States, United Kingdom and France. The UK exercises certification; France exercises prior approval.</td></tr>
+      <tr><td>Autonomy defaults</td><td>The "standard" profile shown in the mockups: autonomous for completeness and screening, act for triage and reminders, recommend at review and committee. "Cautious" (recommend everywhere) is a one-click tenant setting.</td></tr>
+      <tr><td>Organization passport</td><td>Counsel review of the consent and controller model starts now, in parallel; the passport ships in phase 6.</td></tr>
+      <tr><td>UI direction</td><td>Ledger, with the keyboard queue and evidence pane from Console and the phone-width intake from Thread. The merged desk is settled in the first build sprint, not in a further mockup round.</td></tr>
+      <tr><td>Naming</td><td>FundingEnvoy for both the product and the assistant inside it; tenants can rename the assistant.</td></tr>
+    </table></div>
+    <h3>Phase 0 runs on a demo tenant, not a customer</h3>
+    <p>There is no first customer yet, so phase 0 builds a sandbox and demo environment. The demo tenant is Halden Pharma, fictional, with a synthetic SOP, policy and rulebook written to exercise the three request families and three countries, and a synthetic test set of about 46 requests with known expected outcomes. The inputs that previously depended on a customer change as follows: no external sandbox or portal test user is needed, because FundingEnvoy is the record; the SOP and policy are written for the demo rather than imported; the checklist import is replaced by authoring the rulebook in Studio; the pilot baseline comes later, from the first real tenant. What does not change: the pack values for the US, UK and France must still be verified against primary texts before they are published as rules, and the attestation wording and AI-disclosure notice still need legal review before a real requestor sees them.</p>
+  </section>
+</div>
