@@ -43,6 +43,16 @@ function ruleById(l: Loaded): Map<string, Rule> {
 }
 
 /** Decide what to ask the requestor next, in a fixed order a person can predict. */
+const TITLES = /^(dr|pr|prof|mr|mrs|ms|mx|sir|dame)\.?$/i;
+/** "Dr. Elena Marsh" is greeted as "Dr. Marsh"; "Teresa Quinlan" as "Teresa". */
+export function greetingName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts.length > 1 && TITLES.test(parts[0]!) ? `${parts[0]} ${parts.at(-1)}` : parts[0]!;
+}
+
+/** Lower-case the first letter only, so names inside a reason keep their capitals. */
+const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+
 export function nextAsk(l: Loaded, checks: CheckResult[]): Ask {
   const st = l.state;
   const rules = ruleById(l);
@@ -102,6 +112,11 @@ export function nextAsk(l: Loaded, checks: CheckResult[]): Ask {
 
 async function askNext(tx: Tx, l: Loaded, fe: Actor, checks: CheckResult[], lead?: string) {
   const ask = nextAsk(l, checks);
+  if (!lead) {
+    // Edits in the document re-ask only when the question has changed; the conversation doesn't repeat itself.
+    const last = await one<{ ask: { text?: string } | null }>(tx, "select data->'ask' as ask from messages where request_id = $1 and data ? 'ask' order by created_at desc limit 1", [l.row.id]);
+    if (last?.ask?.text === ask.text) return ask;
+  }
   const body = lead ? `${lead}\n\n${ask.text}` : ask.text;
   await addMessage(tx, l, fe, body, { ask });
   return ask;
@@ -147,7 +162,7 @@ export async function startRequest(u: SessionUser, input: { text?: string; count
     const fe = await assistantActor(tx, u.tenantId!);
     const l = await loadRequest(tx, row!.id);
     if (!input.text) {
-      await addMessage(tx, l, fe, `Hello ${u.name.split(" ")[0]}. I can help you prepare a funding request. Tell me about the activity, upload what you have, or use the form. I check everything against the company's policy as we go, and nothing is sent until you confirm.\n\nI'm an AI assistant. I can explain the policy and check your request; I can't predict or make funding decisions.`, { intro: true });
+      await addMessage(tx, l, fe, `Hello ${greetingName(u.name)}. I can help you prepare a funding request. Tell me about the activity, upload what you have, or use the form. I check everything against the company's policy as we go, and nothing is sent until you confirm.\n\nI'm an AI assistant. I can explain the policy and check your request; I can't predict or make funding decisions.`, { intro: true });
     }
     return row!.id;
   });
@@ -225,7 +240,7 @@ async function classify(tx: Tx, l: Loaded, fe: Actor, text: string, proposals: F
   const sub = l.cfg.catalogue.subtypes.find((s) => s.id === c.subtype);
   const q = c.question ?? { text: `This looks like ${sub?.name ?? "a request"}. Is that right?`, options: [] };
   const options = q.options.length ? q.options.map((o) => ({ id: o.subtype ? `subtype:${o.subtype}` : o.id, label: o.label })) : l.cfg.catalogue.subtypes.map((s) => ({ id: `subtype:${s.id}`, label: s.name }));
-  const lead = sub ? `This looks like ${sub.name.toLowerCase()}${c.reasons.length ? ` (${c.reasons[0]!.toLowerCase()})` : ""}. One thing to confirm first, because it decides what else I ask for and who reviews it:` : "One thing first:";
+  const lead = sub ? `This looks like ${sub.name.toLowerCase()}${c.reasons.length ? ` (${lowerFirst(c.reasons[0]!)})` : ""}. One thing to confirm first, because it decides what else I ask for and who reviews it:` : "One thing first:";
   await addMessage(tx, l, fe, `${lead}\n\n${q.text}`, { ask: { kind: "type", questionId: "type", text: q.text, options } satisfies Ask });
 }
 
@@ -295,11 +310,11 @@ export async function onUpload(u: SessionUser, requestId: string, files: { name:
     const progress = requiredProgress(l);
     const docList = read.map((d) => `${d.name} (${labelFor(l, d.type)}${d.classifiedBy === "assistant" ? ", classified by me" : ""}${d.covers.length ? `; it also contains the ${d.covers.map((c) => `${labelFor(l, c.type).toLowerCase()} on page ${c.page}`).join(" and the ")}, so I've counted it for that too` : ""})`).join("; ");
     const lead = [
-      `I read ${read.length === 1 ? "it" : `all ${read.length}`}: ${docList}.`,
+      `I read ${read.length === 1 ? "it" : read.length === 2 ? "both" : `all ${read.length}`}: ${docList}.`,
       applied ? `I filled in ${applied} value${applied === 1 ? "" : "s"}${progress.total ? `; ${progress.answered} of the ${progress.total} things this request needs are now in` : ""}. Each shows where it came from, and stays marked as proposed until you confirm it.` : "I didn't find values I could fill in.",
       budgetLines ? `The budget has ${budgetLines.length} lines totalling ${formatMoney(budgetTotal(l.state), (l.state.fields["amount.currency"]?.value as string) ?? "USD")}.` : "",
       ext.conflicts.length ? `Your documents disagree on: ${ext.conflicts.map((c) => fields.find((f) => f.key === c.key)?.label ?? c.key).join(", ")}. I've used the first and flagged it; I won't pick for you.` : "",
-      skipped.length ? `I didn't overwrite values you had already confirmed (${skipped.join(", ")}).` : "",
+      skipped.length ? `I didn't overwrite values you had already confirmed: ${skipped.map((k) => fields.find((f) => f.key === k)?.label ?? k).join(", ")}.` : "",
       warnings.join(" "),
     ].filter(Boolean).join(" ");
     await addMessage(tx, l, fe, lead, { extracted: { applied, documentIds: read.map((d) => d.id), conflicts: ext.conflicts } });
@@ -434,7 +449,8 @@ export async function updateFields(u: SessionUser, requestId: string, changes: {
         await record(tx, { tenantId: l.row.tenant_id, actor: me, entity: { type: "request", id: l.row.id }, action: changed ? "field.changed" : "field.set", data: { requestId: l.row.id, key: c.key, value: c.value, previous: cur?.value, reason: c.reason } });
       }
     }
-    await recheckAndSave(tx, l);
+    const checksAfter = await recheckAndSave(tx, l);
+    if (l.state.status === "draft") await askNext(tx, l, await assistantActor(tx, l.row.tenant_id), checksAfter);
   });
 }
 
@@ -446,12 +462,13 @@ export async function confirmAll(u: SessionUser, requestId: string) {
     const keys = Object.entries(l.state.fields).filter(([, v]) => v.status === "proposed").map(([k]) => k);
     for (const k of keys) l.state = setField(l.state, k, { ...l.state.fields[k]!, status: "confirmed" }, me);
     if (keys.length) await record(tx, { tenantId: l.row.tenant_id, actor: me, entity: { type: "request", id: l.row.id }, action: "field.confirmed-all", data: { requestId: l.row.id, keys } });
-    await recheckAndSave(tx, l);
+    const checksAfter = await recheckAndSave(tx, l);
+    if (l.state.status === "draft") await askNext(tx, l, await assistantActor(tx, l.row.tenant_id), checksAfter);
     return keys.length;
   });
 }
 
-export async function updateBudget(u: SessionUser, requestId: string, op: { removeLine?: number; note?: string }) {
+export async function updateBudget(u: SessionUser, requestId: string, op: { removeLine?: number; addLine?: { description: string; category: string; amount: number }; note?: string }) {
   return asUser(u, async (tx) => {
     const l = await loadRequest(tx, requestId);
     assertOwnDraftOrInfo(u, l);
@@ -461,7 +478,32 @@ export async function updateBudget(u: SessionUser, requestId: string, op: { remo
       l.state = { ...l.state, budget: l.state.budget.filter((b) => b.line !== op.removeLine) };
       await record(tx, { tenantId: l.row.tenant_id, actor: actorOf(u), entity: { type: "request", id: l.row.id }, action: "budget.line-removed", data: { requestId: l.row.id, line } });
     }
-    await recheckAndSave(tx, l);
+    if (op.addLine) {
+      const line = { line: Math.max(0, ...l.state.budget.map((b) => b.line)) + 1, ...op.addLine, source: { kind: "form" as const } };
+      l.state = { ...l.state, budget: [...l.state.budget, line] };
+      await record(tx, { tenantId: l.row.tenant_id, actor: actorOf(u), entity: { type: "request", id: l.row.id }, action: "budget.line-added", data: { requestId: l.row.id, line, note: op.note } });
+    }
+    const checks = await recheckAndSave(tx, l);
+    await askNext(tx, l, await assistantActor(tx, l.row.tenant_id), checks);
+  });
+}
+
+/** Link the organization's latest document of this type from an earlier request to this one, and say so. */
+export async function reuseDocument(u: SessionUser, requestId: string, type: string) {
+  return asUser(u, async (tx) => {
+    const l = await loadRequest(tx, requestId);
+    assertOwnDraftOrInfo(u, l);
+    const src = await one<{ id: string; name: string; dated: string | null; request_ref: string | null }>(tx, `
+      select d.id, d.name, d.dated, r.ref as request_ref from documents d left join requests r on r.id = d.request_id
+      where d.org_id = $1 and d.type = $2 and (d.request_id is null or d.request_id <> $3) order by d.dated desc nulls last, d.created_at desc limit 1`, [l.row.org_id, type, l.row.id]);
+    if (!src) throw new HttpError(404, "Your organization has no earlier document of that kind to reuse. Please upload it.");
+    const r = await one<{ id: string }>(tx, `insert into documents (tenant_id, org_id, request_id, type, name, mime, size, sha256, storage_key, page_count, pages_text, dated, classified_by, uploaded_by)
+      select $2, org_id, $3, type, name, mime, size, sha256, storage_key, page_count, pages_text, dated, classified_by, $4 from documents where id = $1 returning id`, [src.id, l.row.tenant_id, l.row.id, u.id]);
+    await record(tx, { tenantId: l.row.tenant_id, actor: actorOf(u), entity: { type: "request", id: l.row.id }, action: "document.reused", data: { requestId: l.row.id, documentId: r!.id, from: src.id, fromRequest: src.request_ref, type } });
+    const reloaded = await loadRequest(tx, requestId);
+    const checks = await recheckAndSave(tx, reloaded);
+    await askNext(tx, reloaded, await assistantActor(tx, l.row.tenant_id), checks, `Added ${src.name}${src.dated ? ` (dated ${src.dated})` : ""} from ${src.request_ref ? `request ${src.request_ref}` : "your profile"}. It stays on your earlier request too.`);
+    return { ok: true, documentId: r!.id };
   });
 }
 
@@ -480,7 +522,8 @@ export async function attest(u: SessionUser, requestId: string, attId: string, t
     if (!LOCKED_ACTIONS.attest.roles.some((r) => u.roles.includes(r))) throw new HttpError(403, "Only the requestor can make this statement.");
     l.state = { ...l.state, attestations: { ...l.state.attestations, [attId]: { id: attId, version: def.version, text: def.text, typedName, by: me, at: new Date().toISOString() } } };
     await record(tx, { tenantId: l.row.tenant_id, actor: me, entity: { type: "request", id: l.row.id }, action: "attestation.made", data: { requestId: l.row.id, attestation: attId, version: def.version, text: def.text, typedName } });
-    await recheckAndSave(tx, l);
+    const checksAfter = await recheckAndSave(tx, l);
+    if (l.state.status === "draft") await askNext(tx, l, await assistantActor(tx, l.row.tenant_id), checksAfter);
   });
 }
 

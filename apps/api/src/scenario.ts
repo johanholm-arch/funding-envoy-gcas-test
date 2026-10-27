@@ -149,7 +149,7 @@ export async function runScenario(app?: FastifyInstance) {
       // Approved, agreement signed by both sides; now with Finance, who must confirm the disclosure classification.
       await d.call("alvarez", "POST", `/api/requests/${r.id}/decision`, {
         outcome: "approve", amount: 4500, rationale: "Patient support programme with restricted use, diverse funding and no product link.",
-        votes: [{ memberId: "alvarez", vote: "for" }],
+        votes: [{ memberId: uuidFor("hp-alvarez"), vote: "for" }],
       });
       await d.call("haddad", "POST", `/api/requests/${r.id}/agreement/send`);
       await d.call("quinlan", "POST", `/api/requests/${r.id}/agreement/sign`, { typedName: "Teresa Quinlan" });

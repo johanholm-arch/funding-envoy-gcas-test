@@ -1,0 +1,72 @@
+/* FundingEnvoy · Ledger design tokens.
+   Light values are the concept's; dark values are chosen for the same roles (not inverted):
+   warm near-black ground, paper-coloured ink, desaturated status colours that keep 4.5:1. */
+
+:root {
+  color-scheme: light;
+
+  /* Type */
+  --serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Surfaces and ink */
+  --ground: #fbfaf8;
+  --surface: #ffffff;
+  --sunk: #f3f1ec;
+  --ink: #1b1b1f;
+  --ink-2: #3e3e45;
+  --muted: #5e5e66;
+  --faint: #6c6c74;
+  --rule: #e3e1dc;
+  --rule-soft: #eceae5;
+  --chip: #f0eee9;
+  --chip-ink: #3e3e45;
+  --inv: var(--ink);
+  --inv-ink: var(--ground);
+
+  /* Accent: passed, and the assistant's identity. The tenant's brand colour replaces it. */
+  --accent: var(--brand-light, #176b63);
+  --accent-soft: color-mix(in srgb, var(--accent) 11%, #ffffff);
+  --accent-hover: color-mix(in srgb, var(--accent) 78%, #000000);
+
+  /* Severity */
+  --warn: #9a5b00;
+  --warn-bg: #fff4df;
+  --block: #a3303f;
+  --block-bg: #fbe9ec;
+  --mark: #ffe9a8;
+
+  /* Shape */
+  --radius: 2px;
+  --hair: 1px solid var(--rule);
+  --hair-soft: 1px solid var(--rule-soft);
+  --focus: 2px solid var(--ink);
+
+  --topbar-h: 56px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --ground: #161619;
+    --surface: #1d1d21;
+    --sunk: #222226;
+    --ink: #eceae5;
+    --ink-2: #d2d0ca;
+    --muted: #a9a8af;
+    --faint: #94939b;
+    --rule: #35343a;
+    --rule-soft: #2a2a2f;
+    --chip: #2a2a2f;
+    --chip-ink: #d8d6d0;
+    --accent: var(--brand-dark, #5ebdb0);
+    --accent-soft: color-mix(in srgb, var(--accent) 16%, #161619);
+    --accent-hover: color-mix(in srgb, var(--accent) 80%, #ffffff);
+    --warn: #e6ab55;
+    --warn-bg: #33270f;
+    --block: #f1939f;
+    --block-bg: #3b1d24;
+    --mark: #5a4914;
+  }
+}

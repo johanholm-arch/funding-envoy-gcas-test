@@ -198,7 +198,7 @@ export async function requestInfo(u: SessionUser, requestId: string, questions: 
   });
 }
 
-export async function answerInfo(u: SessionUser, requestId: string, infoRequestId: string, answers: { questionId: string; answer: string }[]) {
+export async function answerInfo(u: SessionUser, requestId: string, infoRequestId: string, answers: { questionId: string; answer: string; documentIds?: string[] }[]) {
   await asUser(u, async (tx) => {
     const l = await loadRequest(tx, requestId);
     const me = actorOf(u);
@@ -208,6 +208,11 @@ export async function answerInfo(u: SessionUser, requestId: string, infoRequestI
     const now = new Date().toISOString();
     for (const a of answers) {
       const q = ir.questions.find((x) => x.id === a.questionId);
+      if (q && a.documentIds?.length) {
+        const own = await many<{ id: string }>(tx, "select id from documents where id = any($1) and request_id = $2", [a.documentIds, l.row.id]);
+        if (own.length !== a.documentIds.length) throw new HttpError(400, "Attach documents uploaded to this request.");
+        q.documentIds = [...new Set([...(q.documentIds ?? []), ...a.documentIds])];
+      }
       if (q && a.answer.trim()) Object.assign(q, { answer: a.answer.trim(), answeredAt: now });
     }
     const done = ir.questions.every((q) => q.answer);
@@ -235,7 +240,13 @@ export async function answerInfo(u: SessionUser, requestId: string, infoRequestI
   });
 }
 
-export async function decide(u: SessionUser, requestId: string, input: { outcome: "approve" | "approve-with-conditions" | "decline" | "defer"; amount?: number; conditions?: string; rationale: string; votes?: { memberId: string; vote: "for" | "against" | "abstain" }[]; recusals?: { memberId: string; reason: string }[]; meetingId?: string }) {
+/** People who sit on the tenant's funding committee. */
+export async function committeeMembers(tx: Tx, tenantId: string) {
+  return many<{ id: string; name: string; title: string | null; roles: string[] }>(tx,
+    "select id, name, title, roles from users where tenant_id = $1 and kind = 'internal' and active and roles && '{committee-member,committee-chair}' order by ('committee-chair' = any(roles)) desc, name", [tenantId]);
+}
+
+export async function decide(u: SessionUser, requestId: string, input: { outcome: "approve" | "approve-with-conditions" | "decline" | "defer"; amount?: number; conditions?: string; rationale: string; votes?: { memberId: string; vote: "for" | "against" | "abstain"; name?: string }[]; recusals?: { memberId: string; reason: string; name?: string }[]; meetingId?: string }) {
   await asUser(u, async (tx) => {
     const l = await loadRequest(tx, requestId);
     const me = actorOf(u);
@@ -251,6 +262,11 @@ export async function decide(u: SessionUser, requestId: string, input: { outcome
     if (!input.rationale?.trim()) throw new HttpError(400, "A decision needs a rationale, recorded with your name.");
     const recusedIds = new Set((input.recusals ?? []).map((r) => r.memberId));
     if ((input.votes ?? []).some((v) => recusedIds.has(v.memberId))) throw new HttpError(400, "A recused member cannot vote.");
+    // Votes and recusals name committee members by user id; the record keeps their names too.
+    const members = new Map((await committeeMembers(tx, l.row.tenant_id)).map((m) => [m.id, m.name]));
+    const unknown = [...(input.votes ?? []), ...(input.recusals ?? [])].map((x) => x.memberId).filter((m) => !members.has(m));
+    if (unknown.length) throw new HttpError(400, "Votes and recusals must name members of this committee.");
+    input = { ...input, votes: input.votes?.map((v) => ({ ...v, name: members.get(v.memberId) })), recusals: input.recusals?.map((r) => ({ ...r, name: members.get(r.memberId) })) };
     const t = transition({ wf: l.cfg.workflow, currentStageId: stage.id, outcomeId: outcome.id, actor: me, facts: buildFacts({ ...l.ctx, request: l.state }), reason: input.rationale });
     const now = new Date().toISOString();
     const amount = input.amount ?? (l.state.fields["amount.requested"]?.value as number | undefined);

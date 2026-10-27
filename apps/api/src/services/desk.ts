@@ -146,7 +146,10 @@ export async function brief(u: SessionUser, requestId: string) {
         count(*) filter (where action = 'assistant.classified-document')::int as classified
       from events where tenant_id = $1 and request_id = $2`, [l.row.tenant_id, l.row.id]);
     const v = view(l, checks);
+    const requestor = await one<{ id: string; name: string; title: string | null }>(tx, "select id, name, title from users where id = $1", [l.row.requestor_id]);
     return {
+      requestor: requestor ? { id: requestor.id, name: requestor.name, title: requestor.title ?? undefined } : undefined,
+      submittedBy: requestor?.name, submittedAt: l.state.submittedAt,
       ...v, judgement, recommendation, actions, reviewingGroup: l.state.reviewingGroup, summaryCounts: { passed: sum.passed.length, forYou: judgement.length, total: checks.length },
       assistantActivity: { actions: events?.agent ?? 0, extractions: events?.extracted ?? 0, documentsClassified: events?.classified ?? 0, proposedFields: Object.values(l.state.fields).filter((f) => f.proposedBy?.type === "agent").length },
       infoRequests: l.state.infoRequests ?? [], decision: l.state.decision, reviewSummary: l.state.reviewSummary,

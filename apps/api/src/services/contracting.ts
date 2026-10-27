@@ -65,13 +65,24 @@ export async function draftAgreement(tx: Tx, l: Loaded, by: Actor): Promise<Agre
   return row!;
 }
 
+/** The party a person may sign for: the organization's authorized signer, or Legal for the company. */
+async function sideFor(tx: Tx, u: SessionUser, l: Loaded): Promise<string | undefined> {
+  if (u.kind === "requestor") return u.roles.includes("org-admin") ? l.org.legalName : undefined;
+  if (!u.roles.includes("legal")) return undefined;
+  return ((await tenantSettings(tx, l.row.tenant_id)).legalEntities as Record<string, string> | undefined)?.[l.state.country] ?? "Company";
+}
+
 export async function agreementView(u: SessionUser, requestId: string) {
   return asUser(u, async (tx) => {
     const l = await loadRequest(tx, requestId);
     const a = await currentAgreement(tx, requestId);
     const req = requiredClauses(l);
     const present = new Set((a?.clauses ?? []).map((c) => c.id));
+    const mySide = await sideFor(tx, u, l);
+    const canSign = Boolean(a && a.status === "sent" && mySide && !a.signatures.some((s) => s.party === mySide));
     return {
+      mySide, canSign,
+      sides: { organization: l.org.legalName, company: ((await tenantSettings(tx, l.row.tenant_id)).legalEntities as Record<string, string> | undefined)?.[l.state.country] ?? "Company" },
       agreement: a ? { ...a, certifiedAt: a.certified_at?.toISOString() } : undefined,
       requiredClauses: req.map((c) => ({ id: c.id, label: c.label, basis: c.basis, present: present.has(c.id) })),
       certificationRequired: certificationRequired(l), signer: l.org.signers[0], stage: l.state.stage,
@@ -115,8 +126,8 @@ export async function signAgreement(u: SessionUser, requestId: string, typedName
     const me = actorOf(u);
     try { assertPersonForLockedAction("sign-agreement", me); } catch (e) { throw new HttpError(403, (e as Error).message); }
     if (typedName.trim().toLowerCase() !== u.name.trim().toLowerCase()) throw new HttpError(400, `Type your full name exactly as "${u.name}" to sign.`);
-    const side = u.kind === "requestor" ? l.org.legalName : ((await tenantSettings(tx, l.row.tenant_id)).legalEntities as Record<string, string> | undefined)?.[l.state.country] ?? "Company";
-    if (u.kind === "requestor" && !u.roles.includes("org-admin")) throw new HttpError(403, "Only the organization's authorized signer can sign.");
+    const side = await sideFor(tx, u, l);
+    if (!side) throw new HttpError(403, u.kind === "requestor" ? "Only the organization's authorized signer can sign." : "The company's signature is given by Legal.");
     if (a.signatures.some((s) => s.party === side)) throw new HttpError(409, `${side} has already signed.`);
     const at = new Date().toISOString();
     const signatures = [...a.signatures, { party: side, name: u.name, at, userId: u.id }];

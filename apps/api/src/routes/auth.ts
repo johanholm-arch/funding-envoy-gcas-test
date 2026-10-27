@@ -11,10 +11,14 @@ export async function authRoutes(app: FastifyInstance) {
   app.get("/api/demo/personas", async () => {
     if (!DEMO) throw new HttpError(404, "Not found");
     return withContext({ operator: true }, async (tx) => {
-      const tenants = await many<{ id: string; slug: string; name: string }>(tx, "select id, slug, name from tenants order by name");
+      // Only tenants that are set up (a published catalogue); test fixtures in a shared database are left out.
+      const tenants = await many<{ id: string; slug: string; name: string }>(tx, "select id, slug, name from tenants t where exists (select 1 from config_versions c where c.tenant_id = t.id and c.kind = 'catalogue' and c.status = 'published') order by name");
+      const ids = tenants.map((t) => t.id);
       const people = await many<{ id: string; name: string; title: string | null; kind: string; roles: string[]; tenant_id: string | null; org_id: string | null; org_name: string | null }>(tx, `
         select u.id, u.name, u.title, u.kind, u.roles, u.tenant_id, u.org_id, o.legal_name as org_name
-        from users u left join organizations o on o.id = u.org_id where u.active order by u.kind, u.name`);
+        from users u left join organizations o on o.id = u.org_id
+        where u.active and u.email not like 'perf.%' and (u.kind = 'operator' or u.tenant_id = any($1) or (u.kind = 'requestor' and exists (select 1 from org_shares s where s.org_id = u.org_id and s.tenant_id = any($1))))
+        order by u.kind, u.name`, [ids]);
       return { tenants, people };
     });
   });

@@ -2,10 +2,11 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { many } from "@fe/db";
 import { asUser, HttpError, requireRole, requireTenantUser, requireUser } from "../auth.ts";
-import { acknowledge, answerCoi, askPolicy, attest, confirmAll, onChoice, onMessage, onUpload, preview, startRequest, submit, updateBudget, updateFields } from "../services/assistant.ts";
+import { acknowledge, answerCoi, askPolicy, attest, confirmAll, nextAsk, onChoice, onMessage, onUpload, preview, reuseDocument, startRequest, submit, updateBudget, updateFields } from "../services/assistant.ts";
+import { summarize } from "@fe/core";
 import { loadRequest, runChecks, view } from "../services/requests.ts";
 import { brief, desk, myRequests } from "../services/desk.ts";
-import { act, answerInfo, decide, judge, requestInfo } from "../services/workflow.ts";
+import { act, answerInfo, committeeMembers, decide, judge, requestInfo } from "../services/workflow.ts";
 import { getFile } from "../storage.ts";
 
 const id = z.object({ id: z.string().uuid() });
@@ -27,9 +28,16 @@ export async function requestRoutes(app: FastifyInstance) {
       const l = await loadRequest(tx, rid);
       const internal = u.kind !== "requestor";
       const messages = await many<{ id: string; author: unknown; body: string; data: unknown; channel: string; created_at: Date }>(tx,
-        `select id, author, body, data, channel, created_at from messages where request_id = $1 ${internal ? "" : "and channel = 'requestor'"} order by created_at`, [rid]);
-      const checks = l.state.status === "draft" || l.state.status === "info-requested" ? runChecks(l, "draft") : l.state.checks;
-      return { ...view(l, checks), messages: messages.map((m) => ({ ...m, createdAt: m.created_at })) };
+        `select id, author, body, data, channel, created_at from messages where request_id = $1 ${internal ? "" : "and channel = 'requestor'"} order by created_at, id`, [rid]);
+      const open = l.state.status === "draft" || l.state.status === "info-requested";
+      const checks = open ? runChecks(l, "draft") : l.state.checks;
+      // Readiness without side effects: the preview re-screens when screening is stale; this does not.
+      const sum = summarize(checks);
+      return {
+        ...view(l, checks), messages: messages.map((m) => ({ ...m, createdAt: m.created_at })),
+        nextAsk: l.state.status === "draft" && l.state.typeConfirmed ? nextAsk(l, checks) : undefined,
+        readiness: open ? { canSubmit: sum.submittable, blockers: checks.filter((c) => c.severity === "block" && (c.status === "fail" || c.status === "pending")).map((c) => ({ ruleId: c.ruleId, message: c.message })) } : undefined,
+      };
     });
   });
 
@@ -95,9 +103,15 @@ export async function requestRoutes(app: FastifyInstance) {
   app.post("/api/requests/:id/confirm-all", async (req) => ({ confirmed: await confirmAll(requireTenantUser(req), id.parse(req.params).id) }));
 
   app.post("/api/requests/:id/budget", async (req) => {
-    const b = z.object({ removeLine: z.number().int().optional(), note: z.string().optional() }).parse(req.body);
+    const b = z.object({ removeLine: z.number().int().optional(), addLine: z.object({ description: z.string().min(2).max(300), category: z.string().min(2).max(40), amount: z.number().nonnegative() }).optional(), note: z.string().max(1000).optional() }).parse(req.body);
     await updateBudget(requireTenantUser(req), id.parse(req.params).id, b);
     return { ok: true };
+  });
+
+  // Bring in a document the organization gave for an earlier request (the "reuse" action on a document check).
+  app.post("/api/requests/:id/documents/reuse", async (req) => {
+    const { type } = z.object({ type: z.string().min(2).max(60) }).parse(req.body);
+    return reuseDocument(requireTenantUser(req), id.parse(req.params).id, type);
   });
 
   app.post("/api/requests/:id/coi", async (req) => {
@@ -124,7 +138,7 @@ export async function requestRoutes(app: FastifyInstance) {
 
   app.post("/api/requests/:id/info/:infoId", async (req) => {
     const { id: rid, infoId } = z.object({ id: z.string().uuid(), infoId: z.string().uuid() }).parse(req.params);
-    const b = z.object({ answers: z.array(z.object({ questionId: z.string(), answer: z.string().max(4000) })) }).parse(req.body);
+    const b = z.object({ answers: z.array(z.object({ questionId: z.string(), answer: z.string().max(4000), documentIds: z.array(z.string().uuid()).max(20).optional() })) }).parse(req.body);
     await answerInfo(requireTenantUser(req), rid, infoId, b.answers);
     return { ok: true };
   });
@@ -159,6 +173,11 @@ export async function requestRoutes(app: FastifyInstance) {
     const b = z.object({ questions: z.array(z.string().max(2000)).min(1).max(10), dueDays: z.number().int().min(1).max(60).optional() }).parse(req.body);
     await requestInfo(u, id.parse(req.params).id, b.questions, b.dueDays);
     return { ok: true };
+  });
+
+  app.get("/api/committee/members", async (req) => {
+    const u = requireRole(req, [...internal]);
+    return asUser(u, (tx) => committeeMembers(tx, u.tenantId!));
   });
 
   app.post("/api/requests/:id/decision", async (req) => {

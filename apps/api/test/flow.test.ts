@@ -210,7 +210,7 @@ describe("flagship request, end to end", () => {
   it("records the decision with votes and a recusal, and the assistant drafts the agreement with the required clauses", async () => {
     await call("alvarez", "POST", `/api/requests/${id}/decision`, {
       outcome: "approve-with-conditions", amount: 48500, conditions: "Agreement executed by 30 April 2027.", rationale: "Clear educational need; provider controls content; lead time accepted with condition.",
-      votes: [{ memberId: "lindqvist", vote: "for" }, { memberId: "costa", vote: "for" }, { memberId: "alvarez", vote: "for" }], recusals: [{ memberId: "brennan", reason: "Former board member of the organization" }],
+      votes: [{ memberId: uuidFor("hp-lindqvist"), vote: "for" }, { memberId: uuidFor("hp-costa"), vote: "for" }, { memberId: uuidFor("hp-alvarez"), vote: "for" }], recusals: [{ memberId: uuidFor("hp-brennan"), reason: "Former board member of the organization" }],
     });
     const a = await call("haddad", "GET", `/api/requests/${id}/agreement`);
     expect(a.agreement.status).toBe("draft");
