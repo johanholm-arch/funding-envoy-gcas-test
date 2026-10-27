@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, errorText } from "../lib/api";
 import { assistantName, hasRole, useMe, useToast } from "../lib/app";
 import { contrastWithGround } from "../lib/brand";
+import { prepareLogo } from "../lib/logo";
 import { fmtDate, plural, roleWords } from "../lib/format";
 import { useDocumentTitle, useMediaQuery, useResource } from "../lib/hooks";
 
@@ -193,18 +194,23 @@ function BrandEditor({ body, draftVersion, canEdit, busy, onSave }: { body?: Rec
   const [localUrl, setLocalUrl] = useState<string>();
   const [uploading, setUploading] = useState(false);
   const [imgErr, setImgErr] = useState<string>();
+  const [imgNote, setImgNote] = useState<string>();
   useEffect(() => { setColor(String(body?.color ?? "#176B63")); setLogo(String(body?.logoText ?? "")); setImage(body?.logo as LogoRef | undefined); setLocalUrl(undefined); }, [body]);
   const c = contrastWithGround(color);
   // What the preview shows: a file just chosen, the draft's logo, or the published one.
   const imageUrl = !image ? undefined : localUrl ?? (draftVersion ? `/api/tenant/logo?v=${draftVersion}&h=${image.sha.slice(0, 12)}` : me.tenant?.brand?.logoUrl);
   const changed = color !== String(body?.color ?? "#176B63") || logo !== String(body?.logoText ?? "") || (image?.sha ?? "") !== ((body?.logo as LogoRef | undefined)?.sha ?? "");
 
-  async function chooseLogo(file: File | undefined) {
-    if (!file) return;
-    setImgErr(undefined);
-    if (file.size > 512 * 1024) { setImgErr("That image is larger than 512 KB. Use a smaller one."); return; }
+  async function chooseLogo(chosen: File | undefined) {
+    if (!chosen) return;
+    setImgErr(undefined); setImgNote(undefined);
     setUploading(true);
     try {
+      // Empty borders are cropped and very large images scaled down here, before upload.
+      const prepared = await prepareLogo(chosen).catch(() => ({ file: chosen, trimmed: false, resized: false }));
+      const file = prepared.file;
+      if (file.size > 512 * 1024) { setImgErr("That image is larger than 512 KB even after preparing it. Use a smaller one."); return; }
+      if (prepared.trimmed) setImgNote("Empty space around the logo was cropped so it fills its space.");
       const fd = new FormData();
       fd.append("file", file, file.name);
       const ref = await api.post<LogoRef>("/api/studio/brand/logo", fd);
@@ -230,7 +236,7 @@ function BrandEditor({ body, draftVersion, canEdit, busy, onSave }: { body?: Rec
       <div className="stack" style={{ gap: 6 }}>
         <span className="label">Logo</span>
         <div className="row" style={{ gap: 14, alignItems: "center" }}>
-          {imageUrl ? <img className="logo-preview" src={imageUrl} alt="Logo" /> : <span className="muted small">No logo. The name above is shown instead.</span>}
+          {imageUrl ? <span className="logo-stage"><img className="logo-preview" src={imageUrl} alt="Logo" /></span> : <span className="muted small">No logo. The name above is shown instead.</span>}
           {canEdit ? (
             <>
               <label className="btn small quiet" style={{ cursor: "pointer" }}>
@@ -241,7 +247,8 @@ function BrandEditor({ body, draftVersion, canEdit, busy, onSave }: { body?: Rec
             </>
           ) : null}
         </div>
-        <p className="help">PNG, JPEG, WebP or SVG, up to 512 KB. A wide logo on a transparent background works best; it is shown about 28 pixels high in the top bar.</p>
+        <p className="help">PNG, JPEG, WebP or SVG. A wide logo meant for light backgrounds works best. Empty space around it is cropped automatically, and it is shown 40 pixels high in the top bar, as in the preview below.</p>
+        {imgNote ? <p className="small" style={{ color: "var(--accent)" }}>{imgNote}</p> : null}
         {imgErr ? <p className="error-text" role="alert">{imgErr}</p> : null}
       </div>
       <div className="stack" style={{ gap: 6 }}>
