@@ -63,16 +63,28 @@ az extension add --name containerapp --upgrade --only-show-errors >/dev/null 2>&
 for ns in Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistry Microsoft.DBforPostgreSQL Microsoft.Storage; do
   az provider register --namespace "$ns" --wait --only-show-errors >/dev/null
 done
-az group create --name "$RG" --location "$REGION" --only-show-errors >/dev/null
+# The resource group is only a folder; if it already exists (perhaps from a run in another region), keep it.
+az group show --name "$RG" >/dev/null 2>&1 || az group create --name "$RG" --location "$REGION" --only-show-errors >/dev/null
 note "Everything goes into one resource group: $RG (region $REGION)."
 
 say "Step 3 of 7: the database (about 5 to 10 minutes)"
 if az postgres flexible-server show --name "$PG" --resource-group "$RG" >/dev/null 2>&1; then
   note "Database server $PG already exists."
 else
-  az postgres flexible-server create --name "$PG" --resource-group "$RG" --location "$REGION" \
-    --tier Burstable --sku-name Standard_B1ms --storage-size 32 --version 16 \
-    --admin-user "$DB_ADMIN" --admin-password "$DB_ADMIN_PW" --public-access 0.0.0.0 --yes --only-show-errors >/dev/null
+  if ! out=$(az postgres flexible-server create --name "$PG" --resource-group "$RG" --location "$REGION" \
+      --tier Burstable --sku-name Standard_B1ms --storage-size 32 --version 16 \
+      --admin-user "$DB_ADMIN" --admin-password "$DB_ADMIN_PW" --public-access 0.0.0.0 --yes --only-show-errors 2>&1); then
+    if grep -qiE "restricted|not available|quota|SkuNotAvailable|NoRegisteredProviderFound" <<<"$out"; then
+      rm -f "$SETTINGS"
+      fail "Azure won't create this database in $REGION for your subscription. Nothing has been built yet.
+Run the setup again and choose a different region when asked:
+    bash deploy/azure/deploy.sh
+In the US try centralus, westus3 or eastus2; in Europe try northeurope, swedencentral or uksouth.
+(Azure's message was: $(head -c 300 <<<"$out"))"
+    fi
+    fail "Creating the database failed. Azure's message was:
+$out"
+  fi
   note "Database server $PG created. Only services inside Azure can reach it."
 fi
 
