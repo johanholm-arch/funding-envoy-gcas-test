@@ -23,7 +23,6 @@ export function Home() {
           <h1>{greeting()}, {greetName(me.user.name)}.</h1>
           {lead ? <p className="lede">{lead}</p> : null}
         </div>
-        <Link to="/requests/new" className="btn">New request</Link>
       </div>
 
       {list.error ? <p className="error-text">{list.error.message}</p> : null}
