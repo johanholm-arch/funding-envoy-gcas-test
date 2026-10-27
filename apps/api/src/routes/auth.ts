@@ -26,6 +26,10 @@ export async function authRoutes(app: FastifyInstance) {
       const u = await one<{ id: string; kind: string; tenant_id: string | null }>(tx, "select id, kind, tenant_id from users where id = $1 and active", [body.userId]);
       if (!u) throw new HttpError(404, "Unknown person.");
       let tenantId = u.tenant_id;
+      if (u.kind === "internal") {
+        const idp = await one<{ enforced: boolean }>(tx, "select enforced from identity_providers where tenant_id = $1", [u.tenant_id]);
+        if (idp?.enforced) throw new HttpError(403, "This organization signs its people in through its own identity provider.", "sso-required");
+      }
       if (u.kind !== "internal") {
         const slug = body.tenantSlug ?? process.env.FE_DEFAULT_TENANT ?? "halden";
         const t = await one<{ id: string }>(tx, "select id from tenants where slug = $1", [slug]);
@@ -64,12 +68,12 @@ export async function authRoutes(app: FastifyInstance) {
       return u ? { userId: u.id, tenantId: ml.tenant_id } : undefined;
     });
     if (!res) return reply.redirect("/?signin=expired");
-    setSessionCookie(reply, await createSession(res.userId, res.tenantId));
+    setSessionCookie(reply, await createSession(res.userId, res.tenantId, { method: "email-link" }));
     return reply.redirect("/");
   });
 
   app.post("/api/auth/logout", async (req, reply) => {
-    if (req.user) await destroySession(req.user.sessionId);
+    if (req.user) await destroySession(req.user);
     reply.clearCookie(SESSION_COOKIE, { path: "/" });
     return { ok: true };
   });

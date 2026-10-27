@@ -23,6 +23,7 @@ export type Role =
   | "compliance-auditor"
   | "process-owner"
   | "operator"
+  | "access-admin" // manages people, groups, single sign-on and provisioning tokens; nothing to do with funding
   | "sales"; // exists only so the platform can prove sales is locked out (gate G2)
 
 export interface Actor {

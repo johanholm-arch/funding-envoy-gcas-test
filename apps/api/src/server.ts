@@ -14,6 +14,8 @@ import { auditRoutes } from "./routes/audit.ts";
 import { downstreamRoutes } from "./routes/downstream.ts";
 import { studioRoutes } from "./routes/studio.ts";
 import { opsRoutes } from "./routes/ops.ts";
+import { identityRoutes } from "./routes/identity.ts";
+import { scimRoutes } from "./routes/scim.ts";
 
 export async function buildServer(opts: { logger?: boolean } = {}): Promise<FastifyInstance> {
   if (process.env.NODE_ENV === "production") {
@@ -42,12 +44,14 @@ export async function buildServer(opts: { logger?: boolean } = {}): Promise<Fast
   await app.register(downstreamRoutes);
   await app.register(studioRoutes);
   await app.register(opsRoutes);
+  await app.register(identityRoutes);
+  await app.register(scimRoutes, { prefix: "/scim/v2" });
 
   // Serve the built web app when present.
   const web = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../web/dist");
   if (existsSync(web)) {
     await app.register(fastifyStatic, { root: web, prefix: "/", wildcard: false });
-    app.setNotFoundHandler((req, reply) => (req.url.startsWith("/api/") ? reply.status(404).send({ error: "Not found" }) : reply.sendFile("index.html")));
+    app.setNotFoundHandler((req, reply) => (req.url.startsWith("/api/") || req.url.startsWith("/scim/") ? reply.status(404).send({ error: "Not found" }) : reply.sendFile("index.html")));
   }
   return app;
 }

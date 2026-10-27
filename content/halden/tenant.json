@@ -214,6 +214,16 @@
       ],
       "fullName": "Sophie Brandt",
       "region": "US"
+    },
+    {
+      "id": "hp-ferreira",
+      "name": "A. Ferreira",
+      "fullName": "Ana Ferreira",
+      "title": "Identity and Access Administrator, IT",
+      "email": "a.ferreira@halden.example",
+      "roles": [
+        "access-admin"
+      ]
     }
   ]
 }

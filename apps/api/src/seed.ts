@@ -1,5 +1,6 @@
 // Loads the demo tenant (Halden Pharma) and the packs from content/ into a freshly migrated database.
 // Idempotent for configuration: re-running replaces the demo tenant's data.
+import { DEMO_ISSUER } from "./oidc.ts";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -151,6 +152,7 @@ export async function seed(): Promise<{ tenantId: string; counts: Record<string,
     counts.passportDocuments = passportDocs;
   });
   await seedSecondTenant(tenantId);
+  await seedIdentity(tenantId, uuidFor("tenant:meridian"));
   return { tenantId, counts };
 }
 
@@ -198,4 +200,26 @@ async function seedSecondTenant(haldenId: string) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   seed().then(({ tenantId, counts }) => { console.log(`Seeded Halden Pharma (${tenantId})`, counts); return closePool(); })
     .catch((e) => { console.error(e); process.exit(1); });
+}
+
+/**
+ * Single sign-on for both demo tenants through the built-in demo identity provider. Halden creates people on
+ * first sign-in from their directory groups; Meridian only admits people its directory has provisioned.
+ */
+async function seedIdentity(haldenId: string, meridianId: string) {
+  const halden = {
+    "FE-Coordinators": ["coordinator"], "FE-Medical-Review": ["medical-reviewer"], "FE-Compliance-Review": ["compliance-reviewer"],
+    "FE-Legal": ["legal"], "FE-Committee": ["committee-member"], "FE-Committee-Chairs": ["committee-chair"], "FE-Finance": ["finance"],
+    "FE-Tax": ["tax"], "FE-Audit": ["compliance-auditor"], "FE-Process-Owners": ["process-owner"], "FE-Access-Admins": ["access-admin"],
+    "Commercial-Field-Sales": ["sales"],
+  };
+  const meridian = { "FRB-Members": ["committee-member"], "FRB-Chair": ["committee-chair"], "Grants-Office": ["coordinator"], "Finance-AP": ["finance"], "Grants-Process-Owner": ["process-owner"] };
+  await withContext({ operator: true }, async (tx) => {
+    await tx.query("update users set source = 'seed' where source = 'manual' and (tenant_id = any($1) or kind <> 'internal')", [[haldenId, meridianId]]);
+    for (const [tenantId, clientId, domain, mapping, jit] of [[haldenId, "halden-fundingenvoy", "halden.example", halden, true], [meridianId, "meridian-fundingenvoy", "meridian.example", meridian, false]] as const) {
+      await tx.query(`insert into identity_providers (tenant_id, issuer, client_id, email_domains, role_mapping, jit, enforced) values ($1,$2,$3,$4,$5,$6,false)
+        on conflict (tenant_id) do update set issuer = excluded.issuer, client_id = excluded.client_id, email_domains = excluded.email_domains, role_mapping = excluded.role_mapping, jit = excluded.jit`,
+        [tenantId, DEMO_ISSUER, clientId, [domain], JSON.stringify(mapping), jit]);
+    }
+  });
 }

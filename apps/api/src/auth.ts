@@ -6,7 +6,7 @@ import { createHash, randomBytes } from "node:crypto";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Actor, Role } from "@fe/core";
 import { assertNotCommercial } from "@fe/core";
-import { one, withContext, type DbContext, type Tx } from "@fe/db";
+import { appendEvent, one, withContext, type DbContext, type Tx } from "@fe/db";
 
 export const SESSION_COOKIE = "fe_session";
 const SESSION_DAYS = 7;
@@ -36,9 +36,15 @@ export async function asUser<T>(u: SessionUser, fn: (tx: Tx) => Promise<T>): Pro
   return withContext(dbContext(u), fn);
 }
 
-export async function createSession(userId: string, tenantId: string | undefined): Promise<string> {
+/** Opens a session and records the sign-in in the trail of the tenant it is for. */
+export async function createSession(userId: string, tenantId: string | undefined, how: { method: string } = { method: "demo" }): Promise<string> {
   return withContext({ operator: true }, async (tx) => {
-    const row = await one<{ id: string }>(tx, "insert into sessions (user_id, tenant_id, expires_at) values ($1, $2, now() + interval '7 days') returning id", [userId, tenantId ?? null]);
+    const row = await one<{ id: string }>(tx, "insert into sessions (user_id, tenant_id, expires_at, data) values ($1, $2, now() + interval '7 days', $3) returning id", [userId, tenantId ?? null, JSON.stringify(how)]);
+    if (tenantId) {
+      const u = await one<{ name: string; roles: Role[] }>(tx, "select name, roles from auth_get_user($1)", [userId]);
+      await appendEvent(tx, { tenantId, actor: { type: "person", id: userId, name: u?.name ?? "unknown", roles: u?.roles }, entity: { type: "session", id: row!.id }, action: "auth.signed-in", data: { method: how.method } });
+      await tx.query("update users set last_sign_in_at = now() where id = $1", [userId]);
+    }
     return row!.id;
   });
 }
@@ -57,8 +63,11 @@ export async function loadSession(sessionId: string): Promise<SessionUser | unde
   });
 }
 
-export async function destroySession(sessionId: string): Promise<void> {
-  await withContext({ operator: true }, (tx) => tx.query("delete from sessions where id = $1", [sessionId]));
+export async function destroySession(u: SessionUser): Promise<void> {
+  await withContext({ operator: true }, async (tx) => {
+    await tx.query("delete from sessions where id = $1", [u.sessionId]);
+    if (u.tenantId) await appendEvent(tx, { tenantId: u.tenantId, actor: actorOf(u), entity: { type: "session", id: u.sessionId }, action: "auth.signed-out" });
+  });
 }
 
 export function setSessionCookie(reply: FastifyReply, sessionId: string): void {
