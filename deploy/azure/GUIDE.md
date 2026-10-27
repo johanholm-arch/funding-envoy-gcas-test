@@ -39,7 +39,7 @@ You now have a box where you can paste text and press Enter.
 Paste these three lines into Cloud Shell and press Enter:
 
 ```
-git clone -b build/phase-0-1 https://github.com/johanholm-arch/funding-envoy-gcas-test.git
+git clone https://github.com/johanholm-arch/funding-envoy-gcas-test.git
 cd funding-envoy-gcas-test
 bash deploy/azure/deploy.sh
 ```

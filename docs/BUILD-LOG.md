@@ -1,6 +1,6 @@
 # Build log
 
-Branch `build/phase-0-1`. The main branch holds the concept, research and workspace skeleton.
+The finished work is on `main`. `build/phase-0-1` is the branch it was built on and is kept as a record.
 
 ## Decisions taken (27 October 2026)
 
