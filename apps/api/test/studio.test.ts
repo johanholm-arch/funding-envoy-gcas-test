@@ -98,3 +98,30 @@ describe("Studio", () => {
     expect(c.body.plan).toBeUndefined();
   });
 });
+
+describe("Operations (managed service)", () => {
+  it("shows both tenants with their packs, and records the operator's switch in both trails", async () => {
+    await login("brandt", uuidFor("hp-brandt"));
+    const f = await call("brandt", "GET", "/api/ops/fleet");
+    expect(f.status).toBe(200);
+    const names = f.body.map((t: { name: string }) => t.name);
+    expect(names).toEqual(expect.arrayContaining(["Halden Pharma", "Meridian Biologics"]));
+    const meridian = f.body.find((t: { name: string }) => t.name === "Meridian Biologics");
+    expect(meridian.packs.map((p: { id: string }) => p.id)).not.toContain("us");
+    expect(meridian.assistantProfile).toBe("cautious");
+    const lib = await call("brandt", "GET", "/api/ops/library");
+    expect(lib.body.find((p: { id: string }) => p.id === "efpia").adoptedBy.length).toBe(2);
+    const pp = await call("brandt", "GET", "/api/ops/passports");
+    expect(pp.body.sharedWithSeveralFunders).toBeGreaterThan(0);
+    expect((await call("brandt", "POST", "/api/ops/switch", { tenantId: meridian.id })).status).toBe(200);
+    expect((await call("osei", "GET", "/api/ops/fleet")).status).toBe(403);
+  });
+
+  it("keeps tenants apart: Meridian's coordinator cannot see Halden's requests", async () => {
+    await login("dubois", uuidFor("mb-dubois"));
+    const d = await call("dubois", "GET", "/api/desk");
+    expect(d.status).toBe(200);
+    const all = [...d.body.needsYou, ...d.body.assistant, ...d.body.waiting];
+    expect(all.length).toBe(0);
+  });
+});

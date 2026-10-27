@@ -150,7 +150,49 @@ export async function seed(): Promise<{ tenantId: string; counts: Record<string,
     }
     counts.passportDocuments = passportDocs;
   });
+  await seedSecondTenant(tenantId);
   return { tenantId, counts };
+}
+
+/**
+ * A second demo tenant, so multi-tenancy and the managed-service seat are real: Meridian Biologics, an EU/UK
+ * biotech that adopts the European packs only, with its own brand, people and committee. Two of Halden's
+ * requesting organizations also share their passport with Meridian.
+ */
+async function seedSecondTenant(haldenId: string) {
+  const id = uuidFor("tenant:meridian");
+  await withContext({ operator: true }, async (tx) => {
+    await tx.query("select fe_demo_reset_tenant($1)", [id]);
+    await tx.query(`insert into tenants (id, slug, name, region, residency, settings) values ($1,'meridian','Meridian Biologics','eu-west','EU (Dublin)',$2)
+      on conflict (id) do update set settings = excluded.settings`, [id, JSON.stringify({
+        brand: { logoText: "Meridian Biologics", color: "#3B4252", headingFace: "sans", corners: "soft" },
+        words: { request: "Application", committee: "Funding Review Board", reviewingTeam: "Review team", reconciliation: "Close-out report", assistantName: "FundingEnvoy" },
+        languages: ["en", "fr"], productNames: ["Velorin"], legalEntities: { GB: "Meridian Biologics UK Ltd", FR: "Meridian Biologics France SAS", IE: "Meridian Biologics DAC" },
+        demo: true, managedService: true,
+      })]);
+    // Configuration: Halden's published versions, adopting the European packs only.
+    const rows = await tx.query<{ kind: string; version: number; body: Record<string, unknown> }>("select kind, version, body from config_versions where tenant_id = $1 and status = 'published'", [haldenId]);
+    for (const r of rows.rows) {
+      let body = r.body;
+      if (r.kind === "rulebook") body = { ...body, packs: (body.packs as { id: string }[]).filter((p) => ["core", "efpia", "uk", "fr"].includes(p.id)), rules: (body.rules as { id: string; scope: unknown }[]).filter((x) => !x.id.startsWith("US")) };
+      if (r.kind === "autonomy") body = { ...body, profile: "cautious" };
+      if (r.kind === "brand" || r.kind === "words") continue;
+      await publish(tx, id, r.kind, 1, body, "A. Byrne (process owner)", "2026-10-20T10:00:00Z");
+    }
+    const people = [
+      ["mb-byrne", "Aoife Byrne", "Head of Medical Grants (process owner)", ["process-owner"]],
+      ["mb-dubois", "Léa Dubois", "Grants Coordinator, Europe", ["coordinator"]],
+      ["mb-keane", "Dr. M. Keane", "Chair, Funding Review Board", ["committee-chair"]],
+      ["mb-oconnor", "S. O'Connor", "Finance Manager", ["finance"]],
+    ] as const;
+    for (const [cid, name, title, roles] of people) {
+      await tx.query(`insert into users (id, email, name, title, kind, tenant_id, roles, attributes) values ($1,$2,$3,$4,'internal',$5,$6,$7)
+        on conflict (id) do update set tenant_id = excluded.tenant_id, roles = excluded.roles`, [uuidFor(cid), `${cid.slice(3)}@meridian.example`, name, title, id, [...roles], JSON.stringify({ contentId: cid })]);
+    }
+    // Passport sharing: organizations choose which funders see their profile.
+    const shared = await tx.query<{ id: string }>("select id from organizations where country in ('GB','FR') or legal_name = 'New England Cardiology Society'");
+    for (const o of shared.rows) await tx.query("insert into org_shares (org_id, tenant_id) values ($1,$2) on conflict do nothing", [o.id, id]);
+  });
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
