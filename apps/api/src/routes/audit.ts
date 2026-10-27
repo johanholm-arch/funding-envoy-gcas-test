@@ -22,7 +22,8 @@ export async function auditRoutes(app: FastifyInstance) {
 
   app.get("/api/audit/verify", async (req) => {
     const u = requireRole(req, ["compliance-auditor", "process-owner", "coordinator"]);
-    return asUser(u, async (tx) => ({ ...(await verifyTenantChain(tx, u.tenantId!)), verifiedAt: new Date().toISOString() }));
+    const { full } = z.object({ full: z.coerce.boolean().optional() }).parse(req.query);
+    return asUser(u, async (tx) => ({ ...(await verifyTenantChain(tx, u.tenantId!, { mode: full ? "full" : "since-checkpoint" })), verifiedAt: new Date().toISOString() }));
   });
 
   app.post("/api/audit/anchor", async (req) => {
@@ -36,7 +37,7 @@ export async function auditRoutes(app: FastifyInstance) {
     const { id } = z.object({ id: z.string().uuid() }).parse(req.params);
     const body = await asUser(u, async (tx) => {
       const events = await eventsForRequest(tx, u.tenantId!, id);
-      const chain = await verifyTenantChain(tx, u.tenantId!);
+      const chain = await verifyTenantChain(tx, u.tenantId!, { mode: "since-checkpoint" });
       return { exportedAt: new Date().toISOString(), exportedBy: u.name, requestId: id, chainVerification: chain, events };
     });
     reply.header("content-type", "application/json").header("content-disposition", `attachment; filename="trail-${id}.json"`);

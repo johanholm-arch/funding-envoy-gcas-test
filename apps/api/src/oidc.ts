@@ -4,7 +4,7 @@
 //
 // The demo environment includes a stand-in identity provider (issuer DEMO_ISSUER) so the whole flow can be
 // exercised without Okta or Entra. It runs in-process; the browser-facing authorize page is served at /demo-idp.
-import { createHash, createPublicKey, generateKeyPairSync, randomBytes, sign as rsaSign, verify as rsaVerify, type JsonWebKey } from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, randomBytes, sign as rsaSign, verify as rsaVerify, type JsonWebKey } from "node:crypto";
 import { HttpError } from "./auth.ts";
 
 export const DEMO_ISSUER = "https://idp.demo.fundingenvoy.invalid";
@@ -94,17 +94,32 @@ export function verifyIdToken(token: string, o: { issuer: string; clientId: stri
 export interface DemoIdentity { email: string; name: string; groups: string[]; sub?: string }
 
 function createDemoIdp() {
-  const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
-  const kid = `demo-${randomString(4)}`;
+  // Workers of one server share the key the primary process generated (FE_DEMO_IDP_KEY), so any of them can serve
+  // any step of a sign-in.
+  const shared = process.env.FE_DEMO_IDP_KEY;
+  const { privateKey, publicKey } = shared
+    ? { privateKey: createPrivateKey(shared), publicKey: createPublicKey(shared) }
+    : generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const kid = `demo-${createHash("sha256").update(publicKey.export({ format: "der", type: "spki" })).digest("hex").slice(0, 8)}`;
   const jwk = { ...(publicKey.export({ format: "jwk" }) as JsonWebKey), kid, alg: "RS256", use: "sig" };
-  const codes = new Map<string, { clientId: string; redirectUri: string; challenge: string; nonce: string; who: DemoIdentity; exp: number }>();
+  // Authorization codes are self-contained and signed, so they do not depend on which worker issued them.
+  type Code = { clientId: string; redirectUri: string; challenge: string; nonce: string; who: DemoIdentity; exp: number; jti: string };
+  const used = new Set<string>();
 
   const discovery: Discovery = { issuer: DEMO_ISSUER, authorization_endpoint: "/demo-idp/authorize", token_endpoint: `${DEMO_ISSUER}/token`, jwks_uri: `${DEMO_ISSUER}/jwks` };
 
   function issueCode(p: { clientId: string; redirectUri: string; challenge: string; nonce: string; who: DemoIdentity }): string {
-    const code = randomString();
-    codes.set(code, { ...p, exp: Date.now() + 60_000 });
-    return code;
+    const body = b64u(JSON.stringify({ ...p, exp: Date.now() + 60_000, jti: randomString(12) } satisfies Code));
+    return `${body}.${b64u(rsaSign("sha256", Buffer.from(body), privateKey))}`;
+  }
+
+  function readCode(code: string): Code | undefined {
+    const [body, sig] = code.split(".");
+    if (!body || !sig || !rsaVerify("sha256", Buffer.from(body), publicKey, Buffer.from(sig, "base64url"))) return undefined;
+    const c = JSON.parse(Buffer.from(body, "base64url").toString()) as Code;
+    if (used.has(c.jti)) return undefined;
+    used.add(c.jti);
+    return c;
   }
 
   function signToken(claims: Record<string, unknown>): string {
@@ -117,9 +132,7 @@ function createDemoIdp() {
     async discover() { return discovery; },
     async jwks() { return { keys: [jwk] }; },
     async token(_endpoint, form) {
-      const code = form.code ?? "";
-      const c = codes.get(code);
-      codes.delete(code);
+      const c = readCode(form.code ?? "");
       if (!c || c.exp < Date.now() || c.clientId !== form.client_id || c.redirectUri !== form.redirect_uri || pkceChallenge(form.code_verifier ?? "") !== c.challenge) {
         throw new HttpError(401, "The identity provider did not accept the sign-in.", "idp-rejected");
       }

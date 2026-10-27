@@ -10,7 +10,8 @@
     "scenario": "tsx src/scenario.ts",
     "demo:reset": "tsx src/seed.ts && tsx src/scenario.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "build": "tsc -p tsconfig.json --noEmit"
+    "build": "tsc -p tsconfig.json --noEmit",
+    "perf:generate": "tsx src/perf/generate.ts"
   },
   "dependencies": {
     "@fe/core": "workspace:*",
@@ -20,6 +21,10 @@
     "@fastify/cookie": "11.0.2",
     "@fastify/multipart": "9.2.1",
     "@fastify/static": "8.2.0",
-    "zod": "4.1.5"
+    "zod": "4.1.5",
+    "pg": "8.16.3"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.5"
   }
 }

@@ -1,4 +1,5 @@
 import pg from "pg";
+import { deferEvents, flushEvents } from "./events.ts";
 
 // numeric → number (amounts are well inside double precision for this domain)
 pg.types.setTypeParser(1700, (v) => (v === null ? null : Number(v)));
@@ -27,7 +28,30 @@ export function getPool(): pg.Pool {
   return pool;
 }
 
+// Reference numbers come from a small pool of their own: each is taken in a one-statement transaction, so the
+// counter row is locked for microseconds and never held while a longer transaction does its work. A transaction that
+// later fails leaves a gap in the numbering, which references can tolerate.
+let counterPool: pg.Pool | undefined;
+export async function nextCounter(tenantId: string, scope: string, start: number): Promise<number> {
+  counterPool ??= new pg.Pool({ connectionString: process.env.DATABASE_URL ?? "postgres://fe_app:fe_app_dev@localhost:5432/fundingenvoy?host=/tmp", max: 4 });
+  const client = await counterPool.connect();
+  try {
+    await client.query("begin");
+    await client.query("select set_config('app.tenant_id', $1, true), set_config('app.org_id', '', true), set_config('app.operator', '', true)", [tenantId]);
+    const r = await client.query<{ n: string }>(`insert into ref_counters (tenant_id, scope, n) values ($1, $2, $3)
+      on conflict (tenant_id, scope) do update set n = ref_counters.n + 1 returning n`, [tenantId, scope, start]);
+    await client.query("commit");
+    return Number(r.rows[0]!.n);
+  } catch (e) {
+    await client.query("rollback").catch(() => {});
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
 export async function closePool(): Promise<void> {
+  if (counterPool) { const c = counterPool; counterPool = undefined; await c.end(); }
   await pool?.end();
   pool = undefined;
 }
@@ -44,7 +68,9 @@ export async function withContext<T>(ctx: DbContext, fn: (tx: Tx) => Promise<T>)
       "select set_config('app.tenant_id', $1, true), set_config('app.org_id', $2, true), set_config('app.operator', $3, true)",
       [ctx.tenantId ?? "", ctx.orgId ?? "", ctx.operator ? "on" : ""],
     );
+    deferEvents(client);
     const out = await fn(client);
+    await flushEvents(client);
     await client.query("commit");
     return out;
   } catch (e) {

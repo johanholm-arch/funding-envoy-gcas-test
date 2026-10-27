@@ -2,7 +2,7 @@
 // persisting the projection and recording events. Every write here goes through `record`.
 import type { Actor, AuditEventInput, CheckResult, EvalContext, EvalDocument, FieldDef, FieldValue, Organization, RequestState, Subtype } from "@fe/core";
 import { buildFacts, evaluate, evaluateRules, isoDate, requestedAmount, sortChecks, summarize, type Phase } from "@fe/core";
-import { appendEvent, many, one, type Tx } from "@fe/db";
+import { appendEvent, many, nextCounter, one, type Tx } from "@fe/db";
 import { tenantConfig, type TenantConfig } from "../config.ts";
 import { HttpError } from "../auth.ts";
 
@@ -115,11 +115,14 @@ export function requiredProgress(l: Loaded): { answered: number; total: number; 
   return { answered: fields.length - missing.length, total: fields.length, missing, documentsPresent: docsReq.length - missingDocs.length, documentsRequired: docsReq.length, missingDocs };
 }
 
+// Used only when a request states an amount without a currency.
+const LOCAL_CURRENCY: Record<string, string> = { US: "USD", GB: "GBP", FR: "EUR", IE: "EUR", DE: "EUR", ES: "EUR", IT: "EUR", NL: "EUR", BE: "EUR", CH: "CHF", JP: "JPY" };
+
 export async function saveState(tx: Tx, l: Loaded, patch: Partial<RequestState> = {}): Promise<RequestState> {
   const state: RequestState = { ...l.state, ...patch };
   const title = (state.fields.title?.value as string | undefined) ?? state.title ?? null;
   const amount = requestedAmount(state) ?? null;
-  const currency = (state.fields["amount.currency"]?.value as string | undefined) ?? (amount !== null ? "USD" : null);
+  const currency = (state.fields["amount.currency"]?.value as string | undefined) ?? (amount !== null ? (LOCAL_CURRENCY[state.country ?? ""] ?? "USD") : null);
   const { documents: _d, ...persist } = state;
   await tx.query(
     `update requests set state = $2, title = $3, amount = $4, currency = $5, family = $6, subtype = $7, status = $8,
@@ -196,10 +199,8 @@ export async function addMessage(tx: Tx, l: { row: { id: string; tenant_id: stri
     [l.row.tenant_id, l.row.id, author, channel, body, data]);
 }
 
-async function nextNumber(tx: Tx, tenantId: string, scope: string, start: number): Promise<number> {
-  const r = await one<{ n: string }>(tx, `insert into ref_counters (tenant_id, scope, n) values ($1, $2, $3)
-    on conflict (tenant_id, scope) do update set n = ref_counters.n + 1 returning n`, [tenantId, scope, start]);
-  return Number(r!.n);
+async function nextNumber(_tx: Tx, tenantId: string, scope: string, start: number): Promise<number> {
+  return nextCounter(tenantId, scope, start);
 }
 
 export async function nextDraftRef(tx: Tx, tenantId: string): Promise<string> {

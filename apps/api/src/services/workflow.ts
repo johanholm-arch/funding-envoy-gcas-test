@@ -211,7 +211,7 @@ export async function answerInfo(u: SessionUser, requestId: string, infoRequestI
       if (q && a.answer.trim()) Object.assign(q, { answer: a.answer.trim(), answeredAt: now });
     }
     const done = ir.questions.every((q) => q.answer);
-    const events = await many<{ action: string; data: Record<string, unknown>; at: Date }>(tx, "select action, data, at from events where tenant_id = $1 and data->>'requestId' = $2 and at > $3 order by seq", [l.row.tenant_id, l.row.id, ir.at]);
+    const events = await many<{ action: string; data: Record<string, unknown>; at: Date }>(tx, "select action, data, at from events where tenant_id = $1 and request_id = $2 and at > $3 order by seq", [l.row.tenant_id, l.row.id, ir.at]);
     const docs = events.filter((e) => e.action === "document.uploaded").map((e) => String(e.data.name));
     const fields = events.filter((e) => e.action.startsWith("field.")).map((e) => String(e.data.key));
     if (done) {

@@ -1,0 +1,110 @@
+{
+  "at": "2026-10-27T02:56:41.475Z",
+  "vus": 300,
+  "thinkMs": 5000,
+  "seconds": 108,
+  "dataset": {
+    "requests": "501082",
+    "events": "2920931",
+    "open": "29234",
+    "size": "4086 MB"
+  },
+  "requests": 5444,
+  "rps": 50.3,
+  "peakInFlight": 28,
+  "errors": 0,
+  "errorSamples": {},
+  "steps": [
+    {
+      "label": "analyst: ask",
+      "n": 142,
+      "rps": 1.3,
+      "p50": 66,
+      "p95": 187,
+      "p99": 658,
+      "max": 743,
+      "errors": 0
+    },
+    {
+      "label": "coordinator: brief",
+      "n": 239,
+      "rps": 2.2,
+      "p50": 18,
+      "p95": 107,
+      "p99": 408,
+      "max": 570,
+      "errors": 0
+    },
+    {
+      "label": "coordinator: desk",
+      "n": 204,
+      "rps": 1.9,
+      "p50": 155,
+      "p95": 208,
+      "p99": 237,
+      "max": 270,
+      "errors": 0
+    },
+    {
+      "label": "coordinator: request trail",
+      "n": 240,
+      "rps": 2.2,
+      "p50": 5,
+      "p95": 12,
+      "p99": 17,
+      "max": 26,
+      "errors": 0
+    },
+    {
+      "label": "requestor: my requests",
+      "n": 1795,
+      "rps": 16.6,
+      "p50": 8,
+      "p95": 29,
+      "p99": 93,
+      "max": 641,
+      "errors": 0
+    },
+    {
+      "label": "requestor: open a request",
+      "n": 1892,
+      "rps": 17.5,
+      "p50": 11,
+      "p95": 27,
+      "p99": 190,
+      "max": 696,
+      "errors": 0
+    },
+    {
+      "label": "requestor: start a request (write)",
+      "n": 210,
+      "rps": 1.9,
+      "p50": 35,
+      "p95": 68,
+      "p99": 88,
+      "max": 144,
+      "errors": 0
+    },
+    {
+      "label": "reviewer: brief",
+      "n": 366,
+      "rps": 3.4,
+      "p50": 17,
+      "p95": 34,
+      "p99": 56,
+      "max": 193,
+      "errors": 0
+    },
+    {
+      "label": "reviewer: desk",
+      "n": 356,
+      "rps": 3.3,
+      "p50": 106,
+      "p95": 392,
+      "p99": 842,
+      "max": 1062,
+      "errors": 0
+    }
+  ],
+  "markdown": "300 people · think time 5000 ms · 108 s measured · 5,444 requests (50.3/s) · peak 28 in flight · 0 errors\n\n| Step | Count | Per second | p50 ms | p95 ms | p99 ms | Max ms | Errors |\n|---|---:|---:|---:|---:|---:|---:|---:|\n| analyst: ask | 142 | 1.3 | 66 | 187 | 658 | 743 | 0 |\n| coordinator: brief | 239 | 2.2 | 18 | 107 | 408 | 570 | 0 |\n| coordinator: desk | 204 | 1.9 | 155 | 208 | 237 | 270 | 0 |\n| coordinator: request trail | 240 | 2.2 | 5 | 12 | 17 | 26 | 0 |\n| requestor: my requests | 1795 | 16.6 | 8 | 29 | 93 | 641 | 0 |\n| requestor: open a request | 1892 | 17.5 | 11 | 27 | 190 | 696 | 0 |\n| requestor: start a request (write) | 210 | 1.9 | 35 | 68 | 88 | 144 | 0 |\n| reviewer: brief | 366 | 3.4 | 17 | 34 | 56 | 193 | 0 |\n| reviewer: desk | 356 | 3.3 | 106 | 392 | 842 | 1062 | 0 |"
+}

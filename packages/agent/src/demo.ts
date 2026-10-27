@@ -107,6 +107,13 @@ export function extractLabelled(docs: ExtractInput["documents"], fields: FieldDe
     const geo = /\b(US|USA|United States)\b/.test(s) ? "mainly-us" : /\b(UK|GB|United Kingdom|England|Scotland|Wales)\b/.test(s) ? "mainly-uk" : /\b(France|FR)\b/.test(s) ? "mainly-fr" : undefined;
     if (geo && (!geoField.options || geoField.options.includes(geo))) found.set("audience.geography", [{ key: "audience.geography", value: geo, source: { ...loc.source, kind: "derived", note: "From the activity location" }, confidence: 0.7 }]);
   }
+  // The currency stated with the amount ("Amount requested: EUR 25,000") is the request's currency, same quote.
+  const amt = found.get("amount.requested")?.[0];
+  if (amt && fields.some((f) => f.key === "amount.currency") && !found.has("amount.currency")) {
+    const q = amt.source.quote ?? "";
+    const cur = /\b(USD|GBP|EUR)\b/i.exec(q)?.[1]?.toUpperCase() ?? (/£/.test(q) ? "GBP" : /€/.test(q) ? "EUR" : /\$/.test(q) ? "USD" : undefined);
+    if (cur) found.set("amount.currency", [{ key: "amount.currency", value: cur, source: { ...amt.source, kind: "derived", note: "Currency stated with the amount" }, confidence: 0.85 }]);
+  }
   // split "14–15 May 2027" style is not needed: demo documents use ISO dates.
   const proposals: FieldProposal[] = [];
   const conflicts: ExtractOutput["conflicts"] = [];

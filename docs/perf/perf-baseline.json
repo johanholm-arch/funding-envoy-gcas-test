@@ -1,0 +1,105 @@
+{
+  "at": "2026-10-27T02:32:00.803Z",
+  "vus": 300,
+  "thinkMs": 1000,
+  "seconds": 121,
+  "dataset": {
+    "requests": "500004",
+    "events": "2911919",
+    "open": "29234",
+    "size": "3503 MB"
+  },
+  "requests": 854,
+  "rps": 7.1,
+  "peakInFlight": 300,
+  "errors": 13,
+  "errorSamples": {
+    "requestor: open a request": {
+      "n": 13,
+      "sample": "500 {\"error\":\"Something went wrong on our side. It has been logged.\",\"code\":\"internal\",\"detail\":\"Cannot read properties of undefined (reading 'length')\"}"
+    }
+  },
+  "steps": [
+    {
+      "label": "analyst: ask",
+      "n": 17,
+      "rps": 0.1,
+      "p50": 60132,
+      "p95": 82883,
+      "p99": 82883,
+      "max": 82883,
+      "errors": 0
+    },
+    {
+      "label": "coordinator: brief",
+      "n": 36,
+      "rps": 0.3,
+      "p50": 50899,
+      "p95": 58751,
+      "p99": 59171,
+      "max": 59171,
+      "errors": 0
+    },
+    {
+      "label": "coordinator: desk",
+      "n": 36,
+      "rps": 0.3,
+      "p50": 22350,
+      "p95": 59827,
+      "p99": 60430,
+      "max": 60430,
+      "errors": 0
+    },
+    {
+      "label": "coordinator: request trail",
+      "n": 36,
+      "rps": 0.3,
+      "p50": 38381,
+      "p95": 52539,
+      "p99": 52587,
+      "max": 52587,
+      "errors": 0
+    },
+    {
+      "label": "requestor: my requests",
+      "n": 278,
+      "rps": 2.3,
+      "p50": 12650,
+      "p95": 37480,
+      "p99": 37820,
+      "max": 37883,
+      "errors": 0
+    },
+    {
+      "label": "requestor: open a request",
+      "n": 373,
+      "rps": 3.1,
+      "p50": 29407,
+      "p95": 37515,
+      "p99": 37879,
+      "max": 38149,
+      "errors": 13
+    },
+    {
+      "label": "reviewer: brief",
+      "n": 39,
+      "rps": 0.3,
+      "p50": 54061,
+      "p95": 59497,
+      "p99": 60709,
+      "max": 60709,
+      "errors": 0
+    },
+    {
+      "label": "reviewer: desk",
+      "n": 39,
+      "rps": 0.3,
+      "p50": 39975,
+      "p95": 59938,
+      "p99": 61226,
+      "max": 61226,
+      "errors": 0
+    }
+  ],
+  "markdown": "300 people · think time 1000 ms · 121 s measured · 854 requests (7.1/s) · peak 300 in flight · 13 errors\n\n| Step | Count | Per second | p50 ms | p95 ms | p99 ms | Max ms | Errors |\n|---|---:|---:|---:|---:|---:|---:|---:|\n| analyst: ask | 17 | 0.1 | 60132 | 82883 | 82883 | 82883 | 0 |\n| coordinator: brief | 36 | 0.3 | 50899 | 58751 | 59171 | 59171 | 0 |\n| coordinator: desk | 36 | 0.3 | 22350 | 59827 | 60430 | 60430 | 0 |\n| coordinator: request trail | 36 | 0.3 | 38381 | 52539 | 52587 | 52587 | 0 |\n| requestor: my requests | 278 | 2.3 | 12650 | 37480 | 37820 | 37883 | 0 |\n| requestor: open a request | 373 | 3.1 | 29407 | 37515 | 37879 | 38149 | 13 |\n| reviewer: brief | 39 | 0.3 | 54061 | 59497 | 60709 | 60709 | 0 |\n| reviewer: desk | 39 | 0.3 | 39975 | 59938 | 61226 | 61226 | 0 |"
+}

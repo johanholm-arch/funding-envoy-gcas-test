@@ -206,7 +206,7 @@ export async function releasePayment(u: SessionUser, requestId: string, paymentI
     const stage = l0.cfg.workflow.stages.find((s) => s.id === l0.state.stage);
     const outcome = stage?.outcomes.find((o) => o.locked === "release-payment");
     if (!stage || !outcome) throw new HttpError(409, "This request is not waiting for payment.");
-    const routedBy = await one<{ actor: { id: string } }>(tx, "select actor from events where tenant_id = $1 and data->>'requestId' = $2 and action = 'stage.advanced' and data->>'from' = 'triage' and actor->>'type' = 'person' order by seq desc limit 1", [l0.row.tenant_id, requestId]);
+    const routedBy = await one<{ actor: { id: string } }>(tx, "select actor from events where tenant_id = $1 and request_id = $2 and action = 'stage.advanced' and data->>'from' = 'triage' and actor->>'type' = 'person' order by seq desc limit 1", [l0.row.tenant_id, requestId]);
     try {
       assertPersonForLockedAction("release-payment", me, outcome.actorRoles);
       assertSeparationOfDuties("release-payment", me, { routedBy: routedBy?.actor.id, requestedBy: l0.row.requestor_id });
