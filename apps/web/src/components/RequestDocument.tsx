@@ -262,8 +262,45 @@ function FieldEditor({ def, fv, inline }: { def: FieldDef; fv?: FieldValue; inli
   );
 }
 
+const CATEGORIES = ["venue", "av", "faculty-honoraria", "faculty-travel", "meals", "materials", "accreditation", "outcomes", "marketing", "management-fee", "other"];
+
+function AddLine({ currency }: { currency: string }) {
+  const { act, id, busy, setAddingLine } = useRequest();
+  const [desc, setDesc] = useState("");
+  const [cat, setCat] = useState("");
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [err, setErr] = useState<string>();
+  async function add(e: FormEvent) {
+    e.preventDefault();
+    const n = Number(amount);
+    if (!desc.trim()) { setErr("Describe the line as it appears in your budget."); return; }
+    if (!cat) { setErr("Choose a category; it decides which checks apply to the line."); return; }
+    if (!Number.isFinite(n) || n <= 0) { setErr(`Enter the amount in ${currency}, for example 1500.`); return; }
+    setErr(undefined);
+    const ok = await act("add-line", () => api.post(`/api/requests/${id}/budget`, { addLine: { description: desc.trim(), category: cat, amount: n }, note: note.trim() || undefined }), "Line added");
+    if (ok) setAddingLine(false);
+  }
+  return (
+    <form className="panel calm" onSubmit={add} aria-labelledby="h-addline">
+      <h3 id="h-addline">Add a budget line</h3>
+      <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
+        <div className="stack" style={{ gap: 4, flex: "2 1 240px" }}><label className="label" htmlFor="al-desc">Description</label><input id="al-desc" className="input" value={desc} onChange={(e) => setDesc(e.target.value)} autoFocus /></div>
+        <div className="stack" style={{ gap: 4, flex: "1 1 160px" }}>
+          <label className="label" htmlFor="al-cat">Category</label>
+          <select id="al-cat" className="select" value={cat} onChange={(e) => setCat(e.target.value)}><option value="" disabled>Choose…</option>{CATEGORIES.map((c) => <option key={c} value={c}>{humanize(c)}</option>)}</select>
+        </div>
+        <div className="stack" style={{ gap: 4, flex: "1 1 120px" }}><label className="label" htmlFor="al-amt">Amount ({currency})</label><input id="al-amt" className="input mono" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} /></div>
+      </div>
+      <div className="stack" style={{ gap: 4 }}><label className="label" htmlFor="al-note">Why it was missing (optional)</label><input id="al-note" className="input" value={note} onChange={(e) => setNote(e.target.value)} /></div>
+      {err ? <p className="error-text" role="alert">{err}</p> : null}
+      <div className="row"><button type="submit" className="btn small" disabled={Boolean(busy)}>Add the line</button><button type="button" className="btn small quiet" onClick={() => setAddingLine(false)}>Cancel</button></div>
+    </form>
+  );
+}
+
 function Budget() {
-  const { view: v, editable, act, id, busy, openEvidence } = useRequest();
+  const { view: v, editable, act, id, busy, openEvidence, addingLine, setAddingLine } = useRequest();
   const r = v.request;
   const currency = (r.fields["amount.currency"]?.value as string | undefined) ?? "USD";
   const flagged = flaggedLines(v.checks);
@@ -308,6 +345,7 @@ function Budget() {
           </tfoot>
         </table>
       </div>
+      {editable && addingLine ? <AddLine currency={currency} /> : editable ? <div><button type="button" className="btn small quiet" onClick={() => setAddingLine(true)}>Add a line</button></div> : null}
     </div>
   );
 }

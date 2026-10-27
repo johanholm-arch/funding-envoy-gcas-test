@@ -27,19 +27,23 @@ export function Conversation() {
     return Math.max(0, Math.min(messages.length - 2, i >= 0 ? i : messages.length));
   };
 
-  // The open question is the assistant's latest question, if nothing the requestor said or chose has answered it since.
+  // The open question comes from the API (nextAsk) once the type is confirmed. Its controls sit on the
+  // assistant's latest message asking it; if no message carries it, it is shown on its own at the end.
+  // Before the type is confirmed, the open question is the type question in the latest message.
   const active = useMemo(() => {
+    if (v.nextAsk) {
+      const qid = v.nextAsk.questionId;
+      const m = [...messages].reverse().find((x) => x.author.type === "agent" && x.data.ask?.questionId === qid);
+      return { id: m?.id, ask: v.nextAsk };
+    }
+    if (v.request.typeConfirmed) return undefined;
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i]!;
       if (m.author.type === "person") return undefined;
-      if (m.author.type !== "agent" || !m.data.ask) continue;
-      const ask = m.data.ask;
-      if (ask.kind === "field" && ask.fieldKey && !isEmpty(v.request.fields[ask.fieldKey]?.value)) return undefined;
-      if (ask.kind === "type" && v.request.typeConfirmed) return undefined;
-      return { id: m.id, ask };
+      if (m.author.type === "agent" && m.data.ask?.kind === "type") return { id: m.id, ask: m.data.ask };
     }
     return undefined;
-  }, [messages, v.request.fields, v.request.typeConfirmed]);
+  }, [messages, v.nextAsk, v.request.typeConfirmed]);
 
   const visible = phone && !showAll ? messages.slice(visibleFrom(active?.id)) : messages;
 
@@ -95,6 +99,13 @@ export function Conversation() {
         {visible.map((m) => (
           <Bubble key={m.id} m={m} fe={fe} active={active?.id === m.id ? active.ask : undefined} />
         ))}
+        {active && !active.id && editable ? (
+          <div className="bubble">
+            <span className="eyebrow who">{fe} · open question</span>
+            <p className="pre ask-text">{active.ask.text}</p>
+            <AskControls ask={active.ask} />
+          </div>
+        ) : null}
         {pending ? (
           <>
             {pending.text ? <div className="bubble me pending"><span className="eyebrow who">You · sending</span><p>{pending.text}</p></div> : null}
@@ -178,8 +189,7 @@ function AskControls({ ask }: { ask: Ask }) {
     const save = async () => {
       if (isEmpty(value)) { setErr(`Choose ${f.label.toLowerCase()} first.`); return; }
       setErr(undefined);
-      if (f.kind === "boolean") await act("field", () => api.post(`/api/requests/${id}/fields`, { changes: [{ key: f.key, value }] }));
-      else await act("field", () => api.post(`/api/requests/${id}/messages`, { text: String(value) }));
+      await act("field", () => api.post(`/api/requests/${id}/fields`, { changes: [{ key: f.key, value }] }));
     };
     return (
       <div className="stack" style={{ gap: 8 }}>

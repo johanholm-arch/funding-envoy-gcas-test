@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, errorText } from "../lib/api";
 import { hasRole, useMe, useToast } from "../lib/app";
 import { fmtMoney, plural } from "../lib/format";
 import { useDocumentTitle, useMediaQuery, useResource } from "../lib/hooks";
-import type { Brief as BriefData, Desk, Persona } from "../lib/types";
+import type { Brief as BriefData, CommitteeMember, Desk } from "../lib/types";
 import { Brief } from "../components/Brief";
 import { EvidencePane, type EvidenceTarget } from "../components/EvidencePane";
 
@@ -83,12 +83,8 @@ function DecisionForm({ b, onDone }: { b: BriefData; onDone: () => Promise<void>
   const waiting = b.request.stage === "committee";
   const currency = (b.request.fields["amount.currency"]?.value as string | undefined) ?? "USD";
   const requested = Number(b.request.fields["amount.requested"]?.value ?? 0);
-  const people = useResource<{ people: Persona[] }>(member && waiting ? "/api/demo/personas" : undefined);
-  const members = useMemo(() => {
-    const list = (people.data?.people ?? []).filter((p) => p.kind === "internal" && p.tenant_id === me.tenant?.id && p.roles.some((r) => r === "committee-member" || r === "committee-chair"));
-    if (!list.some((p) => p.id === me.user.id)) list.unshift({ id: me.user.id, name: me.user.name, title: me.user.title ?? null, kind: "internal", roles: me.user.roles, tenant_id: me.tenant?.id ?? null, org_id: null, org_name: null });
-    return list;
-  }, [people.data, me]);
+  const membersRes = useResource<CommitteeMember[]>(member && waiting ? "/api/committee/members" : undefined);
+  const members = membersRes.data ?? [];
 
   const [outcome, setOutcome] = useState<Outcome>();
   const [amount, setAmount] = useState(String(requested || ""));
@@ -172,6 +168,7 @@ function DecisionForm({ b, onDone }: { b: BriefData; onDone: () => Promise<void>
       </div>
       <fieldset className="fieldset">
         <legend className="label">Votes and recusals · {tally("for")} for, {tally("against")} against, {tally("abstain")} abstaining{Object.values(recused).filter((x) => x !== undefined).length ? `, ${plural(Object.values(recused).filter((x) => x !== undefined).length, "recusal")}` : ""}</legend>
+        {membersRes.error ? <p className="error-text">{membersRes.error.message}</p> : null}
         <div className="members">
           {members.map((m) => {
             const isRecused = recused[m.id] !== undefined;

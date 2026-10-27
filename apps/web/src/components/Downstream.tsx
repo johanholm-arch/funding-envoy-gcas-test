@@ -29,9 +29,9 @@ export function AgreementPanel({ id, onChanged }: { id: string; onChanged?: () =
   if (!v) return <p className="muted small">Opening the agreement…</p>;
   const ag = v.agreement;
   const sigs = ag?.signatures ?? [];
-  const orgSigned = sigs.some((s) => s.name === v.signer?.name);
-  const mySideSigned = requestor ? orgSigned : sigs.some((s) => s.name !== v.signer?.name);
-  const canSignHere = ag?.status === "sent" && !mySideSigned && (requestor ? me.user.roles.includes("org-admin") : hasRole(me, "legal"));
+  const orgSide = v.sides?.organization;
+  const orgSigned = sigs.some((s) => s.party === orgSide);
+  const canSignHere = Boolean(v.canSign);
   const missing = v.requiredClauses.filter((c) => !c.present);
 
   const sentence = !ag
@@ -71,7 +71,10 @@ export function AgreementPanel({ id, onChanged }: { id: string; onChanged?: () =
       {ag ? (
         <div className="stack" style={{ gap: 4 }}>
           <span className="eyebrow">Signatures</span>
-          {sigs.length ? sigs.map((s) => <p key={s.party} className="small">{s.party}: signed by <strong>{s.name}</strong>, {fmtDate(s.at)} {fmtTime(s.at)} · typed name, recorded with its meaning</p>) : <p className="muted small">None yet.</p>}
+          {v.sides ? [v.sides.organization, v.sides.company].map((side) => {
+            const sg = sigs.find((x) => x.party === side);
+            return <p key={side} className="small">{side}: {sg ? <>signed by <strong>{sg.name}</strong>, {fmtDate(sg.at)} {fmtTime(sg.at)} · typed name, recorded with its meaning</> : <span className="muted">{ag.status === "draft" ? "not sent yet" : "waiting"}{side === v.sides!.company ? " · signed by Legal" : v.signer ? ` · ${v.signer.name}, ${v.signer.title}` : ""}</span>}</p>;
+          }) : sigs.map((sg) => <p key={sg.party} className="small">{sg.party}: signed by <strong>{sg.name}</strong>, {fmtDate(sg.at)} {fmtTime(sg.at)}</p>)}
           {v.certificationRequired ? <p className="small">{ag.certifiedAt ? `Certified by the final signatory, ${fmtDate(ag.certifiedAt)}.` : "UK: the final medical signatory certifies the agreement before payment (ABPI Clause 8.3)."}</p> : null}
         </div>
       ) : null}
@@ -79,7 +82,7 @@ export function AgreementPanel({ id, onChanged }: { id: string; onChanged?: () =
       {canSignHere ? (
         <form className="panel" onSubmit={sign}>
           <span className="eyebrow">Locked to a person · your typed name is your signature</span>
-          <p>By signing you agree to the terms above on behalf of {requestor ? (me.organization?.name ?? "your organization") : (me.tenant?.name ?? "the company")}.</p>
+          <p>By signing you agree to the terms above on behalf of {v.mySide}.</p>
           <div className="sign-row">
             <div className="stack" style={{ gap: 4, flex: "1 1 260px" }}>
               <label className="label" htmlFor="sign-name">Type your full name to sign</label>

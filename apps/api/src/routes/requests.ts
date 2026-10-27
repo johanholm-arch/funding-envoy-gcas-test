@@ -33,10 +33,20 @@ export async function requestRoutes(app: FastifyInstance) {
       const checks = open ? runChecks(l, "draft") : l.state.checks;
       // Readiness without side effects: the preview re-screens when screening is stale; this does not.
       const sum = summarize(checks);
+      const unacked = checks.filter((c) => c.status === "fail" && c.severity === "warn" && !c.acknowledged);
+      const proposed = Object.values(l.state.fields).filter((v) => v.status === "proposed").length;
       return {
         ...view(l, checks), messages: messages.map((m) => ({ ...m, createdAt: m.created_at })),
         nextAsk: l.state.status === "draft" && l.state.typeConfirmed ? nextAsk(l, checks) : undefined,
-        readiness: open ? { canSubmit: sum.submittable, blockers: checks.filter((c) => c.severity === "block" && (c.status === "fail" || c.status === "pending")).map((c) => ({ ruleId: c.ruleId, message: c.message })) } : undefined,
+        // Same three conditions as /submit: no must-fix check, every "your call" decided, every proposed value confirmed.
+        readiness: open ? {
+          canSubmit: sum.submittable && !unacked.length && !proposed,
+          blockers: [
+            ...checks.filter((c) => c.severity === "block" && (c.status === "fail" || c.status === "pending")).map((c) => ({ ruleId: c.ruleId, message: c.message })),
+            ...unacked.map((c) => ({ ruleId: c.ruleId, message: `Your call: ${c.message}` })),
+            ...(proposed ? [{ ruleId: "proposed", message: `Confirm or change ${proposed} proposed value${proposed === 1 ? "" : "s"}.` }] : []),
+          ],
+        } : undefined,
       };
     });
   });

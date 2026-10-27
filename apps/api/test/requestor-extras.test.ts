@@ -19,7 +19,7 @@ beforeAll(async () => {
   app = await buildServer();
   rows = await runScenario(app);
   d = new Driver(app);
-  for (const [w, c] of [["quinlan", "rq-quinlan"], ["haddad", "hp-haddad"], ["osei", "hp-osei"]] as const) await d.login(w, c);
+  for (const [w, c] of [["quinlan", "rq-quinlan"], ["haddad", "hp-haddad"], ["osei", "hp-osei"], ["patel", "hp-patel"], ["shah", "rq-shah"]] as const) await d.login(w, c);
 }, 120_000);
 afterAll(async () => { await app.close(); await closePool(); });
 
@@ -61,5 +61,20 @@ describe("requestor and committee extras", () => {
     expect(q.mySide).toBe("Heartline Patient Alliance");
     const b = await d.call("osei", "GET", `/api/requests/${heartline}/brief`);
     expect(b.requestor.name).toBe("Teresa Quinlan");
+  });
+
+  it("lets the requestor answer an information request in full, and tells the grants team what changed", async () => {
+    const pennine = rows[0]!.id;
+    await d.call("patel", "POST", `/api/requests/${pennine}/info-request`, { questions: ["Please confirm the faculty list.", "Who selects the case studies?"] });
+    const v = await d.call("shah", "GET", `/api/requests/${pennine}`);
+    const ir = v.request.infoRequests.find((x: { status: string }) => x.status === "open");
+    await d.call("shah", "POST", `/api/requests/${pennine}/info/${ir.id}`, { answers: [{ questionId: ir.questions[0].id, answer: "Faculty list attached in the prospectus." }] });
+    await d.call("shah", "POST", `/api/requests/${pennine}/info/${ir.id}`, { answers: [{ questionId: ir.questions[1].id, answer: "The society's education committee." }] });
+    const b = await d.call("osei", "GET", `/api/requests/${pennine}/brief`);
+    expect(b.request.status).toBe("in-review");
+    const internal = await d.call("osei", "GET", `/api/requests/${pennine}`);
+    expect(internal.messages.some((m: { channel: string; body: string }) => m.channel === "internal" && m.body.startsWith("What changed"))).toBe(true);
+    const mine = await d.call("shah", "GET", `/api/requests/${pennine}`);
+    expect(mine.messages.every((m: { channel: string }) => m.channel === "requestor")).toBe(true);
   });
 });

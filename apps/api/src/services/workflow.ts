@@ -230,6 +230,9 @@ export async function answerInfo(u: SessionUser, requestId: string, infoRequestI
     await saveState(tx, l, { infoRequests: irs, status: done ? "in-review" : l.state.status });
     await record(tx, { tenantId: l.row.tenant_id, actor: me, entity: { type: "request", id: l.row.id }, action: done ? "info.answered" : "info.partially-answered", data: { requestId: l.row.id, infoRequestId, answers } });
     if (done) {
+      // What follows is the platform's own bookkeeping for the grants team (an internal note and their task). The
+      // requestor's context may not write internal messages, so these run in the tenant's context.
+      await tx.query("select set_config('app.org_id', '', true)");
       await tx.query("update tasks set status = 'done', completed_at = now() where request_id = $1 and kind = 'info-request' and status = 'open'", [l.row.id]);
       const s = await tenantSettings(tx, l.row.tenant_id);
       const fe = feActor((s.words as { assistantName?: string } | undefined)?.assistantName);

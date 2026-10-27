@@ -20,16 +20,17 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
 
   const [funderSlug, setFunderSlug] = useState(DEFAULT_TENANT);
   const [companyEmail, setCompanyEmail] = useState("");
-  // Demo tenants only: test fixtures have generated slugs and people without titles.
-  const funders = (list.data?.tenants ?? []).filter((t) => (list.data?.people ?? []).some((p) => p.kind === "internal" && p.tenant_id === t.id && p.title));
+  // The API lists only tenants with a published catalogue, their people, and the requestors shared with them.
+  const funders = list.data?.tenants ?? [];
   const tenant = funders.find((t) => t.slug === funderSlug) ?? funders[0];
   const groups = useMemo(() => {
     const people = list.data?.people ?? [];
-    const requestors = people.filter((p) => p.kind === "requestor" && p.title);
-    const staff = funders.map((t) => ({ tenant: t, people: people.filter((p) => p.kind === "internal" && p.tenant_id === t.id && p.title) }));
-    const operators = people.filter((p) => p.kind === "operator");
-    return { requestors, staff, operators };
-  }, [list.data]); // eslint-disable-line react-hooks/exhaustive-deps
+    return {
+      requestors: people.filter((p) => p.kind === "requestor"),
+      staff: funders.map((t) => ({ tenant: t, people: people.filter((p) => p.kind === "internal" && p.tenant_id === t.id) })),
+      operators: people.filter((p) => p.kind === "operator"),
+    };
+  }, [list.data, funders]);
 
   useEffect(() => {
     if (params.get("signin") === "expired") setError("That sign-in link has expired or was already used. Ask for a new one below.");

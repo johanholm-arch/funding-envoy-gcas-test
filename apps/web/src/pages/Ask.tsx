@@ -13,7 +13,7 @@ interface Answer {
   how?: { measure: string; period: string; groupedBy: string[]; filters: string[]; access: string; sql: string; planner: string };
 }
 
-const SUGGESTIONS = ["Requests by stage", "Amount requested by country", "Median days to decision", "Information rounds per request by type"];
+const SUGGESTIONS = ["Requests by stage", "Amount requested by country", "Amount paid by country, all time", "Median days to decision", "Information rounds per request by type"];
 
 /** Questions about the funding function, answered from a governed metrics library, with the definition shown. */
 export function Ask() {
@@ -43,11 +43,11 @@ export function Ask() {
       <div className="page-head">
         <span className="eyebrow">{me.tenant?.name} · questions about your funding</span>
         <h1>Ask</h1>
-        <p className="lede">Every answer shows how it was computed and uses only data your role may see. Questions and the queries behind them are logged.</p>
+        <p className="lede">Every answer shows how it was computed and uses only data your role may see. Answers cover the last 12 months unless you say otherwise ("all time", "in 2026"). Money is shown in its own currency, never converted.</p>
       </div>
       <form className="stack" style={{ gap: 8, maxWidth: 820 }} onSubmit={(e) => void ask(q, e)}>
         <label className="label" htmlFor="ask-q">Your question</label>
-        <div className="compose-row"><input id="ask-q" className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Amount requested by country this year" /><button className="btn" type="submit" disabled={busy || q.trim().length < 3}>Ask</button></div>
+        <div className="compose-row"><input id="ask-q" className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Amount requested by country in 2027" /><button className="btn" type="submit" disabled={busy || q.trim().length < 3}>Ask</button></div>
         <div className="opts">{SUGGESTIONS.map((s) => <button key={s} type="button" className="opt" onClick={() => void ask(s)} disabled={busy}>{s}</button>)}</div>
       </form>
       <div className="stack" style={{ gap: 32 }} aria-live="polite">
@@ -74,6 +74,8 @@ function cell(v: unknown, unit?: string, currency?: string): string {
 function Turn({ t }: { t: { q: string; a?: Answer; error?: string } }) {
   const a = t.a;
   const rows = (a?.rows ?? []).map((r) => (Array.isArray(r) ? r : Object.values(r)));
+  // Money is never converted: each row carries its own currency, and the amount is shown in it.
+  const curIdx = a?.columns?.findIndex((c) => /^currency$/i.test(c)) ?? -1;
   return (
     <article className="stack" style={{ gap: 12, borderTop: "1px solid var(--rule)", paddingTop: 16, maxWidth: 960 }}>
       <p className="eyebrow">You asked</p>
@@ -84,8 +86,12 @@ function Turn({ t }: { t: { q: string; a?: Answer; error?: string } }) {
           {a.columns && rows.length ? (
             <div className="table-scroll">
               <table className="table">
-                <thead><tr>{a.columns.map((c, i) => <th key={c} scope="col" className={i > 0 ? "num" : undefined}>{c}</th>)}</tr></thead>
-                <tbody>{rows.map((r, i) => <tr key={i}>{r.map((v, j) => <td key={j} className={j > 0 ? "num" : undefined}>{cell(v, j === r.length - 1 ? a.metric?.unit : undefined)}</td>)}</tr>)}</tbody>
+                <thead><tr>{a.columns.map((c, i) => <th key={c} scope="col" className={i > 0 && i !== curIdx ? "num" : undefined}>{c}</th>)}</tr></thead>
+                <tbody>{rows.map((r, i) => <tr key={i}>{r.map((v, j) => (
+                  <td key={j} className={j > 0 && j !== curIdx ? "num" : j === curIdx ? "mono small" : undefined}>
+                    {cell(v, j === r.length - 1 ? a.metric?.unit : undefined, curIdx >= 0 ? String(r[curIdx] ?? "") || undefined : undefined)}
+                  </td>
+                ))}</tr>)}</tbody>
               </table>
             </div>
           ) : null}

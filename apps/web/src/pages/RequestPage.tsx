@@ -171,13 +171,16 @@ function Footer({ toFix, unacked, onSave }: { toFix: number; unacked: number; on
   const info = v.request.infoRequests?.find((i) => i.status === "open");
   const next = upNext(v);
   // readiness comes with the request and has no side effects; the Review screen still calls /preview.
-  const can = v.readiness?.canSubmit ?? false;
-  const reason = can ? "" : v.readiness?.blockers.length ? `${plural(v.readiness.blockers.length, "thing")} to do before you can submit` : "";
+  // /submit also refuses unconfirmed proposed values and undecided "your call" flags, so count those too.
+  const proposed = Object.values(v.request.fields).filter((f) => f.status === "proposed").length;
+  const can = (v.readiness?.canSubmit ?? false) && !proposed && unacked === 0;
+  const left = (v.readiness?.blockers.length ?? 0) + (proposed ? 1 : 0) + unacked;
+  const reason = can ? "" : left ? `${plural(left, "thing")} to do before you can submit` : "";
   if (info && v.request.status === "info-requested") {
     return (
       <footer className="footbar">
         <div className="stack" style={{ gap: 2, minWidth: 0 }}>
-          <div className="next">Up next: answer the grants team's {plural(info.questions.length, "question")}</div>
+          <div className="next">Up next: answer the grants team's {plural(info.questions.filter((q) => !q.answer).length, "open question")}</div>
           <div className="muted small why">Only their questions are open. Your answers go to the reviewer with a short note of what changed.</div>
         </div>
         <div className="actions"><button type="button" className="btn" onClick={() => goTo("info")}>Go to the questions</button></div>

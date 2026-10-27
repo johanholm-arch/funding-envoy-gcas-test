@@ -72,7 +72,8 @@ export const Brief = forwardRef<BriefHandle, Props>(function Brief({ id, onEvide
   const r = d.request;
   const title = (r.fields.title?.value as string | undefined) ?? r.title ?? "Untitled request";
   const currency = (r.fields["amount.currency"]?.value as string | undefined) ?? "USD";
-  const requestorName = Object.values(r.attestations)[0]?.by.name ?? Object.values(r.fields).find((f) => f.confirmedBy?.type === "person")?.confirmedBy?.name;
+  const requestorName = d.submittedBy ?? d.requestor?.name;
+  const submittedAt = d.submittedAt ?? r.submittedAt;
   const start = r.fields["activity.startDate"]?.value, end = r.fields["activity.endDate"]?.value;
   const where = r.fields["activity.location"]?.value;
   const open = d.judgement.filter((j) => !j.decided);
@@ -82,7 +83,7 @@ export const Brief = forwardRef<BriefHandle, Props>(function Brief({ id, onEvide
   return (
     <div className="brief-inner">
       <header className="stack" style={{ gap: 8 }}>
-        <span className="eyebrow">{r.ref} · {d.stage.name}{r.submittedAt ? ` · submitted ${fmtDate(r.submittedAt)} ${fmtTime(r.submittedAt)}` : ""}{requestorName ? ` by ${requestorName}` : ""}</span>
+        <span className="eyebrow">{r.ref} · {d.stage.name}{submittedAt ? ` · submitted ${fmtDate(submittedAt)} ${fmtTime(submittedAt)}` : ""}{requestorName ? ` by ${requestorName}` : ""}</span>
         <h1 style={{ fontSize: 36 }}>{title}</h1>
         <p className="muted">
           {[d.organization.legalName, d.subtype?.name, countryName(r.country), where ? String(where) : undefined, start ? `${fmtDate(String(start).slice(0, 10))}${end && end !== start ? ` to ${fmtDate(String(end).slice(0, 10))}` : ""}` : undefined].filter(Boolean).join(" · ")}

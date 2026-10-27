@@ -15,7 +15,7 @@ function requireOperator(u: SessionUser) {
 export async function fleet(u: SessionUser) {
   requireOperator(u);
   return withContext({ operator: true }, async (tx) => {
-    const tenants = await many<{ id: string; slug: string; name: string; region: string; residency: string; settings: { brand?: { color?: string } } }>(tx, "select id, slug, name, region, residency, settings from tenants where exists (select 1 from config_versions c where c.tenant_id = tenants.id) order by name");
+    const tenants = await many<{ id: string; slug: string; name: string; region: string; residency: string; settings: { brand?: { color?: string } } }>(tx, "select id, slug, name, region, residency, settings from tenants where exists (select 1 from config_versions c where c.tenant_id = tenants.id and c.kind = 'catalogue' and c.status = 'published') order by name");
     const packs = await many<{ body: Pack }>(tx, "select distinct on (id) body from packs order by id, version desc");
     const out = [];
     for (const t of tenants) {
