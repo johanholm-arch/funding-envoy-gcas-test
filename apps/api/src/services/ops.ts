@@ -2,7 +2,7 @@
 // with adoption per tenant, and passports. Operators switch into a tenant explicitly; every switch is recorded
 // in the trail of the tenant entered and the tenant left.
 import { many, one, withContext } from "@fe/db";
-import { HttpError, type SessionUser } from "../auth.ts";
+import { actorOf, HttpError, type SessionUser } from "../auth.ts";
 import { configVersion } from "../config.ts";
 import { record } from "./requests.ts";
 import { nextOccurrence } from "./disclosure.ts";
@@ -90,5 +90,109 @@ export async function switchTenant(u: SessionUser, tenantId: string | null) {
     if (u.tenantId) await record(tx, { tenantId: u.tenantId, actor, entity: { type: "operator-session", id: u.sessionId }, action: "operator.switched-out", data: { to: tenantId } });
     if (tenantId) await record(tx, { tenantId, actor, entity: { type: "operator-session", id: u.sessionId }, action: "operator.switched-in", data: { from: u.tenantId ?? null } });
     await tx.query("update sessions set tenant_id = $2 where id = $1", [u.sessionId, tenantId]);
+  });
+}
+
+// ─── Adding a funder ─────────────────────────────────────────────────────────
+
+export interface NewFunder { name: string; color: string; countries: ("US" | "GB" | "FR")[]; processOwnerName?: string; templateTenantId?: string }
+
+const PACKS_BY_COUNTRY: Record<string, string[]> = { US: ["us"], GB: ["uk", "efpia"], FR: ["fr", "efpia"] };
+const ALWAYS_PACKS = ["core", "accredited-ce"];
+const ENTITY_SUFFIX: Record<string, string> = { US: "Inc.", GB: "UK Ltd", FR: "France SAS" };
+// A demo team for the new funder: every seat a grants office needs. Names are fictional.
+const TEAM: [string, string, string[]][] = [
+  ["Sam Rivera", "Grants Coordinator", ["coordinator"]],
+  ["Dr. Lena Fischer", "Medical Reviewer (final medical signatory)", ["medical-reviewer"]],
+  ["Tom Becker", "Compliance Reviewer", ["compliance-reviewer"]],
+  ["Dr. Grace Ellis", "Chair, Grants Committee", ["committee-chair"]],
+  ["Dr. Ken Mori", "Member, Grants Committee", ["committee-member"]],
+  ["Ruth Adler", "Member, Grants Committee", ["committee-member"]],
+  ["Nadia Rahman", "Counsel", ["legal"]],
+  ["Joe Lindgren", "Finance Manager", ["finance"]],
+  ["Maria Lopez", "Compliance Auditor", ["compliance-auditor"]],
+  ["Chris Novak", "Identity and Access Administrator", ["access-admin"]],
+];
+
+const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "funder";
+const emailFor = (name: string, slug: string) => `${name.replace(/^(dr|pr|prof)\.?\s+/i, "").toLowerCase().normalize("NFKD").replace(/[^a-z ]/g, "").trim().replace(/\s+/g, ".")}@${slug}.example`;
+
+/**
+ * Create a funder from a template funder's signed setup. The new funder gets its own name, colour, countries and
+ * people; the template's rules and workflow are copied as version 1 and can then be changed in its own Studio.
+ */
+export async function createFunder(u: SessionUser, input: NewFunder) {
+  requireOperator(u);
+  const name = input.name.trim();
+  if (name.length < 2 || name.length > 60) throw new HttpError(400, "Give the funder a name of 2 to 60 characters.");
+  if (!/^#[0-9a-f]{6}$/i.test(input.color)) throw new HttpError(400, "Choose a colour such as #1F6F8B.");
+  const countries = [...new Set(input.countries)].filter((c) => c in PACKS_BY_COUNTRY);
+  if (!countries.length) throw new HttpError(400, "Choose at least one country.");
+  const ownerName = (input.processOwnerName ?? "").trim() || "Alex Morgan";
+
+  return withContext({ operator: true }, async (tx) => {
+    if (await one(tx, "select 1 from tenants where lower(name) = lower($1)", [name])) throw new HttpError(409, `There is already a funder called ${name}.`);
+    const template = input.templateTenantId
+      ? await one<{ id: string; name: string; slug: string; settings: Record<string, unknown> }>(tx, "select id, name, slug, settings from tenants where id = $1", [input.templateTenantId])
+      : await one<{ id: string; name: string; slug: string; settings: Record<string, unknown> }>(tx, "select id, name, slug, settings from tenants where slug = 'halden'");
+    if (!template) throw new HttpError(404, "The funder to copy from wasn't found.");
+    const configs = await many<{ kind: string; body: Record<string, unknown> }>(tx, "select kind, body from config_versions where tenant_id = $1 and status = 'published'", [template.id]);
+    if (!configs.some((c) => c.kind === "catalogue")) throw new HttpError(409, `${template.name} has no published setup to copy.`);
+
+    let slug = slugify(name);
+    for (let i = 2; await one(tx, "select 1 from tenants where slug = $1", [slug]); i++) slug = `${slugify(name)}-${i}`;
+    const words = { ...(template.settings.words as Record<string, unknown> ?? {}), assistantName: "FundingEnvoy" };
+    const brand = { logoText: name, color: input.color };
+    const tenant = await one<{ id: string }>(tx, "insert into tenants (slug, name, region, residency, settings) values ($1,$2,$3,$4,$5) returning id", [
+      slug, name, countries.includes("US") ? "us-east" : "eu-west", countries.includes("US") ? "US" : "EU",
+      JSON.stringify({
+        brand, words, languages: countries.includes("FR") ? ["en", "fr"] : ["en"], productNames: [],
+        legalEntities: Object.fromEntries(countries.map((c) => [c, `${name} ${ENTITY_SUFFIX[c]}`])),
+        demo: true, managedService: true, createdFrom: template.slug,
+      }),
+    ]);
+    const id = tenant!.id;
+
+    // The template's signed setup, renamed and narrowed to the chosen countries.
+    const packs = new Set([...ALWAYS_PACKS, ...countries.flatMap((c) => PACKS_BY_COUNTRY[c]!)]);
+    const short = template.name.split(/\s+/)[0]!;
+    const rename = (body: unknown) => {
+      let text = JSON.stringify(body).split(template.name).join(JSON.stringify(name).slice(1, -1));
+      if (short.length >= 4) text = text.split(short).join(JSON.stringify(name).slice(1, -1));
+      return JSON.parse(text) as Record<string, unknown>;
+    };
+    const signed = `${u.name} (set up from ${template.name})`;
+    const copied: string[] = [];
+    for (const c of configs) {
+      if (c.kind === "brand" || c.kind === "words") continue;
+      let body = rename(c.body);
+      if (c.kind === "rulebook") body = { ...body, packs: ((body.packs as { id: string }[]) ?? []).filter((p) => packs.has(p.id)) };
+      if (c.kind === "testset") body = { ...body, cases: ((body.cases as { country?: string }[]) ?? []).filter((t) => !t.country || countries.includes(t.country as NewFunder["countries"][number])) };
+      await tx.query("insert into config_versions (tenant_id, kind, version, status, body, signed_name, signed_at, note) values ($1,$2,1,'published',$3,$4,now(),$5)",
+        [id, c.kind, JSON.stringify(body), signed, `Copied from ${template.name}`]);
+      copied.push(c.kind);
+    }
+    for (const [kind, body] of [["brand", brand], ["words", words]] as const) {
+      await tx.query("insert into config_versions (tenant_id, kind, version, status, body, signed_name, signed_at, note) values ($1,$2,1,'published',$3,$4,now(),'New funder')", [id, kind, JSON.stringify(body), signed]);
+    }
+
+    // People: the process owner named in the form, and a demo team for every other seat.
+    const team: [string, string, string[]][] = [[ownerName, "Head of Grants (process owner)", ["process-owner"]], ...TEAM];
+    const people: { name: string; title: string; roles: string[] }[] = [];
+    for (const [personName, title, roles] of team) {
+      let email = emailFor(personName, slug);
+      for (let i = 2; await one(tx, "select 1 from users where lower(email) = lower($1)", [email]); i++) email = email.replace(/(\.\d+)?@/, `.${i}@`);
+      await tx.query("insert into users (email, name, title, kind, tenant_id, roles, attributes, source) values ($1,$2,$3,'internal',$4,$5,$6,'manual')",
+        [email, personName, title, id, roles, JSON.stringify({ finalSignatory: roles.includes("medical-reviewer"), createdBy: u.name })]);
+      people.push({ name: personName, title, roles });
+    }
+
+    // Requesting organizations in the chosen countries that already share their profile with the template funder.
+    const shared = await tx.query("insert into org_shares (org_id, tenant_id) select s.org_id, $2 from org_shares s join organizations o on o.id = s.org_id where s.tenant_id = $1 and o.country = any($3) on conflict do nothing", [template.id, id, countries]);
+
+    await record(tx, { tenantId: id, actor: actorOf(u), entity: { type: "tenant", id }, action: "tenant.created", data: {
+      name, slug, countries, template: template.name, packs: [...packs], configuration: copied, people: people.length, organizationsShared: shared.rowCount ?? 0,
+    } });
+    return { id, slug, name, countries, packs: [...packs], people, organizationsShared: shared.rowCount ?? 0 };
   });
 }

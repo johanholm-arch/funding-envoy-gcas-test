@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { api, errorText } from "../lib/api";
 import { useMe, useToast } from "../lib/app";
 import { fmtDate, humanize, plural } from "../lib/format";
@@ -65,6 +65,8 @@ export function Operations() {
         {me.tenant ? <div><button type="button" className="linkbtn small" onClick={() => void switchTo(null)} disabled={Boolean(busy)}>Leave {me.tenant.name}</button></div> : null}
       </section>
 
+      <AddFunder templates={(fleet.data ?? []).filter((t) => t.packs.length > 0)} busy={Boolean(busy)} onCreated={() => void fleet.refetch()} onWorkIn={(t) => void switchTo(t)} />
+
       <section aria-labelledby="h-q" className="stack" style={{ gap: 6 }}>
         <h2 id="h-q">Needs a person today <span className="count">{queue.data?.length ?? needs}</span></h2>
         {queue.data && !queue.data.length ? <p className="muted small">Nothing across tenants needs a person right now.</p> : null}
@@ -103,5 +105,91 @@ export function Operations() {
         </section>
       ) : null}
     </div>
+  );
+}
+
+const COUNTRIES = [{ id: "US", label: "United States" }, { id: "GB", label: "United Kingdom" }, { id: "FR", label: "France" }] as const;
+interface Created { id: string; slug: string; name: string; countries: string[]; packs: string[]; people: { name: string; title: string; roles: string[] }[]; organizationsShared: number }
+
+/** A new funder: its own name, colour, countries and people, starting from another funder's signed setup. */
+function AddFunder({ templates, busy, onCreated, onWorkIn }: { templates: FleetRow[]; busy: boolean; onCreated: () => void; onWorkIn: (t: FleetRow) => void }) {
+  const toast = useToast();
+  const [name, setName] = useState("");
+  const [color, setColor] = useState("#1F6F8B");
+  const [countries, setCountries] = useState<string[]>(["US"]);
+  const [owner, setOwner] = useState("");
+  const [template, setTemplate] = useState("");
+  const [working, setWorking] = useState(false);
+  const [err, setErr] = useState<string>();
+  const [done, setDone] = useState<Created>();
+  const from = templates.find((t) => t.id === template) ?? templates.find((t) => t.slug === "halden") ?? templates[0];
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (name.trim().length < 2) { setErr("Give the funder a name."); return; }
+    if (!countries.length) { setErr("Choose at least one country."); return; }
+    setWorking(true); setErr(undefined);
+    try {
+      const r = await api.post<Created>("/api/ops/funders", { name: name.trim(), color, countries, processOwnerName: owner.trim() || undefined, templateTenantId: from?.id });
+      setDone(r); setName(""); setOwner(""); onCreated(); toast(`${r.name} is ready`);
+    } catch (x) { setErr(errorText(x)); } finally { setWorking(false); }
+  }
+
+  return (
+    <section aria-labelledby="h-add" className="stack" style={{ gap: 10 }}>
+      <h2 id="h-add">Add a funder</h2>
+      <p className="muted small">A new funder starts from another funder's signed setup: its request types, rules, workflow, policy and test set. It gets its own name, colour, countries and people, and from then on it changes only through its own Studio.</p>
+      <form className="panel calm stack" style={{ gap: 14, maxWidth: 720 }} onSubmit={submit}>
+        <div className="row" style={{ gap: 16, alignItems: "flex-start" }}>
+          <div className="stack" style={{ gap: 4, flex: "1 1 260px" }}>
+            <label className="label" htmlFor="nf-name">Funder name</label>
+            <input id="nf-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Biosciences" maxLength={60} />
+          </div>
+          <div className="stack" style={{ gap: 4 }}>
+            <label className="label" htmlFor="nf-color">Brand colour</label>
+            <div className="row" style={{ flexWrap: "nowrap" }}>
+              <input id="nf-color" type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 44, height: 44, padding: 0, border: "1px solid var(--ink)", borderRadius: 2 }} />
+              <input className="input mono" style={{ width: 110 }} value={color} onChange={(e) => setColor(e.target.value)} aria-label="Colour as hex" />
+            </div>
+          </div>
+        </div>
+        <fieldset className="stack" style={{ gap: 6, border: 0, padding: 0, margin: 0 }}>
+          <legend className="label">Countries it funds in</legend>
+          <div className="row" style={{ gap: 18 }}>
+            {COUNTRIES.map((c) => (
+              <label key={c.id} className="row small" style={{ gap: 6, flexWrap: "nowrap" }}>
+                <input type="checkbox" checked={countries.includes(c.id)} onChange={(e) => setCountries((xs) => e.target.checked ? [...xs, c.id] : xs.filter((x) => x !== c.id))} />{c.label}
+              </label>
+            ))}
+          </div>
+          <p className="help">Each country brings its own set of rules. Requesting organizations in these countries can apply to the new funder.</p>
+        </fieldset>
+        <div className="row" style={{ gap: 16, alignItems: "flex-start" }}>
+          <div className="stack" style={{ gap: 4, flex: "1 1 260px" }}>
+            <label className="label" htmlFor="nf-owner">Process owner's name</label>
+            <input id="nf-owner" className="input" value={owner} onChange={(e) => setOwner(e.target.value)} placeholder="Alex Morgan" maxLength={80} />
+            <p className="help">The person who signs changes in Studio. A demo team is added for every other seat.</p>
+          </div>
+          {templates.length > 1 ? (
+            <div className="stack" style={{ gap: 4, flex: "1 1 220px" }}>
+              <label className="label" htmlFor="nf-from">Start from the setup of</label>
+              <select id="nf-from" className="select" value={from?.id ?? ""} onChange={(e) => setTemplate(e.target.value)}>
+                {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+          ) : null}
+        </div>
+        {err ? <p className="error-text" role="alert">{err}</p> : null}
+        <div><button type="submit" className="btn" disabled={working || busy}>{working ? "Setting it up…" : "Add funder"}</button></div>
+      </form>
+      {done ? (
+        <div className="panel stack" style={{ gap: 8, maxWidth: 720 }} aria-live="polite">
+          <h3 style={{ fontSize: 18, margin: 0 }}>{done.name} is ready</h3>
+          <p className="small">Its {plural(done.people.length, "person", "people")} are in the sign-in list under {done.name}. {plural(done.organizationsShared, "requesting organization")} can apply to it. Rules for: {done.countries.join(", ")}.</p>
+          <p className="small">Next: sign out, sign in as <strong style={{ fontWeight: 500 }}>{done.people[0]?.name}</strong> (process owner) under {done.name}, and open Studio to add the logo and adjust the setup.</p>
+          <div>{(() => { const t = templates.find((x) => x.id === done.id); return t ? <button type="button" className="btn small quiet" onClick={() => onWorkIn(t)}>Work in {done.name}</button> : null; })()}</div>
+        </div>
+      ) : null}
+    </section>
   );
 }

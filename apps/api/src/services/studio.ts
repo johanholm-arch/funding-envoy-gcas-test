@@ -7,6 +7,7 @@ import { actorOf, asUser, HttpError, type SessionUser } from "../auth.ts";
 import { configVersion, invalidateConfigCache, loadPacks, tenantConfig, type ConfigKind } from "../config.ts";
 import { record } from "./requests.ts";
 import { evaluateCases, type TestCase, type TestsetReport } from "../testset.ts";
+import { getFile, putFile } from "../storage.ts";
 
 const KINDS: ConfigKind[] = ["catalogue", "rulebook", "workflow", "autonomy", "brand", "words", "policy", "sop", "testset"];
 
@@ -161,6 +162,10 @@ export async function publish(u: SessionUser, kind: ConfigKind, version: number,
     const body = typeof draft.body === "object" && draft.body && "status" in draft.body ? { ...draft.body, status: "published", signedBy: u.name, signedAt: new Date().toISOString() } : draft.body;
     await tx.query("update config_versions set body = $4, status = 'published', signed_by = $5, signed_name = $6, signed_at = now() where tenant_id = $1 and kind = $2 and version = $3",
       [u.tenantId, kind, version, JSON.stringify(body), u.id, u.name]);
+    // Brand and words are read on every page; the funder's settings carry the published version.
+    if (kind === "brand" || kind === "words") {
+      await tx.query("update tenants set settings = jsonb_set(settings, $2::text[], $3::jsonb) where id = $1", [u.tenantId, [kind], JSON.stringify(body)]);
+    }
     const d = prev ? diffBodies(kind, prev.body, draft.body) : { summary: "First version" };
     await record(tx, { tenantId: u.tenantId!, actor: actorOf(u), entity: { type: "config", id: `${kind}:${version}` }, action: "config.published",
       data: { kind, version, previous: prev?.version, diff: d.summary, tests: tests ? `${tests.passed}/${tests.total}` : undefined, acceptedDifferences: input.acceptDifferences, meaning: "I approve this configuration version for use on new requests." } });
@@ -256,4 +261,41 @@ export async function autonomyView(u: SessionUser) {
       }),
     };
   });
+}
+
+// ─── Logo ───────────────────────────────────────────────────────────────────
+
+export interface LogoRef { sha: string; mime: string; name?: string }
+const LOGO_TYPES: Record<string, (b: Buffer) => boolean> = {
+  "image/png": (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  "image/jpeg": (b) => b[0] === 0xff && b[1] === 0xd8,
+  "image/webp": (b) => b.subarray(0, 4).toString() === "RIFF" && b.subarray(8, 12).toString() === "WEBP",
+  "image/svg+xml": (b) => /<svg[\s>]/i.test(b.subarray(0, 4096).toString("utf8")),
+};
+export const LOGO_MAX_BYTES = 512 * 1024;
+
+/** Keep an uploaded logo. It becomes part of a brand draft when the draft is saved, and is used once published. */
+export async function storeLogo(u: SessionUser, file: { buf: Buffer; mime: string; name: string }): Promise<LogoRef> {
+  if (!u.roles.includes("process-owner") && !u.roles.includes("operator") && u.kind !== "operator") throw new HttpError(403, "Only the process owner can change the brand.");
+  const mime = file.mime === "image/jpg" ? "image/jpeg" : file.mime;
+  const check = LOGO_TYPES[mime];
+  if (!check) throw new HttpError(400, "Use a PNG, JPEG, WebP or SVG image for the logo.");
+  if (file.buf.length > LOGO_MAX_BYTES) throw new HttpError(400, "The logo is larger than 512 KB. Use a smaller image.");
+  if (!check(file.buf)) throw new HttpError(400, "That file isn't the kind of image its name says it is.");
+  const stored = await putFile(file.buf);
+  await asUser(u, (tx) => record(tx, { tenantId: u.tenantId!, actor: actorOf(u), entity: { type: "config", id: "brand:logo" }, action: "brand.logo-uploaded", data: { sha256: stored.sha256, mime, name: file.name, bytes: file.buf.length } }));
+  return { sha: stored.sha256, mime, name: file.name };
+}
+
+/** The logo of the signed-in person's funder: the published one, or a draft's for Studio's preview. */
+export async function logoFor(u: SessionUser, version?: number): Promise<{ buf: Buffer; mime: string } | undefined> {
+  if (version !== undefined && !u.roles.some((r) => ["process-owner", "operator", "compliance-auditor"].includes(r)) && u.kind !== "operator") throw new HttpError(403, "Not allowed.");
+  const logo = await asUser(u, async (tx) => {
+    const row = version !== undefined
+      ? await one<{ body: { logo?: LogoRef } }>(tx, "select body from config_versions where tenant_id = $1 and kind = 'brand' and version = $2", [u.tenantId, version])
+      : await one<{ body: { logo?: LogoRef } }>(tx, "select settings->'brand' as body from tenants where id = $1", [u.tenantId]);
+    return row?.body?.logo;
+  });
+  if (!logo?.sha || !/^[0-9a-f]{64}$/.test(logo.sha)) return undefined;
+  return { buf: await getFile(`${logo.sha.slice(0, 2)}/${logo.sha}`), mime: logo.mime };
 }

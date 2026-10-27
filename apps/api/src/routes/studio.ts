@@ -1,9 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { requireRole } from "../auth.ts";
+import { HttpError, requireRole, requireTenantUser } from "../auth.ts";
 import type { ConfigKind } from "../config.ts";
 import { ask, library } from "../services/ask.ts";
-import { autonomyView, createDraft, diff, discardDraft, draftFromSop, getVersion, overview, publish, runTests, updateDraft, validate, versions } from "../services/studio.ts";
+import { autonomyView, createDraft, diff, discardDraft, draftFromSop, getVersion, LOGO_MAX_BYTES, logoFor, overview, publish, runTests, storeLogo, updateDraft, validate, versions } from "../services/studio.ts";
 
 const kind = z.enum(["catalogue", "rulebook", "workflow", "autonomy", "brand", "words", "policy", "sop", "testset"]);
 const studioRoles = ["process-owner", "operator", "compliance-auditor"] as const;
@@ -18,6 +18,27 @@ export async function studioRoutes(app: FastifyInstance) {
   });
 
   app.get("/api/studio", async (req) => overview(requireRole(req, [...studioRoles])));
+
+  // Logo: upload one file; it is referenced by the brand draft that is saved next.
+  app.post("/api/studio/brand/logo", async (req) => {
+    const u = requireRole(req, [...editRoles]);
+    const part = await req.file({ limits: { fileSize: LOGO_MAX_BYTES + 1 } });
+    if (!part) throw new HttpError(400, "Choose an image to upload.");
+    const buf = await part.toBuffer();
+    return storeLogo(u, { buf, mime: part.mimetype, name: part.filename });
+  });
+  // The funder's logo for whoever is signed in; ?v= shows a draft's logo in Studio.
+  app.get("/api/tenant/logo", async (req, reply) => {
+    const u = requireTenantUser(req);
+    const q = z.object({ v: z.coerce.number().int().optional() }).parse(req.query);
+    const logo = await logoFor(u, q.v);
+    if (!logo) throw new HttpError(404, "No logo.");
+    // SVG can carry script; this policy and sandbox stop it from running even if the file is opened directly.
+    reply.header("content-security-policy", "default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox");
+    reply.header("x-content-type-options", "nosniff");
+    reply.header("cache-control", "private, max-age=86400");
+    return reply.type(logo.mime).send(logo.buf);
+  });
   app.get("/api/studio/autonomy", async (req) => autonomyView(requireRole(req, [...studioRoles])));
   app.get("/api/studio/tests", async (req) => {
     const q = z.object({ rulebook: z.coerce.number().int().optional(), catalogue: z.coerce.number().int().optional() }).parse(req.query);

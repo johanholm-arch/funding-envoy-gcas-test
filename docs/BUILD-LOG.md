@@ -17,7 +17,7 @@ The finished work is on `main`. `build/phase-0-1` is the branch it was built on 
 | 1 | Rethink the grants experience | Built: start from your own words or documents, provenance on every value, checks in the margin, review in your name |
 | 2 | Agentic requestor interface | Built: the assistant reads documents, proposes values with their source, asks one question at a time, answers policy with clauses, declines to predict |
 | 3 | Agentic coordinator and approver interface, autonomy dial | Built: desk and brief with judgement items first; dial levels 0 to 4 per stage; five actions always a person's |
-| 4 | Front-end configurability and branding, single and multi-tenant | Built: brand and words per tenant as signed versions; contrast kept automatically; two tenants |
+| 4 | Front-end configurability and branding, single and multi-tenant | Built: brand (colour, name, logo) and words per funder as signed versions; contrast kept automatically; new funders added from the Operations screen |
 | 5 | SOP-driven workflow | Built: workflow drafted from an SOP, with a clause diff, stage impact and questions about vague clauses |
 | 6 | Dynamic fields and workflows across request types | Built: catalogue of types, fields, documents, statements and conflict questions; conditional fields; stage variations |
 | 7 | Front-end configuration for Salesforce and other grants platforms | Not started; deferred by decision (system of record first) |

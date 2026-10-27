@@ -27,10 +27,11 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
     const people = list.data?.people ?? [];
     return {
       requestors: people.filter((p) => p.kind === "requestor"),
-      staff: funders.map((t) => ({ tenant: t, people: people.filter((p) => p.kind === "internal" && p.tenant_id === t.id) })),
+      // One funder at a time: the one chosen above.
+      staff: (tenant ? [tenant] : []).map((t) => ({ tenant: t, people: people.filter((p) => p.kind === "internal" && p.tenant_id === t.id) })),
       operators: people.filter((p) => p.kind === "operator"),
     };
-  }, [list.data, funders]);
+  }, [list.data, funders, tenant]);
 
   useEffect(() => {
     if (params.get("signin") === "expired") setError("That sign-in link has expired or was already used. Ask for a new one below.");
@@ -134,7 +135,7 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           {list.loading ? <p className="muted small">Loading people…</p> : null}
           {funders.length > 1 ? (
             <div className="row">
-              <label className="small" htmlFor="funder">Requestors ask</label>
+              <label className="small" htmlFor="funder">Funder</label>
               <select id="funder" className="select small" style={{ width: "auto" }} value={tenant?.slug} onChange={(e) => setFunderSlug(e.target.value)}>
                 {funders.map((t) => <option key={t.slug} value={t.slug}>{t.name}</option>)}
               </select>

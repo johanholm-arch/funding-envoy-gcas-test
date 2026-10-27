@@ -17,7 +17,7 @@ export interface Me {
   user: { id: string; name: string; title?: string; email: string; kind: "internal" | "requestor" | "operator"; roles: Role[] };
   tenant?: {
     id: string; slug: string; name: string; demo: boolean;
-    brand?: { color?: string; corners?: string; logoText?: string; headingFace?: string };
+    brand?: { color?: string; corners?: string; logoText?: string; headingFace?: string; logoUrl?: string };
     words?: { request?: string; committee?: string; assistantName?: string; reviewingTeam?: string; reconciliation?: string };
   };
   organization?: { id: string; name: string; country: string };

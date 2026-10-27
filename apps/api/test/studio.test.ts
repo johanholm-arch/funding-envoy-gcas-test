@@ -110,7 +110,7 @@ describe("Operations (managed service)", () => {
     expect(meridian.packs.map((p: { id: string }) => p.id)).not.toContain("us");
     expect(meridian.assistantProfile).toBe("cautious");
     const lib = await call("brandt", "GET", "/api/ops/library");
-    expect(lib.body.find((p: { id: string }) => p.id === "efpia").adoptedBy.length).toBe(2);
+    expect(lib.body.find((p: { id: string }) => p.id === "efpia").adoptedBy.map((a: { tenant: string }) => a.tenant)).toEqual(expect.arrayContaining(["Halden Pharma", "Meridian Biologics"]));
     const pp = await call("brandt", "GET", "/api/ops/passports");
     expect(pp.body.sharedWithSeveralFunders).toBeGreaterThan(0);
     expect((await call("brandt", "POST", "/api/ops/switch", { tenantId: meridian.id })).status).toBe(200);

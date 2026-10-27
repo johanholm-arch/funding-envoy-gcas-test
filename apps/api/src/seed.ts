@@ -181,6 +181,10 @@ async function seedSecondTenant(haldenId: string) {
       if (r.kind === "brand" || r.kind === "words") continue;
       await publish(tx, id, r.kind, 1, body, "A. Byrne (process owner)", "2026-10-20T10:00:00Z");
     }
+    // Meridian's own brand and words, as signed versions so Studio shows and edits them.
+    const own = (await tx.query<{ settings: Record<string, unknown> }>("select settings from tenants where id = $1", [id])).rows[0]!.settings;
+    await publish(tx, id, "brand", 1, own.brand as Record<string, unknown>, "A. Byrne (process owner)", "2026-10-20T10:00:00Z");
+    await publish(tx, id, "words", 1, own.words as Record<string, unknown>, "A. Byrne (process owner)", "2026-10-20T10:00:00Z");
     const people = [
       ["mb-byrne", "Aoife Byrne", "Head of Medical Grants (process owner)", ["process-owner"]],
       ["mb-dubois", "Léa Dubois", "Grants Coordinator, Europe", ["coordinator"]],

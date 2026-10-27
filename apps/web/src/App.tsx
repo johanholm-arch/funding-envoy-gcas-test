@@ -156,7 +156,12 @@ function Shell({ children, refused }: { children: React.ReactNode; refused?: boo
       <a className="skip" href="#main">Skip to content</a>
       <header className={`topbar ${open ? "open" : ""}`}>
         <div className="topbar-left">
-          <NavLink to="/" className="brand">{me.user.kind === "operator" && !me.tenant ? "FundingEnvoy" : me.tenant?.brand?.logoText ?? me.tenant?.name ?? "FundingEnvoy"} <span className="seat">· {seat}</span></NavLink>
+          <NavLink to="/" className="brand">
+            {me.tenant?.brand?.logoUrl && !(me.user.kind === "operator" && !me.tenant)
+              ? <img className="brand-logo" src={me.tenant.brand.logoUrl} alt={me.tenant.brand.logoText ?? me.tenant.name} />
+              : me.user.kind === "operator" && !me.tenant ? "FundingEnvoy" : me.tenant?.brand?.logoText ?? me.tenant?.name ?? "FundingEnvoy"}{" "}
+            <span className="seat">· {seat}</span>
+          </NavLink>
           <nav className="nav" aria-label="Main" id="main-nav">
             {nav.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.end ?? false}>{n.label}</NavLink>

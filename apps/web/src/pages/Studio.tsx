@@ -69,7 +69,7 @@ export function Studio() {
 }
 
 function KindPanel({ meta, row, onChanged }: { meta: (typeof KINDS)[number]; row?: OverviewRow; onChanged: () => void }) {
-  const { me } = useMe();
+  const { me, refresh } = useMe();
   const toast = useToast();
   const owner = hasRole(me, "process-owner");
   const canEdit = me.user.roles.some((r) => r === "process-owner" || r === "operator") || me.user.kind === "operator";
@@ -104,7 +104,7 @@ function KindPanel({ meta, row, onChanged }: { meta: (typeof KINDS)[number]; row
     if (!row?.draft) return;
     if (name.trim().toLowerCase() !== me.user.name.trim().toLowerCase()) { setErr(`Type your full name exactly as "${me.user.name}" to sign this version.`); return; }
     const r = await run("publish", () => api.post<{ version: number; diff: { summary: string } }>(`/api/studio/${meta.kind}/${row.draft!.version}/publish`, { typedName: name.trim(), acceptDifferences: accept.trim() || undefined }), `Published v${row.draft.version}`);
-    if (r) { setName(""); setAccept(""); setIssues(undefined); onChanged(); await pub.refetch(); }
+    if (r) { setName(""); setAccept(""); setIssues(undefined); onChanged(); await pub.refetch(); if (meta.kind === "brand" || meta.kind === "words") await refresh(); }
   }
 
   const editorBody = (draft.data?.body ?? pub.data?.body) as Record<string, unknown> | undefined;
@@ -120,7 +120,7 @@ function KindPanel({ meta, row, onChanged }: { meta: (typeof KINDS)[number]; row
         </p>
       </header>
 
-      {meta.kind === "brand" ? <BrandEditor body={editorBody} canEdit={canEdit} busy={busy} onSave={(b) => void saveDraft(b, "Brand change")} /> : null}
+      {meta.kind === "brand" ? <BrandEditor body={editorBody} draftVersion={row?.draft?.version} canEdit={canEdit} busy={busy} onSave={(b) => void saveDraft(b, "Brand change")} /> : null}
       {meta.kind === "words" ? <WordsEditor body={editorBody} canEdit={canEdit} busy={busy} onSave={(b) => void saveDraft(b, "Words change")} /> : null}
       {meta.kind === "autonomy" ? <AutonomyEditor body={editorBody} canEdit={canEdit} busy={busy} onSave={(b) => void saveDraft(b, "Autonomy change")} /> : null}
       {meta.kind === "workflow" ? <WorkflowView body={(draft.data ?? pub.data)?.body} /> : null}
@@ -183,11 +183,35 @@ async function fetchDelete(url: string) {
   if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { error?: string }).error ?? "Discarding failed.");
 }
 
-function BrandEditor({ body, canEdit, busy, onSave }: { body?: Record<string, unknown>; canEdit: boolean; busy?: string; onSave: (b: unknown) => void }) {
+interface LogoRef { sha: string; mime: string; name?: string }
+
+function BrandEditor({ body, draftVersion, canEdit, busy, onSave }: { body?: Record<string, unknown>; draftVersion?: number; canEdit: boolean; busy?: string; onSave: (b: unknown) => void }) {
+  const { me } = useMe();
   const [color, setColor] = useState(String(body?.color ?? "#176B63"));
   const [logo, setLogo] = useState(String(body?.logoText ?? ""));
-  useEffect(() => { setColor(String(body?.color ?? "#176B63")); setLogo(String(body?.logoText ?? "")); }, [body]);
+  const [image, setImage] = useState<LogoRef | undefined>(body?.logo as LogoRef | undefined);
+  const [localUrl, setLocalUrl] = useState<string>();
+  const [uploading, setUploading] = useState(false);
+  const [imgErr, setImgErr] = useState<string>();
+  useEffect(() => { setColor(String(body?.color ?? "#176B63")); setLogo(String(body?.logoText ?? "")); setImage(body?.logo as LogoRef | undefined); setLocalUrl(undefined); }, [body]);
   const c = contrastWithGround(color);
+  // What the preview shows: a file just chosen, the draft's logo, or the published one.
+  const imageUrl = !image ? undefined : localUrl ?? (draftVersion ? `/api/tenant/logo?v=${draftVersion}&h=${image.sha.slice(0, 12)}` : me.tenant?.brand?.logoUrl);
+  const changed = color !== String(body?.color ?? "#176B63") || logo !== String(body?.logoText ?? "") || (image?.sha ?? "") !== ((body?.logo as LogoRef | undefined)?.sha ?? "");
+
+  async function chooseLogo(file: File | undefined) {
+    if (!file) return;
+    setImgErr(undefined);
+    if (file.size > 512 * 1024) { setImgErr("That image is larger than 512 KB. Use a smaller one."); return; }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file, file.name);
+      const ref = await api.post<LogoRef>("/api/studio/brand/logo", fd);
+      setImage(ref);
+      setLocalUrl(URL.createObjectURL(file));
+    } catch (e) { setImgErr(errorText(e)); } finally { setUploading(false); }
+  }
   return (
     <section className="panel calm" aria-labelledby="h-brand">
       <h2 id="h-brand" style={{ fontSize: 20 }}>Colour and name</h2>
@@ -204,16 +228,38 @@ function BrandEditor({ body, canEdit, busy, onSave }: { body?: Record<string, un
         </div>
       </div>
       <div className="stack" style={{ gap: 6 }}>
+        <span className="label">Logo</span>
+        <div className="row" style={{ gap: 14, alignItems: "center" }}>
+          {imageUrl ? <img className="logo-preview" src={imageUrl} alt="Logo" /> : <span className="muted small">No logo. The name above is shown instead.</span>}
+          {canEdit ? (
+            <>
+              <label className="btn small quiet" style={{ cursor: "pointer" }}>
+                {uploading ? "Uploading…" : image ? "Choose another image" : "Upload a logo"}
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="sr-only" disabled={uploading} onChange={(e) => { void chooseLogo(e.target.files?.[0]); e.target.value = ""; }} />
+              </label>
+              {image ? <button type="button" className="linkbtn small" onClick={() => { setImage(undefined); setLocalUrl(undefined); }}>Remove logo</button> : null}
+            </>
+          ) : null}
+        </div>
+        <p className="help">PNG, JPEG, WebP or SVG, up to 512 KB. A wide logo on a transparent background works best; it is shown about 28 pixels high in the top bar.</p>
+        {imgErr ? <p className="error-text" role="alert">{imgErr}</p> : null}
+      </div>
+      <div className="stack" style={{ gap: 6 }}>
         <span className="eyebrow">Preview as the requestor</span>
         <div style={{ border: "1px solid var(--rule)", padding: "12px 16px", display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", background: "var(--ground)" }}>
-          <span className="brand">{logo || "Company"} <span className="seat">· Funding</span></span>
+          <span className="brand">{imageUrl ? <img className="brand-logo" src={imageUrl} alt={logo || "Company"} /> : logo || "Company"} <span className="seat">· Funding</span></span>
           <span className="chip" style={{ background: `color-mix(in srgb, ${color} 12%, #fff)`, color }}>Passed</span>
           <a href="#preview" onClick={(e) => e.preventDefault()} style={{ color }}>A link in your colour</a>
           <span className="dot" style={{ background: color }} aria-hidden="true" />
         </div>
         <p className="help">Only the colour and name change. The layout, the safety rules and the locked outcomes are the platform's.</p>
       </div>
-      {canEdit ? <div><button type="button" className="btn" disabled={Boolean(busy)} onClick={() => onSave({ ...body, color, logoText: logo })}>Save as draft</button></div> : null}
+      {canEdit ? (
+        <div className="row">
+          <button type="button" className="btn" disabled={Boolean(busy) || uploading || !changed} onClick={() => { const { logo: _old, ...rest } = body ?? {}; onSave({ ...rest, color, logoText: logo, ...(image ? { logo: image } : {}) }); }}>Save as draft</button>
+          {!changed ? <span className="muted small">Change the colour, name or logo to start a draft.</span> : null}
+        </div>
+      ) : null}
     </section>
   );
 }

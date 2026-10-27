@@ -130,6 +130,9 @@ button.chip:hover, a.chip:hover { text-decoration: underline; text-underline-off
 .brand { font-family: var(--serif); font-size: 20px; font-weight: 500; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; white-space: nowrap; }
 .brand:hover { color: var(--ink); }
 .brand .seat { color: var(--muted); font-weight: 400; }
+.brand { display: inline-flex; align-items: center; gap: 6px; }
+.brand-logo { height: 28px; width: auto; max-width: 180px; object-fit: contain; display: block; }
+.logo-preview { height: 40px; width: auto; max-width: 220px; object-fit: contain; display: block; }
 .nav { display: flex; gap: 20px; font-size: 14px; }
 .nav a { color: var(--muted); text-decoration: none; padding: 4px 0 2px; border-bottom: 2px solid transparent; white-space: nowrap; }
 .nav a:hover { color: var(--ink); }
