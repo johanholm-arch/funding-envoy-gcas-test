@@ -116,25 +116,27 @@ From now on only those people can open the demo. To let someone new in later, re
 
 ## Everyday tasks
 
-Open Cloud Shell (step 1) and paste the line for what you want to do.
+Open Cloud Shell (step 1) and paste the line for what you want to do. Each line first fetches the latest copy of
+FundingEnvoy from GitHub, so it works even when Cloud Shell has forgotten everything since last time (it says "Your
+Cloud Shell session will be ephemeral" when that happens). The scripts then look up your FundingEnvoy in Azure.
 
 **Start the demo again from the beginning.** This erases what people have done in it.
 
 ```
-cd ~/funding-envoy-gcas-test && bash deploy/azure/reset-demo.sh
+cd ~ && (test -d funding-envoy-gcas-test || git clone https://github.com/johanholm-arch/funding-envoy-gcas-test.git) && cd funding-envoy-gcas-test && git pull && bash deploy/azure/reset-demo.sh
 ```
 
 **Get the latest version.** Use this after new work has been added to GitHub. Demo data is kept.
 
 ```
-cd ~/funding-envoy-gcas-test && bash deploy/azure/update.sh
+cd ~ && (test -d funding-envoy-gcas-test || git clone https://github.com/johanholm-arch/funding-envoy-gcas-test.git) && cd funding-envoy-gcas-test && git pull && bash deploy/azure/update.sh
 ```
 
 **Delete everything and stop all charges.** This can't be undone, but you can run step 2 again later to set it up
 fresh.
 
 ```
-cd ~/funding-envoy-gcas-test && bash deploy/azure/remove.sh
+cd ~ && (test -d funding-envoy-gcas-test || git clone https://github.com/johanholm-arch/funding-envoy-gcas-test.git) && cd funding-envoy-gcas-test && git pull && bash deploy/azure/remove.sh
 ```
 
 ## If something goes wrong

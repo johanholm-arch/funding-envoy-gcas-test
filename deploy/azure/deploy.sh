@@ -8,6 +8,8 @@ if [ -f "$SETTINGS" ]; then
   # shellcheck disable=SC1090
   source "$SETTINGS"
   say "Continuing with the settings saved in $SETTINGS."
+elif recover_settings; then
+  say "Found your existing FundingEnvoy in Azure; continuing with it."
 fi
 
 say "Step 1 of 7: checking your Azure subscription"
@@ -38,24 +40,7 @@ DB_APP_PW=${DB_APP_PW:-Ap-$(rand A-Za-z0-9 24)-7b}
 COOKIE_SECRET=${COOKIE_SECRET:-$(rand A-Za-z0-9 48)}
 ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
 
-umask 077
-cat > "$SETTINGS" <<SETTINGS_EOF
-# FundingEnvoy on Azure: names and passwords created by deploy.sh. Keep this file private.
-REGION=$REGION
-RG=$RG
-SUFFIX=$SUFFIX
-PG=$PG
-ACR=$ACR
-SA=$SA
-ENVNAME=$ENVNAME
-APP=$APP
-DB_ADMIN=$DB_ADMIN
-DB_ADMIN_PW=$DB_ADMIN_PW
-DB_APP_PW=$DB_APP_PW
-COOKIE_SECRET=$COOKIE_SECRET
-ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
-ANTHROPIC_SET=1
-SETTINGS_EOF
+save_settings
 note "Names and passwords are saved in $SETTINGS (only you can read it)."
 
 say "Step 2 of 7: preparing the subscription (a minute or two the first time)"
