@@ -1,11 +1,11 @@
 -- FundingEnvoy schema v1
 -- Tenant isolation: every tenant table has tenant_id; RLS is FORCED so even the table owner is filtered.
+-- gen_random_uuid() is built in from Postgres 13; no extension is needed (managed services restrict extensions).
 -- Session context (set per transaction by the API with SET LOCAL):
 --   app.tenant_id  uuid of the tenant in scope
 --   app.org_id     uuid of the requesting organization (requestor sessions only)
 --   app.operator   'on' for managed-service operator sessions (cross-tenant read/write, every switch is logged)
 
-create extension if not exists pgcrypto;
 
 create or replace function current_tenant() returns uuid language sql stable as
 $$ select nullif(current_setting('app.tenant_id', true), '')::uuid $$;

@@ -23,7 +23,9 @@ export async function buildServer(opts: { logger?: boolean } = {}): Promise<Fast
     if (reset?.n) throw new Error("Refusing to start: the demo reset function exists in a production database.");
     if (!process.env.FE_COOKIE_SECRET) throw new Error("FE_COOKIE_SECRET must be set in production.");
   }
-  const app = Fastify({ logger: opts.logger ?? false, bodyLimit: 2 * 1024 * 1024 });
+  // Behind a cloud load balancer (FE_TRUST_PROXY=1) the original scheme and host come from X-Forwarded-* headers,
+  // so sign-in callbacks and links use https and the public address.
+  const app = Fastify({ logger: opts.logger ?? false, bodyLimit: 2 * 1024 * 1024, trustProxy: process.env.FE_TRUST_PROXY === "1" });
   await app.register(cookie, { secret: process.env.FE_COOKIE_SECRET ?? "fundingenvoy-demo-secret-change-me" });
   await app.register(multipart, { limits: { fileSize: 25 * 1024 * 1024, files: 10 } });
   app.addHook("onRequest", sessionHook);

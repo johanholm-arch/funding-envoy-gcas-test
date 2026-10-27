@@ -27,6 +27,15 @@ FE_TODAY=2027-04-02 pnpm --filter @fe/api start
 Open http://127.0.0.1:8787 and choose a persona. `FE_TODAY` pins the demo date so lead times and screening dates in
 the demo content stay current. For front-end work, run `pnpm dev:web` (port 5173, proxied to the API on 8787).
 
+**Put it on Azure for your team.** Follow `deploy/azure/GUIDE.md`. It is written for non-developers: open Cloud Shell
+in the Azure portal, paste three lines, answer three questions, then turn on Microsoft sign-in so only your team can
+get in.
+
+**Run it in a container.** The `Dockerfile` builds one image that serves the whole app. At start-up it creates the
+database if needed, applies migrations and loads the demo once. Give it the database through `FE_DB_HOST`,
+`FE_DB_ADMIN_USER`, `FE_DB_ADMIN_PASSWORD` and `FE_DB_APP_PASSWORD` (add `FE_DB_SSL=disable` for a local database),
+and mount `/data` so uploaded documents survive restarts. Changing `FE_RESEED_TOKEN` resets the demo.
+
 **A short tour.**
 1. **Requestor.** Sign in as Dr. Elena Marsh, New England Cardiology Society. Describe a $50,000 symposium in Boston,
    then upload the files in `content/halden/documents/necs-hf2027/`.
