@@ -20,7 +20,7 @@ The finished work is on `main`. `build/phase-0-1` is the branch it was built on 
 | 4 | Front-end configurability and branding, single and multi-tenant | Built: brand (colour, name, logo) and words per funder as signed versions; contrast kept automatically; new funders added from the Operations screen |
 | 5 | SOP-driven workflow | Built: workflow drafted from an SOP, with a clause diff, stage impact and questions about vague clauses |
 | 6 | Dynamic fields and workflows across request types | Built: catalogue of types, fields, documents, statements and conflict questions; conditional fields; stage variations |
-| 7 | Front-end configuration for Salesforce and other grants platforms | Not started; deferred by decision (system of record first) |
+| 7 | Front-end configuration for Salesforce and other grants platforms | Built against a simulated Salesforce org: Studio's Connect to Salesforce page (connect, read the org, suggested field, value, document and status matches, trial run, signed publication); four checkpoints at submission in the requestor's name; status changes and comments back as events. A live org needs the company's External Client App and network access (`docs/BUILD-LOG.md`, Salesforce) |
 | 8 | DocuSign, SAP and similar | Simulated connectors behind the same interfaces a real connector would use; recorded in the trail |
 | 9 | Hundreds of concurrent users, 500k rows | Measured: 300 people over 500,000 requests, p95 under 400 ms at a realistic pace, no errors (`docs/PERFORMANCE.md`) |
 | 10 | Natural-language analytics | Built: Ask plans questions onto a governed metrics library; the model never writes SQL; every answer shows its query |
@@ -54,6 +54,19 @@ look and the assistant. Every suggestion shows the clause and sentence it came f
 signature publishes them all, after the same checks and test set as before. The section-by-section view is kept under
 "Advanced". Discarding a draft no longer fails with "unsupported media type" in some browsers.
 
+## Salesforce connector, simulated (5 November 2026)
+
+For funders whose grants already run on Salesforce (option A of the integration plan). In Studio, Connections,
+Salesforce: test the connection, read the org (objects, fields, picklists, validation and duplicate rules, the Flow),
+check FundingEnvoy's suggested matches for fields, list values, document categories and statuses, run a trial, save,
+and publish with the rest of the setup. From then on a submitted request is written to Salesforce at four checkpoints
+(organization matched or created, draft, documents, submit) in the same transaction as the submission, in the
+requestor's name; if Salesforce refuses, nothing is submitted and the requestor sees why. Those requests leave
+FundingEnvoy's desk. The Salesforce page shows the simulated org as a coordinator sees it there; asking for
+information, commenting, approving or declining there comes back as platform events, and FundingEnvoy turns them into
+the requestor's tasks and status. The simulated org enforces required fields, restricted picklists, field lengths,
+validation rules and a duplicate rule with Salesforce's error codes; it found two real bugs during the build.
+
 ## Found and fixed along the way
 
 - **Money across currencies.** Ask added dollars, pounds and euros together. Money is now reported per currency.
@@ -77,7 +90,7 @@ signature publishes them all, after the same checks and test set as before. The 
 
 ## Open items
 
-- **Salesforce and other platform integrations (requirement 7).** Deferred by decision.
+- **A live Salesforce org (requirement 7).** The connector runs against the simulated org. A live org needs the steps in the integration plan: the company's External Client App and integration user, network access from FundingEnvoy to Salesforce, real REST, Composite Graph and Pub/Sub calls in place of the simulated ones, and the portal sign-in.
 - **Real DocuSign and SAP connectors.** These replace the simulated ones without changing the workflow.
 - **Field-by-field editors in Studio.** The guided setup changes words, limits, required documents, checks and stage
   times. Adding request types, fields or stages, and changing stage owners, still needs the Advanced view's drafts.

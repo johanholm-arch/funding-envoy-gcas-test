@@ -7,7 +7,7 @@ import { prepareLogo } from "../lib/logo";
 import { fmtDate, plural, roleWords } from "../lib/format";
 import { useDocumentTitle, useMediaQuery, useResource } from "../lib/hooks";
 
-type Kind = "brand" | "words" | "catalogue" | "rulebook" | "workflow" | "autonomy" | "policy" | "sop" | "testset";
+type Kind = "brand" | "words" | "catalogue" | "rulebook" | "workflow" | "autonomy" | "policy" | "sop" | "testset" | "connector";
 interface OverviewRow { kind: Kind; published?: { version: number; signedName: string; signedAt: string }; draft?: { version: number; createdAt: string; note?: string }; versions: number }
 interface VersionBody<T = unknown> { version: number; body: T; status?: string; signedName?: string; signedAt?: string }
 interface Issue { severity: "error" | "warning"; where?: string; message: string }
@@ -24,6 +24,7 @@ const KINDS: { kind: Kind; label: string; what: string }[] = [
   { kind: "policy", label: "Policy", what: "The policy the assistant quotes when it answers." },
   { kind: "sop", label: "SOP", what: "The source the workflow is drafted from." },
   { kind: "testset", label: "Test set", what: "Past requests with known outcomes, run before every publication." },
+  { kind: "connector", label: "Salesforce connection", what: "How requests are written to the funder's Salesforce org, and what comes back." },
 ];
 
 export function Studio() {
@@ -131,6 +132,7 @@ function KindPanel({ meta, row, onChanged }: { meta: (typeof KINDS)[number]; row
       {meta.kind === "catalogue" ? <CatalogueView body={(draft.data ?? pub.data)?.body} /> : null}
       {meta.kind === "policy" || meta.kind === "sop" ? <DocumentView body={(draft.data ?? pub.data)?.body} /> : null}
       {meta.kind === "sop" && canEdit ? <SopUpload onDone={onChanged} /> : null}
+      {meta.kind === "connector" ? <p><Link className="btn quiet" to="/studio/connect">Open Connect to Salesforce</Link></p> : null}
       {meta.kind === "testset" || meta.kind === "rulebook" || meta.kind === "catalogue" ? <Tests /> : null}
 
       {row?.draft ? (
@@ -169,7 +171,7 @@ function KindPanel({ meta, row, onChanged }: { meta: (typeof KINDS)[number]; row
             </form>
           ) : <p className="muted small">Only the process owner can publish.</p>}
         </section>
-      ) : canEdit && !["brand", "words", "autonomy", "sop"].includes(meta.kind) ? (
+      ) : canEdit && !["brand", "words", "autonomy", "sop", "connector"].includes(meta.kind) ? (
         <div><button type="button" className="btn quiet" disabled={Boolean(busy)} onClick={() => void run("draft", () => api.post(`/api/studio/${meta.kind}/drafts`, { note: `Started from v${row?.published?.version ?? ""}` }), "Draft started").then(() => onChanged())}>Start a draft from the published version</button></div>
       ) : null}
       {err ? <p className="error-text" role="alert">{err}</p> : null}

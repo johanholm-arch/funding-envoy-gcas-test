@@ -6,7 +6,7 @@ import { ask, library } from "../services/ask.ts";
 import { checkAll, discardAll, propose, publishAll, saveRequirements, saveWords, saveWorkflow, setupView, uploadDocument } from "../services/setup.ts";
 import { autonomyView, createDraft, diff, discardDraft, draftFromSop, getVersion, LOGO_MAX_BYTES, logoFor, overview, publish, runTests, storeLogo, updateDraft, validate, versions } from "../services/studio.ts";
 
-const kind = z.enum(["catalogue", "rulebook", "workflow", "autonomy", "brand", "words", "policy", "sop", "testset"]);
+const kind = z.enum(["catalogue", "rulebook", "workflow", "autonomy", "brand", "words", "policy", "sop", "testset", "connector"]);
 const studioRoles = ["process-owner", "operator", "compliance-auditor"] as const;
 const editRoles = ["process-owner", "operator"] as const;
 

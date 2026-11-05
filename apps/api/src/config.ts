@@ -5,7 +5,7 @@ import { composeRulebook, type ComposedRulebook } from "@fe/core";
 import { many, one, type Tx } from "@fe/db";
 import { parseClauses, type Clause } from "@fe/agent";
 
-export type ConfigKind = "rulebook" | "workflow" | "catalogue" | "autonomy" | "brand" | "words" | "policy" | "sop" | "metrics" | "testset";
+export type ConfigKind = "rulebook" | "workflow" | "catalogue" | "autonomy" | "brand" | "words" | "policy" | "sop" | "metrics" | "testset" | "connector";
 
 const cache = new Map<string, unknown>();
 

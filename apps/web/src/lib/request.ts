@@ -19,6 +19,7 @@ export function statusSentence(v: RequestView): string {
   const map: Partial<Record<RequestStatus, string>> = {
     draft: "Draft. Nothing has been sent.",
     submitted: `Submitted${sub ? ` on ${sub}` : ""}. A coordinator will pick it up shortly.`,
+    "with-salesforce": `Submitted${sub ? ` on ${sub}` : ""}, with the grants team. You'll hear here when they ask for anything or decide.`,
     "in-review": `Being reviewed (${v.stage.name.toLowerCase()} since ${fmtDate(v.stage.enteredAt)}).${weeks ? ` Decisions for this type usually take ${weeks[0]} to ${weeks[1]} weeks${sub ? ` from ${sub}` : ""}.` : ""}`,
     "info-requested": "The grants team has a question for you. Only their questions are open; the rest of your request stays as it is.",
     committee: `With the committee for a decision, since ${fmtDate(v.stage.enteredAt)}.`,

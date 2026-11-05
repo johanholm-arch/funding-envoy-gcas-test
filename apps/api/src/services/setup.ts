@@ -12,10 +12,10 @@ import { record } from "./requests.ts";
 import { provider } from "./assistant.ts";
 import { createDraft, discardDraft, draftFromSop, publish, runTests, updateDraft, validate } from "./studio.ts";
 
-const ORDER: ConfigKind[] = ["policy", "sop", "words", "brand", "catalogue", "rulebook", "workflow", "autonomy", "testset"];
+const ORDER: ConfigKind[] = ["policy", "sop", "words", "brand", "catalogue", "rulebook", "workflow", "autonomy", "connector", "testset"];
 const LABEL: Record<string, string> = {
   policy: "Policy", sop: "SOP", words: "Words", brand: "Look", catalogue: "Documents requestors provide",
-  rulebook: "Limits and checks", workflow: "Workflow", autonomy: "Assistant", testset: "Test set",
+  rulebook: "Limits and checks", workflow: "Workflow", autonomy: "Assistant", connector: "Salesforce connection", testset: "Test set",
 };
 const WORD_KEYS = ["request", "committee", "reviewingTeam", "reconciliation", "assistantName"] as const;
 const WORD_LABEL: Record<string, string> = {

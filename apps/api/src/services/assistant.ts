@@ -12,6 +12,7 @@ import {
 } from "./requests.ts";
 import { autoAdvance } from "./workflow.ts";
 import { rescreen } from "./screening.ts";
+import { pushSubmission } from "./connector.ts";
 
 let providerPromise: Promise<AssistantProvider> | undefined;
 export function provider(): Promise<AssistantProvider> {
@@ -107,7 +108,7 @@ export function nextAsk(l: Loaded, checks: CheckResult[]): Ask {
   }
   const att = checks.find((c) => (c.status === "fail") && rules.get(c.ruleId)?.check.kind === "attestationsComplete");
   if (att) return { kind: "attestations", questionId: "attestations", text: "Last step: your statements. These are yours to make; I can't make them for you. They're recorded with your name and the time." };
-  return { kind: "ready", questionId: "ready", text: "Everything Halden's policy asks for is in. Review exactly what will be sent, in your name, and submit when you're ready." };
+  return { kind: "ready", questionId: "ready", text: "Everything the funder's policy asks for is in. Review exactly what will be sent, in your name, and submit when you're ready." };
 }
 
 async function askNext(tx: Tx, l: Loaded, fe: Actor, checks: CheckResult[], lead?: string) {
@@ -582,14 +583,20 @@ export async function submit(u: SessionUser, requestId: string) {
     const now = new Date().toISOString();
     const summaryMd = reviewSummary(l, checks, ref);
     l.state = { ...l.state, ref, status: t.status, stage: t.to, submittedAt: l.state.submittedAt ?? now, checks, reviewSummary: { generatedAt: now, rulebookVersion: l.state.versions.rulebook, markdown: summaryMd } };
+    // A funder whose Salesforce org keeps the record gets the request there, in the requestor's name, before it
+    // counts as submitted here; if Salesforce refuses, nothing is submitted.
+    const external = await pushSubmission(tx, l, u.name, u.name);
+    if (external) l.state = { ...l.state, status: "with-salesforce", external };
     await saveState(tx, l);
     await record(tx, { tenantId: l.row.tenant_id, actor: me, entity: { type: "request", id: l.row.id }, action: "request.submitted", data: { requestId: l.row.id, ref, from: t.from, to: t.to, skipped: t.skipped, flags: l.state.flags.map((f) => f.ruleId), rulebookVersion: l.state.versions.rulebook } });
     await record(tx, { tenantId: l.row.tenant_id, actor: fe, entity: { type: "request", id: l.row.id }, action: "assistant.review-summary", data: { requestId: l.row.id, checks: checks.length, passed: s.passed.length, forReviewer: s.forReviewer.length + l.state.flags.length } });
-    await addMessage(tx, l, fe, `Submitted as ${ref} on ${now.slice(0, 10)}, in your name. I'll tell you when a reviewer picks it up and when anything is needed from you.`, { submitted: true });
-    return { ref };
+    await addMessage(tx, l, fe, external
+      ? `Submitted as ${ref} on ${now.slice(0, 10)}, in your name, to the grants team's system, with your documents and my review summary. I'll tell you when they ask for anything or decide.`
+      : `Submitted as ${ref} on ${now.slice(0, 10)}, in your name. I'll tell you when a reviewer picks it up and when anything is needed from you.`, { submitted: true });
+    return { ref, external: Boolean(external) };
   });
-  await autoAdvance(requestId, u);
-  return out;
+  if (!out.external) await autoAdvance(requestId, u);
+  return { ref: out.ref };
 }
 
 export function reviewSummary(l: Loaded, checks: CheckResult[], ref: string): string {

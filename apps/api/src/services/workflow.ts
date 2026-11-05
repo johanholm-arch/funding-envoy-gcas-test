@@ -7,6 +7,7 @@ import {
 } from "@fe/core";
 import { many, one, withContext, type Tx } from "@fe/db";
 import { randomUUID } from "node:crypto";
+import { pushInfoAnswer } from "./connector.ts";
 import { actorOf, asUser, HttpError, type SessionUser } from "../auth.ts";
 import { addMessage, loadRequest, record, runChecks, saveState, tenantSettings, type Loaded } from "./requests.ts";
 import { onEnterStage } from "./contracting.ts";
@@ -227,7 +228,9 @@ export async function answerInfo(u: SessionUser, requestId: string, infoRequestI
         fields.length ? `Fields changed: ${[...new Set(fields)].join(", ")}.` : "No other fields changed.",
       ].join("\n");
     }
-    await saveState(tx, l, { infoRequests: irs, status: done ? "in-review" : l.state.status });
+    // When Salesforce keeps the record, the answers and the "what changed" note go back there, and it is resubmitted.
+    if (done && l.state.external) await pushInfoAnswer(tx, l, ir, u.name);
+    await saveState(tx, l, { infoRequests: irs, status: done ? (l.state.external ? "with-salesforce" : "in-review") : l.state.status, ...(l.state.external ? { external: l.state.external } : {}) });
     await record(tx, { tenantId: l.row.tenant_id, actor: me, entity: { type: "request", id: l.row.id }, action: done ? "info.answered" : "info.partially-answered", data: { requestId: l.row.id, infoRequestId, answers } });
     if (done) {
       // What follows is the platform's own bookkeeping for the grants team (an internal note and their task). The
@@ -238,7 +241,7 @@ export async function answerInfo(u: SessionUser, requestId: string, infoRequestI
       const fe = feActor((s.words as { assistantName?: string } | undefined)?.assistantName);
       await addMessage(tx, l, fe, `What changed since the information request of ${ir.at.slice(0, 10)}:\n${ir.whatChanged}`, { whatChanged: ir.id }, "internal");
       await record(tx, { tenantId: l.row.tenant_id, actor: fe, entity: { type: "request", id: l.row.id }, action: "assistant.what-changed", data: { requestId: l.row.id, infoRequestId, note: ir.whatChanged } });
-      await createTask(tx, l, "info-answered", `${l.row.ref}: requestor answered your questions`, "coordinator");
+      if (!l.state.external) await createTask(tx, l, "info-answered", `${l.row.ref}: requestor answered your questions`, "coordinator");
     }
   });
 }

@@ -19,6 +19,8 @@ import { AgreementPage } from "./pages/AgreementPage";
 import { Disclosure } from "./pages/Disclosure";
 import { Studio } from "./pages/Studio";
 import { StudioSetup } from "./pages/Setup";
+import { StudioConnect } from "./pages/StudioConnect";
+import { SalesforceSim } from "./pages/SalesforceSim";
 import { Ask } from "./pages/Ask";
 import { Operations } from "./pages/Operations";
 import { People, Identity } from "./pages/Access";
@@ -97,6 +99,8 @@ export function App() {
               <Route path="/ask" element={<Ask />} />
               <Route path="/studio" element={<StudioSetup />} />
               <Route path="/studio/advanced" element={<Studio />} />
+              <Route path="/studio/connect" element={<StudioConnect />} />
+              <Route path="/salesforce" element={<SalesforceSim />} />
               <Route path="/studio/:kind" element={<Studio />} />
               <Route path="/ops" element={<Operations />} />
               <Route path="/people" element={<People />} />
@@ -146,6 +150,7 @@ function Shell({ children, refused }: { children: React.ReactNode; refused?: boo
   const funding = [
     { to: "/desk", label: "Desk" }, { to: "/committee", label: "Committee" }, { to: "/agreements", label: "Agreements & payments" },
     { to: "/disclosure", label: "Disclosure" }, { to: "/ask", label: "Ask" }, { to: "/studio", label: "Studio" }, { to: "/audit", label: "Audit" },
+    ...(me.tenant?.connections?.salesforce?.enabled ? [{ to: "/salesforce", label: "Salesforce" }] : []),
   ];
   const nav: { to: string; label: string; end?: boolean }[] = refused ? [] : requestor
     ? [{ to: "/requests", label: `My ${word}s`, end: true }, { to: "/requests/new", label: `New ${word}` }, { to: "/policy", label: "Policy" }]

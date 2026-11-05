@@ -22,7 +22,8 @@ export interface DeskItem {
 
 type DeskLite = Omit<DeskRow, "state"> & { judgement_open: number | null; group_label: string | null; passed: number | null; info_requests: NonNullable<DeskRow["state"]["infoRequests"]> | null };
 
-const OPEN = "r.status not in ('draft', 'withdrawn', 'closed', 'declined')";
+// Requests a connected Salesforce org keeps are worked there, not on this desk.
+const OPEN = "r.status not in ('draft', 'withdrawn', 'closed', 'declined', 'with-salesforce') and not (r.state ? 'external')";
 const SHOWN = { needsYou: 100, assistant: 50, waiting: 50 };
 
 /**

@@ -41,7 +41,7 @@ export async function draftAgreement(tx: Tx, l: Loaded, by: Actor): Promise<Agre
   const existing = await currentAgreement(tx, l.row.id);
   if (existing) return existing;
   const s = await tenantSettings(tx, l.row.tenant_id);
-  const entity = (s.legalEntities as Record<string, string> | undefined)?.[l.state.country] ?? "Halden Pharma";
+  const entity = (s.legalEntities as Record<string, string> | undefined)?.[l.state.country] ?? (await one<{ name: string }>(tx, "select name from tenants where id = $1", [l.row.tenant_id]))?.name ?? "the funder";
   const clauses = requiredClauses(l);
   const amount = l.state.decision?.amount ?? (l.state.fields["amount.requested"]?.value as number);
   const cur = (l.state.fields["amount.currency"]?.value as string) ?? "USD";

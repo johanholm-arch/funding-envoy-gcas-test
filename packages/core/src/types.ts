@@ -406,7 +406,8 @@ export interface CoiAnswer {
 
 export type RequestStatus =
   | "draft" | "submitted" | "in-review" | "info-requested" | "committee" | "approved" | "declined"
-  | "agreement" | "payment" | "active" | "reconciliation" | "outcomes" | "closed" | "withdrawn";
+  | "agreement" | "payment" | "active" | "reconciliation" | "outcomes" | "closed" | "withdrawn"
+  | "with-salesforce"; // submitted, and kept by the funder's Salesforce org from here on
 
 export interface DocumentRef {
   id: Uuid;
@@ -449,6 +450,19 @@ export interface RequestState {
   decision?: { outcome: "approve" | "approve-with-conditions" | "decline" | "defer"; amount?: number; conditions?: string; rationale: string; by: Actor; at: IsoDateTime };
   agreement?: AgreementSnapshot;
   reviewSummary?: { generatedAt: IsoDateTime; rulebookVersion: number; markdown: string };
+  /** Set when the funder's own grants platform keeps the record (a connected Salesforce org, for example). */
+  external?: ExternalRecord;
+}
+
+export interface ExternalRecord {
+  system: "salesforce";
+  simulated: boolean;
+  recordId: string;
+  organizationId?: string;
+  status: string;
+  syncedAt: IsoDateTime;
+  connectorVersion: number;
+  handledComments?: string[];
 }
 
 export interface InfoRequest {

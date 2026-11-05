@@ -19,6 +19,7 @@ export interface Me {
     id: string; slug: string; name: string; demo: boolean;
     brand?: { color?: string; corners?: string; logoText?: string; headingFace?: string; logoUrl?: string };
     words?: { request?: string; committee?: string; assistantName?: string; reviewingTeam?: string; reconciliation?: string };
+    connections?: { salesforce?: { mode: "simulated" | "live"; enabled: boolean; version: number } };
   };
   organization?: { id: string; name: string; country: string };
   assistant: { provider: string; model: string; label: string };
@@ -89,6 +90,7 @@ export interface InfoRequest {
 }
 
 export type RequestStatus =
+  | "with-salesforce"
   | "draft" | "submitted" | "in-review" | "info-requested" | "committee" | "approved" | "declined"
   | "agreement" | "payment" | "active" | "reconciliation" | "outcomes" | "closed" | "withdrawn";
 

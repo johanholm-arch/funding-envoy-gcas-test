@@ -97,7 +97,7 @@ export async function authRoutes(app: FastifyInstance) {
       const org = u.orgId ? await one<{ id: string; legal_name: string; country: string }>(tx, "select id, legal_name, country from organizations where id = $1", [u.orgId]) : undefined;
       return {
         user: { id: u.id, name: u.name, title: u.title, email: u.email, kind: u.kind, roles: u.roles },
-        tenant: t ? { id: t.id, slug: t.slug, name: t.name, brand: withLogoUrl(t.settings.brand), words: t.settings.words, demo: Boolean(t.settings.demo) } : undefined,
+        tenant: t ? { id: t.id, slug: t.slug, name: t.name, brand: withLogoUrl(t.settings.brand), words: t.settings.words, demo: Boolean(t.settings.demo), connections: t.settings.connections } : undefined,
         organization: org ? { id: org.id, name: org.legal_name, country: org.country } : undefined,
         assistant: { provider: p.name, model: p.model, label: p.name === "demo" ? "Demo assistant: reads labelled facts and keywords; no AI model is called" : `Claude (${p.model})` },
       };

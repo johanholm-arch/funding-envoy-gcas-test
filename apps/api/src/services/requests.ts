@@ -175,7 +175,8 @@ export function view(l: Loaded, checks = l.state.checks): RequestView {
     progress: requiredProgress(l),
     documents: dedupeDocs(l.docs),
     versions: l.state.versions,
-    stage: { id: l.state.stage, name: stage?.name ?? l.state.stage, enteredAt: l.row.stage_entered_at.toISOString() },
+    // A request kept by the funder's Salesforce org is past FundingEnvoy's own stages.
+    stage: { id: l.state.stage, name: l.state.external ? "With the grants team" : stage?.name ?? l.state.stage, enteredAt: l.row.stage_entered_at.toISOString() },
     catalogue: { subtypes: l.cfg.catalogue.subtypes.map((s) => ({ id: s.id, name: s.name, family: s.family })), attestations: l.cfg.catalogue.attestations, coiQuestions: l.cfg.catalogue.coiQuestions },
     documentRequirements: l.subtype?.documents ?? [],
   };

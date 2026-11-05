@@ -77,6 +77,10 @@ export function StudioSetup() {
           ))}
         </ol>
         <p className="help">Every step saves a draft. Nothing changes for requests until you publish in step 6. Requests already started keep the setup they started with.</p>
+        <div className="stack" style={{ gap: 4 }}>
+          <span className="eyebrow">Connections</span>
+          <Link className="small" to="/studio/connect">Salesforce{me.tenant?.connections?.salesforce?.enabled ? " · connected" : ""}</Link>
+        </div>
         <Link className="small" to="/studio/advanced">Advanced: every section in detail</Link>
       </nav>
 

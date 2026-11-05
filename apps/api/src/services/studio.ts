@@ -8,6 +8,7 @@ import { configVersion, invalidateConfigCache, loadPacks, tenantConfig, type Con
 import { record } from "./requests.ts";
 import { evaluateCases, type TestCase, type TestsetReport } from "../testset.ts";
 import { getFile, putFile } from "../storage.ts";
+import { validateStored, type ConnectorConfig } from "./connector.ts";
 
 const KINDS: ConfigKind[] = ["catalogue", "rulebook", "workflow", "autonomy", "brand", "words", "policy", "sop", "testset"];
 
@@ -144,6 +145,7 @@ export async function validate(u: SessionUser, kind: ConfigKind, version: number
     for (const o of pol.overrides ?? []) if (!wf.stages.some((s) => s.id === o.stage)) issues.push({ severity: "error", where: o.stage, message: `There is no stage "${o.stage}" in the published workflow.` });
     if (pol.confidenceFloor < 0 || pol.confidenceFloor > 1) issues.push({ severity: "error", message: "Confidence floor must be between 0 and 1." });
   }
+  if (kind === "connector") issues.push(...await asUser(u, (tx) => validateStored(tx, u.tenantId!, v.body as ConnectorConfig)));
   if (tests && tests.passed < tests.total) issues.push({ severity: "error", message: `${tests.total - tests.passed} of ${tests.total} test cases disagree with this version. Fix the rules or the cases, or accept the differences with a reason when publishing.` });
   return { issues, tests };
 }
@@ -165,6 +167,10 @@ export async function publish(u: SessionUser, kind: ConfigKind, version: number,
     // Brand and words are read on every page; the funder's settings carry the published version.
     if (kind === "brand" || kind === "words") {
       await tx.query("update tenants set settings = jsonb_set(settings, $2::text[], $3::jsonb) where id = $1", [u.tenantId, [kind], JSON.stringify(body)]);
+    }
+    if (kind === "connector") {
+      const c = body as unknown as ConnectorConfig;
+      await tx.query("update tenants set settings = jsonb_set(settings, '{connections}', $2::jsonb) where id = $1", [u.tenantId, JSON.stringify({ salesforce: { mode: c.mode, enabled: c.enabled, version } })]);
     }
     const d = prev ? diffBodies(kind, prev.body, draft.body) : { summary: "First version" };
     await record(tx, { tenantId: u.tenantId!, actor: actorOf(u), entity: { type: "config", id: `${kind}:${version}` }, action: "config.published",

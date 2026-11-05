@@ -46,6 +46,9 @@ and mount `/data` so uploaded documents survive restarts. Changing `FE_RESEED_TO
 6. **Configuration and analytics.** Jane Whitfield owns the Studio and Ask.
 7. **Operations.** Sophie Brandt runs the managed service across both tenants.
 8. **Access.** Ana Ferreira manages people and single sign-on.
+9. **Salesforce.** As Sophie Brandt, add a US funder in Operations. Sign in as its process owner, open Studio,
+   Connections, Salesforce, and connect the simulated org. Submit a request to that funder as Teresa Quinlan (Heartline,
+   files in `content/halden/documents/heartline/`), then act on it in the Salesforce page as the process owner.
 
 ## The assistant
 
@@ -61,6 +64,8 @@ disclosure submission.
 
 - **E-signature (DocuSign) and ERP (SAP).** Simulated connectors. They record what they would send, as connector
   actions in the trail.
+- **Salesforce.** A simulated org with a packaged grants app (namespace `gx`), its rules, Flow and platform events. The
+  connector writes and listens exactly as it would against a live org.
 - **Screening lists.** Simulated per country.
 - **Single sign-on.** Runs against a built-in demo identity provider. Real OIDC providers work through the same code
   path.
