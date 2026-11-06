@@ -34,6 +34,12 @@ interface View {
   feFields: FeField[]; feDocTypes: { type: string; label: string }[];
   health: { cursor: number; cursorAt?: string; links: Record<string, number> };
   issues: { severity: "error" | "warning"; where?: string; message: string }[];
+  live: Live;
+}
+interface Live {
+  configured: boolean; myDomain?: string; clientIdHint?: string; savedBy?: string; savedAt?: string;
+  lastTest?: { ok: boolean; at: string; error?: string; message?: string; org?: { name: string; edition: string; sandbox: boolean; instance?: string; apiVersion: string }; user?: { username?: string; name?: string }; limits?: { DailyApiRequests: { Max: number; Remaining: number } } };
+  snapshot?: { readBy: string; readAt: string; org: { name: string }; objects: { name: string; label: string; fields: number; custom: boolean }[]; validationRules: { object: string; name: string; description: string; errorMessage: string }[]; found?: { totalObjects: number; customObjects: number }; note?: string };
 }
 interface TestResult { org: { name: string; edition: string; apiVersion: string; myDomain: string }; limits: { DailyApiRequests: { Max: number; Remaining: number } }; identity: { integrationUser: string; profile: string; permissionSet: string } }
 interface Trial { ok: boolean; sample: string; payload: Record<string, unknown>; result: { id?: string; success: boolean; note?: string; errors?: { errorCode: string; message: string; fields: string[] }[] } }
@@ -57,6 +63,8 @@ export function StudioConnect() {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => { if (v.data) { setCfg(v.data.config); setDirty(false); setDomain((d) => d || v.data!.config?.connection.myDomain || v.data!.defaults.myDomain); } }, [v.data]);
+  const liveSaved = Boolean(v.data?.live.configured);
+  useEffect(() => { if (liveSaved) setMode("live"); }, [liveSaved]);
   const snap = v.data?.snapshot;
   const reqObj = snap?.objects.find((o) => o.name === (cfg?.objects.request ?? "gx__Request__c"));
   const docObj = snap?.objects.find((o) => o.name === (cfg?.objects.document ?? "ContentVersion"));
@@ -92,7 +100,7 @@ export function StudioConnect() {
         </p>
       </div>
 
-      <Step n={1} title="Connection" done={d.connected} lead="Which Salesforce org, and how FundingEnvoy signs in to it.">
+      <Step n={1} title="Connection" done={mode === "live" ? Boolean(d.live.lastTest?.ok) : d.connected} lead="Which Salesforce org, and how FundingEnvoy signs in to it.">
         <div className="connect-modes" role="radiogroup" aria-label="Which org">
           <button type="button" role="radio" aria-checked={mode === "simulated"} className="setup-card connect-mode" onClick={() => setMode("simulated")}>
             <span style={{ fontWeight: 600 }}>Simulated org</span>
@@ -100,9 +108,10 @@ export function StudioConnect() {
           </button>
           <button type="button" role="radio" aria-checked={mode === "live"} className="setup-card connect-mode" onClick={() => setMode("live")}>
             <span style={{ fontWeight: 600 }}>Your company's org</span>
-            <span className="small muted">Needs an External Client App created by your Salesforce admin and network access from FundingEnvoy to the org. Not available yet.</span>
+            <span className="small muted">Your Salesforce org, or a test copy of it. Needs an External Client App created by your Salesforce admin. Read-only for now: test the connection and read the org.</span>
           </button>
         </div>
+        {mode === "live" ? <LiveConnect live={d.live} canEdit={canEdit} onChanged={() => void v.refetch()} /> : (<>
         <div className="row" style={{ alignItems: "flex-end" }}>
           <div className="stack" style={{ gap: 4, flex: "1 1 320px" }}>
             <label className="label" htmlFor="sf-domain">My Domain</label>
@@ -123,8 +132,10 @@ export function StudioConnect() {
             <div><dt>Signs in as</dt><dd>{test.identity.integrationUser} · {test.identity.profile} · permission set “{test.identity.permissionSet}”, for background work. Requests are written as the requestor.</dd></div>
           </dl>
         ) : d.connected && d.limits ? <p className="small" style={{ color: "var(--accent)" }}>Connected. {d.limits.DailyApiRequests.Remaining.toLocaleString("en-US")} of {d.limits.DailyApiRequests.Max.toLocaleString("en-US")} API calls left today.</p> : null}
+        </>)}
       </Step>
 
+      {mode === "live" ? <LiveRead live={d.live} canEdit={canEdit} onChanged={() => void v.refetch()} /> : (<>
       <Step n={2} title="Read the org" done={Boolean(snap)} lead="FundingEnvoy reads the grants app's objects, fields, lists of values and the checks Salesforce runs on save. Nothing is hard-coded.">
         {canEdit ? <div><button type="button" className={`btn ${snap ? "quiet" : ""}`} disabled={!d.connected || Boolean(busy)} onClick={() => void run("read", () => api.post<{ changes: string[] }>("/api/connect/salesforce/read", { myDomain: domain }), "Org read").then((r) => { if (r) void v.refetch(); })}>{busy === "read" ? "Reading…" : snap ? "Read the org again" : "Read the org"}</button></div> : null}
         {!d.connected ? <p className="help">Test the connection first.</p> : null}
@@ -269,6 +280,7 @@ export function StudioConnect() {
           ) : null}
         </>
       ) : null}
+      </>)}
     </div>
   );
 }
@@ -283,5 +295,113 @@ function Step({ n, title, lead, done, children }: { n: number; title: string; le
       <p className="muted small" style={{ marginTop: -6 }}>{lead}</p>
       {children}
     </section>
+  );
+}
+
+// ─── The company's own org ──────────────────────────────────────────────────
+
+function LiveConnect({ live, canEdit, onChanged }: { live: Live; canEdit: boolean; onChanged: () => void }) {
+  const toast = useToast();
+  const [domain, setDomain] = useState(live.myDomain ?? "");
+  const [key, setKey] = useState("");
+  const [secret, setSecret] = useState("");
+  const [editing, setEditing] = useState(!live.configured);
+  const [busy, setBusy] = useState<string>();
+  const [err, setErr] = useState<string>();
+  async function run(k: string, fn: () => Promise<unknown>, ok: string) {
+    setBusy(k); setErr(undefined);
+    try { await fn(); toast(ok); onChanged(); return true; } catch (e) { setErr(errorText(e)); onChanged(); return false; } finally { setBusy(undefined); }
+  }
+  async function saveAndTest() {
+    if (!(await run("save", () => api.post("/api/connect/salesforce/live/credentials", { myDomain: domain, clientId: key || undefined, clientSecret: secret || undefined }), "Saved"))) return;
+    setEditing(false); setKey(""); setSecret("");
+    await run("test", () => api.post("/api/connect/salesforce/live/test"), "Connected to Salesforce");
+  }
+  const t = live.lastTest;
+  return (
+    <div className="stack" style={{ gap: 12 }}>
+      <p className="small">Read-only: FundingEnvoy signs in, reads who it is and what the org looks like, and writes nothing. <a href="https://github.com/johanholm-arch/funding-envoy-gcas-test/blob/main/docs/SALESFORCE-TEST-CONNECTION.md" target="_blank" rel="noreferrer">How to set up the Salesforce side</a></p>
+      {live.configured && !editing ? (
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <span className="small">Saved: <span className="mono">{live.myDomain}</span> · consumer key <span className="mono">{live.clientIdHint}</span> · secret stored encrypted · by {live.savedBy} on {fmtDate(live.savedAt)}</span>
+          {canEdit ? (
+            <span className="row">
+              <button type="button" className="btn" disabled={Boolean(busy)} onClick={() => void run("test", () => api.post("/api/connect/salesforce/live/test"), "Connected to Salesforce")}>{busy === "test" ? "Testing…" : "Test connection"}</button>
+              <button type="button" className="btn small quiet" onClick={() => { setEditing(true); setDomain(live.myDomain ?? ""); }}>Change</button>
+              <button type="button" className="btn small quiet danger" disabled={Boolean(busy)} onClick={() => { if (window.confirm("Remove the saved Salesforce key and secret?")) void run("remove", () => api.post("/api/connect/salesforce/live/remove"), "Removed").then(() => setEditing(true)); }}>Remove</button>
+            </span>
+          ) : null}
+        </div>
+      ) : canEdit ? (
+        <form className="stack" style={{ gap: 10 }} onSubmit={(e) => { e.preventDefault(); void saveAndTest(); }}>
+          <div className="stack" style={{ gap: 4 }}>
+            <label className="label" htmlFor="live-domain">My Domain address</label>
+            <input id="live-domain" className="input" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="yourcompany--test.sandbox.my.salesforce.com" autoComplete="off" spellCheck={false} />
+            <span className="help">In Salesforce: Setup, then My Domain. It ends in .my.salesforce.com.</span>
+          </div>
+          <div className="stack" style={{ gap: 4 }}>
+            <label className="label" htmlFor="live-key">Consumer key</label>
+            <input id="live-key" className="input mono" value={key} onChange={(e) => setKey(e.target.value)} placeholder={live.clientIdHint ? `Saved (${live.clientIdHint}); paste to replace` : "From the External Client App"} autoComplete="off" spellCheck={false} />
+          </div>
+          <div className="stack" style={{ gap: 4 }}>
+            <label className="label" htmlFor="live-secret">Consumer secret</label>
+            <input id="live-secret" className="input mono" type="password" value={secret} onChange={(e) => setSecret(e.target.value)} placeholder={live.configured ? "Saved; paste to replace" : "From the External Client App"} autoComplete="new-password" />
+            <span className="help">Stored encrypted. It is never shown again, here or anywhere else.</span>
+          </div>
+          <div className="row">
+            <button type="submit" className="btn" disabled={Boolean(busy) || !domain.trim() || (!live.configured && (!key.trim() || !secret.trim()))}>{busy ? "Connecting…" : "Save and test connection"}</button>
+            {live.configured ? <button type="button" className="btn quiet" onClick={() => setEditing(false)}>Cancel</button> : null}
+          </div>
+        </form>
+      ) : <p className="muted small">Only the process owner can connect the company's org.</p>}
+      {err ? <p className="error-text" role="alert">{err}</p> : null}
+      {t ? (t.ok && t.org ? (
+        <dl className="connect-facts">
+          <div><dt>Org</dt><dd>{t.org.name} · {t.org.edition}{t.org.sandbox ? " · sandbox" : ""}</dd></div>
+          <div><dt>Signed in as</dt><dd>{t.user?.username ?? t.user?.name}</dd></div>
+          <div><dt>API calls left today</dt><dd>{t.limits?.DailyApiRequests.Remaining.toLocaleString("en-US")} of {t.limits?.DailyApiRequests.Max.toLocaleString("en-US")}</dd></div>
+          <div><dt>Last tested</dt><dd>{fmtDate(t.at)} · worked</dd></div>
+        </dl>
+      ) : !err ? <p className="error-text">Last test on {fmtDate(t.at)} didn't work: {t.message}</p> : null) : null}
+    </div>
+  );
+}
+
+function LiveRead({ live, canEdit, onChanged }: { live: Live; canEdit: boolean; onChanged: () => void }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string>();
+  const s = live.snapshot;
+  async function read() {
+    setBusy(true); setErr(undefined);
+    try { await api.post("/api/connect/salesforce/live/read"); toast("Org read"); onChanged(); } catch (e) { setErr(errorText(e)); } finally { setBusy(false); }
+  }
+  return (
+    <>
+      <Step n={2} title="Read the org" done={Boolean(s)} lead="FundingEnvoy reads the objects a grants app is built on: organizations, files, Salesforce's Grants Management objects if you have them, and custom objects whose names suggest grants. Plus the checks Salesforce runs on save.">
+        {canEdit ? <div><button type="button" className={`btn ${s ? "quiet" : ""}`} disabled={busy || !live.lastTest?.ok} onClick={() => void read()}>{busy ? "Reading…" : s ? "Read the org again" : "Read the org"}</button></div> : null}
+        {!live.lastTest?.ok ? <p className="help">Test the connection first.</p> : null}
+        {err ? <p className="error-text" role="alert">{err}</p> : null}
+        {s ? (
+          <>
+            <p className="small">Read {fmtDate(s.readAt)} by {s.readBy}: {s.org.name}. {s.found ? `The org has ${s.found.totalObjects.toLocaleString("en-US")} objects, ${s.found.customObjects} of them custom; FundingEnvoy read the ${s.objects.length} below.` : ""}</p>
+            <table className="connect-table">
+              <thead><tr><th>Object</th><th>API name</th><th>Fields</th></tr></thead>
+              <tbody>{s.objects.map((o) => <tr key={o.name}><td>{o.label}{o.custom ? <span className="chip sys" style={{ marginLeft: 6 }}>Custom</span> : null}</td><td className="mono small">{o.name}</td><td>{o.fields}</td></tr>)}</tbody>
+            </table>
+            {s.validationRules.length ? (
+              <details>
+                <summary className="small" style={{ cursor: "pointer", color: "var(--accent)" }}>What Salesforce checks on save ({s.validationRules.length} validation rules)</summary>
+                <ul className="setup-checks">{s.validationRules.map((r) => <li key={`${r.object}.${r.name}`}><span>{r.description || r.name}</span><span className="help">Validation rule <span className="mono">{r.name}</span> on {r.object}: “{r.errorMessage}”</span></li>)}</ul>
+              </details>
+            ) : null}
+            {s.note ? <p className="small" style={{ color: "var(--warn)" }}>{s.note}</p> : null}
+          </>
+        ) : null}
+      </Step>
+      <section className="setup-note">
+        Next, once you know which object holds your grant requests: match FundingEnvoy's fields to it and let it write, as the simulated org shows today. Choose “Simulated org” above to see the whole flow.
+      </section>
+    </>
   );
 }

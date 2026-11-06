@@ -67,6 +67,16 @@ information, commenting, approving or declining there comes back as platform eve
 the requestor's tasks and status. The simulated org enforces required fields, restricted picklists, field lengths,
 validation rules and a duplicate rule with Salesforce's error codes; it found two real bugs during the build.
 
+## A real Salesforce org, read-only (6 November 2026)
+
+Studio's Connect to Salesforce page can now connect to a real org: choose "Your company's org", paste the My Domain
+address and the consumer key and secret of an External Client App (client credentials flow), and test. FundingEnvoy
+shows the org, its edition, the user it signed in as and the API calls left today, then reads the objects a grants
+app is built on and the active validation rules. It writes nothing. The secret is encrypted at rest (AES-256-GCM) and
+never returned; only Salesforce My Domain addresses are called; every test and reading is in the audit trail. Setup
+steps for the Salesforce side: `docs/SALESFORCE-TEST-CONNECTION.md`. Tested against a stand-in server that answers
+like Salesforce, since the build environment cannot reach Salesforce.
+
 ## Found and fixed along the way
 
 - **Money across currencies.** Ask added dollars, pounds and euros together. Money is now reported per currency.
