@@ -107,7 +107,10 @@ interface GlobalObject { name: string; label: string; custom: boolean; queryable
 // Objects worth reading: the standard ones a grants app builds on, Salesforce's own Grants Management objects, and
 // custom objects whose names suggest grants. A packaged app's objects carry its namespace, e.g. gx__Request__c.
 const STANDARD = ["Account", "Contact", "ContentVersion", "IndividualApplication", "FundingAward", "FundingOpportunity", "ApplicationReview", "ApplicationDecision", "Budget"];
-const GRANTISH = /grant|request|application|funding|award|payee|disburse|reconcil|donation|sponsor|comment|review/i;
+// Strong words point at a grants app; weak ones also match other apps' requests, so they are read after the strong ones.
+const STRONG = /grant|fund|award|donat|sponsor|contribution|educat|\bime\b|charit|payee|disburse|reconcil/i;
+const WEAK = /request|application|comment|review|proposal/i;
+const MAX_READ = 60;
 
 const TYPE_MAP: Record<string, string> = { id: "id", string: "string", textarea: "textarea", currency: "currency", double: "double", percent: "double", int: "int", boolean: "boolean", date: "date", datetime: "datetime", picklist: "picklist", multipicklist: "string", reference: "reference", email: "string", phone: "string", url: "string", combobox: "picklist" };
 
@@ -117,10 +120,11 @@ export async function readOrg(c: Client, myDomain: string) {
   const global = await c.get<{ sobjects: GlobalObject[] }>(`/services/data/v${API_VERSION}/sobjects`);
   const names = new Set(global.sobjects.map((o) => o.name));
   const custom = global.sobjects.filter((o) => o.custom && o.queryable && o.name.endsWith("__c"));
-  const picked = [
-    ...STANDARD.filter((n) => names.has(n)),
-    ...custom.filter((o) => GRANTISH.test(`${o.name} ${o.label}`)).map((o) => o.name),
-  ].slice(0, 25);
+  const text = (o: GlobalObject) => `${o.name.replace(/_/g, " ")} ${o.label}`;
+  const strong = custom.filter((o) => STRONG.test(text(o)));
+  const weak = custom.filter((o) => !STRONG.test(text(o)) && WEAK.test(text(o)));
+  const matched = [...STANDARD.filter((n) => names.has(n)), ...strong.map((o) => o.name), ...weak.map((o) => o.name)];
+  const picked = matched.slice(0, MAX_READ);
   const objects = [];
   for (const name of picked) {
     const d = await c.get<{ name: string; label: string; fields: DescribeField[] }>(`/services/data/v${API_VERSION}/sobjects/${encodeURIComponent(name)}/describe`);
@@ -150,7 +154,12 @@ export async function readOrg(c: Client, myDomain: string) {
   return {
     org: { name: t.org.name, edition: t.org.edition, apiVersion: API_VERSION, namespace: "", myDomain: normalizeDomain(myDomain), licences: 0, sandbox: t.org.sandbox },
     objects, validationRules, duplicateRules: [] as { object: string; name: string; description: string }[], flows: [] as { name: string; description: string }[],
-    found: { totalObjects: global.sobjects.length, customObjects: custom.length, read: picked },
+    found: {
+      totalObjects: global.sobjects.length, customObjects: custom.length, read: picked,
+      notRead: matched.slice(MAX_READ).map((n) => ({ name: n, label: custom.find((o) => o.name === n)?.label ?? n })),
+      // Every custom object's name, so a grants app with unexpected names can still be spotted.
+      allCustom: custom.map((o) => ({ name: o.name, label: o.label })),
+    },
     note,
   };
 }

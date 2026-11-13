@@ -115,6 +115,9 @@ describe("a real Salesforce org, read-only", () => {
     expect(r.validationRules[0]).toMatchObject({ object: "acme__Grant_Request__c", errorMessage: "Requested amount must be positive." });
     const v = (await d.call("owner", "GET", "/api/connect/salesforce")).live;
     expect(v.snapshot.objects.find((o: { name: string }) => o.name === "acme__Grant_Request__c")).toMatchObject({ fields: 3, custom: true });
+    // Every custom object is listed by name, so a grants app with unexpected names can still be spotted.
+    expect(v.snapshot.found.allCustom.map((o: { name: string }) => o.name)).toEqual(["acme__Grant_Request__c", "acme__Invoice__c"]);
+    expect(v.snapshot.found.notRead).toEqual([]);
     // The simulated org's mapping is untouched by reading a real org.
     expect((await d.call("owner", "GET", "/api/connect/salesforce")).snapshot).toBeUndefined();
   });

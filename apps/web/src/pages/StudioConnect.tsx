@@ -39,7 +39,7 @@ interface View {
 interface Live {
   configured: boolean; myDomain?: string; clientIdHint?: string; savedBy?: string; savedAt?: string;
   lastTest?: { ok: boolean; at: string; error?: string; message?: string; org?: { name: string; edition: string; sandbox: boolean; instance?: string; apiVersion: string }; user?: { username?: string; name?: string }; limits?: { DailyApiRequests: { Max: number; Remaining: number } } };
-  snapshot?: { readBy: string; readAt: string; org: { name: string }; objects: { name: string; label: string; fields: number; custom: boolean }[]; validationRules: { object: string; name: string; description: string; errorMessage: string }[]; found?: { totalObjects: number; customObjects: number }; note?: string };
+  snapshot?: { readBy: string; readAt: string; org: { name: string }; objects: { name: string; label: string; fields: number; custom: boolean }[]; validationRules: { object: string; name: string; description: string; errorMessage: string }[]; found?: { totalObjects: number; customObjects: number; notRead?: { name: string; label: string }[]; allCustom?: { name: string; label: string }[] }; note?: string };
 }
 interface TestResult { org: { name: string; edition: string; apiVersion: string; myDomain: string }; limits: { DailyApiRequests: { Max: number; Remaining: number } }; identity: { integrationUser: string; profile: string; permissionSet: string } }
 interface Trial { ok: boolean; sample: string; payload: Record<string, unknown>; result: { id?: string; success: boolean; note?: string; errors?: { errorCode: string; message: string; fields: string[] }[] } }
@@ -389,6 +389,13 @@ function LiveRead({ live, canEdit, onChanged }: { live: Live; canEdit: boolean; 
               <thead><tr><th>Object</th><th>API name</th><th>Fields</th></tr></thead>
               <tbody>{s.objects.map((o) => <tr key={o.name}><td>{o.label}{o.custom ? <span className="chip sys" style={{ marginLeft: 6 }}>Custom</span> : null}</td><td className="mono small">{o.name}</td><td>{o.fields}</td></tr>)}</tbody>
             </table>
+            {s.found?.notRead?.length ? <p className="small" style={{ color: "var(--warn)" }}>{s.found.notRead.length} more objects matched but weren't read: {s.found.notRead.map((o) => `${o.label} (${o.name})`).join(", ")}.</p> : null}
+            {s.found?.allCustom?.length ? (
+              <details>
+                <summary className="small" style={{ cursor: "pointer", color: "var(--accent)" }}>All {s.found.allCustom.length} custom objects in the org, to spot the grants app</summary>
+                <table className="connect-table"><tbody>{s.found.allCustom.map((o) => <tr key={o.name}><td className="small">{o.label}</td><td className="mono small">{o.name}</td></tr>)}</tbody></table>
+              </details>
+            ) : null}
             {s.validationRules.length ? (
               <details>
                 <summary className="small" style={{ cursor: "pointer", color: "var(--accent)" }}>What Salesforce checks on save ({s.validationRules.length} validation rules)</summary>
