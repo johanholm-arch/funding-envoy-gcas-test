@@ -39,7 +39,7 @@ interface View {
 interface Live {
   configured: boolean; myDomain?: string; clientIdHint?: string; savedBy?: string; savedAt?: string;
   lastTest?: { ok: boolean; at: string; error?: string; message?: string; org?: { name: string; edition: string; sandbox: boolean; instance?: string; apiVersion: string }; user?: { username?: string; name?: string }; limits?: { DailyApiRequests: { Max: number; Remaining: number } } };
-  snapshot?: { readBy: string; readAt: string; org: { name: string }; objects: { name: string; label: string; fields: number; custom: boolean }[]; validationRules: { object: string; name: string; description: string; errorMessage: string }[]; found?: { totalObjects: number; customObjects: number; notRead?: { name: string; label: string }[]; allCustom?: { name: string; label: string }[] }; note?: string };
+  snapshot?: { readBy: string; readAt: string; org: { name: string }; objects: { name: string; label: string; fields: number; custom: boolean }[]; validationRules: { object: string; name: string; description: string; errorMessage: string }[]; found?: { totalObjects: number; customObjects: number; prefixes?: string[]; appObjects?: number; notRead?: { name: string; label: string }[]; allCustom?: { name: string; label: string }[] }; note?: string };
 }
 interface TestResult { org: { name: string; edition: string; apiVersion: string; myDomain: string }; limits: { DailyApiRequests: { Max: number; Remaining: number } }; identity: { integrationUser: string; profile: string; permissionSet: string } }
 interface Trial { ok: boolean; sample: string; payload: Record<string, unknown>; result: { id?: string; success: boolean; note?: string; errors?: { errorCode: string; message: string; fields: string[] }[] } }
@@ -372,19 +372,30 @@ function LiveRead({ live, canEdit, onChanged }: { live: Live; canEdit: boolean; 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string>();
   const s = live.snapshot;
+  const [prefix, setPrefix] = useState(s?.found?.prefixes?.join(", ") ?? "");
   async function read() {
     setBusy(true); setErr(undefined);
-    try { await api.post("/api/connect/salesforce/live/read"); toast("Org read"); onChanged(); } catch (e) { setErr(errorText(e)); } finally { setBusy(false); }
+    const prefixes = prefix.split(/[,\s]+/).map((p) => p.trim()).filter(Boolean);
+    try { await api.post("/api/connect/salesforce/live/read", { prefixes }); toast("Org read"); onChanged(); } catch (e) { setErr(errorText(e)); } finally { setBusy(false); }
   }
   return (
     <>
       <Step n={2} title="Read the org" done={Boolean(s)} lead="FundingEnvoy reads the objects a grants app is built on: organizations, files, Salesforce's Grants Management objects if you have them, and custom objects whose names suggest grants. Plus the checks Salesforce runs on save.">
-        {canEdit ? <div><button type="button" className={`btn ${s ? "quiet" : ""}`} disabled={busy || !live.lastTest?.ok} onClick={() => void read()}>{busy ? "Reading…" : s ? "Read the org again" : "Read the org"}</button></div> : null}
+        {canEdit ? (
+          <div className="row" style={{ alignItems: "flex-end" }}>
+            <div className="stack" style={{ gap: 4 }}>
+              <label className="label" htmlFor="live-prefix">Your grants app's prefix (optional)</label>
+              <input id="live-prefix" className="input mono" style={{ width: 220 }} value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="for example ENGAGE" autoComplete="off" spellCheck={false} />
+            </div>
+            <button type="button" className={`btn ${s ? "quiet" : ""}`} disabled={busy || !live.lastTest?.ok} onClick={() => void read()}>{busy ? "Reading…" : s ? "Read the org again" : "Read the org"}</button>
+          </div>
+        ) : null}
+        {canEdit ? <p className="help">The prefix is the part before the two underscores in the app's object names: ENGAGE in ENGAGE__FMVRequest__c. With it, FundingEnvoy reads every object of that app; without it, it guesses from the names.</p> : null}
         {!live.lastTest?.ok ? <p className="help">Test the connection first.</p> : null}
         {err ? <p className="error-text" role="alert">{err}</p> : null}
         {s ? (
           <>
-            <p className="small">Read {fmtDate(s.readAt)} by {s.readBy}: {s.org.name}. {s.found ? `The org has ${s.found.totalObjects.toLocaleString("en-US")} objects, ${s.found.customObjects} of them custom; FundingEnvoy read the ${s.objects.length} below.` : ""}</p>
+            <p className="small">Read {fmtDate(s.readAt)} by {s.readBy}: {s.org.name}. {s.found ? `The org has ${s.found.totalObjects.toLocaleString("en-US")} objects, ${s.found.customObjects} of them custom. ${s.found.prefixes?.length ? `The ${s.found.prefixes.join(", ")} app has ${s.found.appObjects ?? 0}; ` : ""}FundingEnvoy read the ${s.objects.length} below.` : ""}</p>
             <table className="connect-table">
               <thead><tr><th>Object</th><th>API name</th><th>Fields</th></tr></thead>
               <tbody>{s.objects.map((o) => <tr key={o.name}><td>{o.label}{o.custom ? <span className="chip sys" style={{ marginLeft: 6 }}>Custom</span> : null}</td><td className="mono small">{o.name}</td><td>{o.fields}</td></tr>)}</tbody>

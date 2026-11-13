@@ -115,7 +115,14 @@ const MAX_READ = 60;
 const TYPE_MAP: Record<string, string> = { id: "id", string: "string", textarea: "textarea", currency: "currency", double: "double", percent: "double", int: "int", boolean: "boolean", date: "date", datetime: "datetime", picklist: "picklist", multipicklist: "string", reference: "reference", email: "string", phone: "string", url: "string", combobox: "picklist" };
 
 /** Reads the org's grants-related objects and its active validation rules, in the same shape as the simulated org. */
-export async function readOrg(c: Client, myDomain: string) {
+/** A packaged app's prefix (its namespace), as typed: "ENGAGE", "ENGAGE__" or "engage" all mean the same. */
+export function normalizePrefix(p: string): string {
+  const v = p.trim().replace(/_+$/, "");
+  if (!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(v)) throw new SfLiveError("bad-prefix", "A prefix is the letters before the two underscores in an object's API name, for example ENGAGE in ENGAGE__FMVRequest__c.");
+  return v;
+}
+
+export async function readOrg(c: Client, myDomain: string, opts: { prefixes?: string[] } = {}) {
   const t = await testOrg(c);
   const global = await c.get<{ sobjects: GlobalObject[] }>(`/services/data/v${API_VERSION}/sobjects`);
   const names = new Set(global.sobjects.map((o) => o.name));
@@ -123,8 +130,13 @@ export async function readOrg(c: Client, myDomain: string) {
   const text = (o: GlobalObject) => `${o.name.replace(/_/g, " ")} ${o.label}`;
   const strong = custom.filter((o) => STRONG.test(text(o)));
   const weak = custom.filter((o) => !STRONG.test(text(o)) && WEAK.test(text(o)));
-  const matched = [...STANDARD.filter((n) => names.has(n)), ...strong.map((o) => o.name), ...weak.map((o) => o.name)];
-  const picked = matched.slice(0, MAX_READ);
+  // With a prefix, read exactly that app's objects; otherwise guess from the names.
+  const prefixes = (opts.prefixes ?? []).map((p) => `${normalizePrefix(p).toLowerCase()}__`);
+  const ofApp = custom.filter((o) => prefixes.some((p) => o.name.toLowerCase().startsWith(p)));
+  const matched = prefixes.length
+    ? [...STANDARD.filter((n) => names.has(n)), ...ofApp.map((o) => o.name)]
+    : [...STANDARD.filter((n) => names.has(n)), ...strong.map((o) => o.name), ...weak.map((o) => o.name)];
+  const picked = matched.slice(0, prefixes.length ? 120 : MAX_READ);
   const objects = [];
   for (const name of picked) {
     const d = await c.get<{ name: string; label: string; fields: DescribeField[] }>(`/services/data/v${API_VERSION}/sobjects/${encodeURIComponent(name)}/describe`);
@@ -155,8 +167,8 @@ export async function readOrg(c: Client, myDomain: string) {
     org: { name: t.org.name, edition: t.org.edition, apiVersion: API_VERSION, namespace: "", myDomain: normalizeDomain(myDomain), licences: 0, sandbox: t.org.sandbox },
     objects, validationRules, duplicateRules: [] as { object: string; name: string; description: string }[], flows: [] as { name: string; description: string }[],
     found: {
-      totalObjects: global.sobjects.length, customObjects: custom.length, read: picked,
-      notRead: matched.slice(MAX_READ).map((n) => ({ name: n, label: custom.find((o) => o.name === n)?.label ?? n })),
+      totalObjects: global.sobjects.length, customObjects: custom.length, read: picked, prefixes: prefixes.map((p) => p.slice(0, -2).toUpperCase()), appObjects: ofApp.length,
+      notRead: matched.slice(prefixes.length ? 120 : MAX_READ).map((n) => ({ name: n, label: custom.find((o) => o.name === n)?.label ?? n })),
       // Every custom object's name, so a grants app with unexpected names can still be spotted.
       allCustom: custom.map((o) => ({ name: o.name, label: o.label })),
     },

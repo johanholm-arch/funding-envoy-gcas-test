@@ -20,7 +20,10 @@ export async function connectorRoutes(app: FastifyInstance) {
   });
   app.post("/api/connect/salesforce/live/remove", async (req) => removeCredentials(requireRole(req, [...edit])));
   app.post("/api/connect/salesforce/live/test", async (req) => testLive(requireRole(req, [...edit])));
-  app.post("/api/connect/salesforce/live/read", async (req) => readLive(requireRole(req, [...edit])));
+  app.post("/api/connect/salesforce/live/read", async (req) => {
+    const b = z.object({ prefixes: z.array(z.string().max(60)).max(5).optional() }).parse(req.body ?? {});
+    return readLive(requireRole(req, [...edit]), b.prefixes ?? []);
+  });
   app.post("/api/connect/salesforce/test", async (req) => {
     const b = z.object({ mode: z.enum(["simulated", "live"]), myDomain: z.string().max(120) }).parse(req.body);
     return testConnection(requireRole(req, [...edit]), b);

@@ -4,7 +4,7 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { one } from "@fe/db";
 import { asUser, HttpError, type SessionUser } from "../auth.ts";
-import { Client, readOrg, signIn, SfLiveError, testOrg, normalizeDomain } from "../connectors/salesforce-live.ts";
+import { Client, readOrg, signIn, SfLiveError, testOrg, normalizeDomain, normalizePrefix } from "../connectors/salesforce-live.ts";
 import { snapshotHash } from "../connectors/salesforce-sim.ts";
 import { record } from "./requests.ts";
 
@@ -106,11 +106,12 @@ export async function testLive(u: SessionUser) {
   }
 }
 
-export async function readLive(u: SessionUser) {
+export async function readLive(u: SessionUser, prefixes: string[] = []) {
   requireOwner(u);
+  try { prefixes.forEach(normalizePrefix); } catch (e) { throw new HttpError(400, (e as Error).message, "bad-prefix"); }
   try {
     const { client, domain } = await session(u);
-    const body = await readOrg(client, domain);
+    const body = await readOrg(client, domain, { prefixes });
     const hash = snapshotHash(body);
     await asUser(u, async (tx) => {
       await tx.query("insert into connector_snapshots (tenant_id, system, hash, body, read_by) values ($1,$2,$3,$4,$5) on conflict (tenant_id, system, hash) do update set read_at = now(), read_by = excluded.read_by", [u.tenantId, SNAPSHOT_SYSTEM, hash, JSON.stringify(body), u.name]);

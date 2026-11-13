@@ -122,6 +122,13 @@ describe("a real Salesforce org, read-only", () => {
     expect((await d.call("owner", "GET", "/api/connect/salesforce")).snapshot).toBeUndefined();
   });
 
+  it("reads every object of the grants app when told its prefix", async () => {
+    expect((await d.try("owner", "POST", "/api/connect/salesforce/live/read", { prefixes: ["not a prefix!"] })).status).toBe(400);
+    const r = await d.call("owner", "POST", "/api/connect/salesforce/live/read", { prefixes: ["acme__"] });
+    expect(r.objects.map((o: { name: string }) => o.name)).toEqual(["Account", "ContentVersion", "acme__Grant_Request__c", "acme__Invoice__c"]);
+    expect(r.found).toMatchObject({ prefixes: ["ACME"], appObjects: 2 });
+  });
+
   it("explains Salesforce's sign-in refusals in plain words", async () => {
     await d.call("owner", "POST", "/api/connect/salesforce/live/credentials", { myDomain: "acme--test.sandbox.my.salesforce.com", clientId: KEY, clientSecret: "wrong" });
     let t = await d.try("owner", "POST", "/api/connect/salesforce/live/test");
