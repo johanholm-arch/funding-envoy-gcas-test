@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { requireRole } from "../auth.ts";
-import { chooseRequestObject, connectPractice, findRequests, mappingView, saveMapping, searchRequests, wizardState } from "../services/connect-wizard.ts";
+import { chooseRequestObject, connectPractice, findRequests, mappingView, requestMapView, saveMapping, saveParts, searchRequests, wizardState } from "../services/connect-wizard.ts";
 import { liveReading, liveView, readLive, removeCredentials, saveCredentials, testLive } from "../services/connector-live.ts";
 import { connectView, readOrg, saveConfig, simAct, simConsole, testConnection, trialRun, type ConnectorConfig } from "../services/connector.ts";
 
@@ -32,6 +32,11 @@ export async function connectorRoutes(app: FastifyInstance) {
   app.post("/api/connect/salesforce/live/choose", async (req) => {
     const b = z.object({ name: z.string().min(1).max(90) }).parse(req.body);
     return chooseRequestObject(requireRole(req, [...edit]), b.name);
+  });
+  app.get("/api/connect/salesforce/live/request-map", async (req) => requestMapView(requireRole(req, [...view])));
+  app.post("/api/connect/salesforce/live/request-parts", async (req) => {
+    const b = z.object({ parts: z.array(z.string().max(90)).max(60) }).parse(req.body);
+    return saveParts(requireRole(req, [...edit]), b.parts);
   });
   app.get("/api/connect/salesforce/mapping", async (req) => {
     const q = z.object({ mode: z.enum(["simulated", "live"]) }).parse(req.query);

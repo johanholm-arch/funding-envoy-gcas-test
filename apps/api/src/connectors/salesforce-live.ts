@@ -287,3 +287,69 @@ export async function readRequestObject(c: Client, myDomain: string, name: strin
     requestObject: g.name, objects, validationRules, duplicateRules: [] as { object: string; name: string; description: string }[], flows: [] as { name: string; description: string }[], note,
   };
 }
+
+// ─── A request as a family of records: the parent, its request types, its children and what it links to ─────────
+
+interface DescribeFull { name: string; label: string; fields: DescribeField[]; childRelationships?: { childSObject: string; field: string; relationshipName: string | null }[]; recordTypeInfos?: { name: string; developerName: string; active?: boolean; available?: boolean; master?: boolean }[] }
+export interface MapNode { name: string; label: string; via: string; records?: number; byType?: Record<string, number>; children: MapNode[] }
+export interface RequestMap {
+  root: { name: string; label: string; records?: number; types: { name: string; developerName: string; records?: number }[] };
+  children: MapNode[];
+  links: { field: string; label: string; object: string; objectLabel: string }[];
+  documents: boolean;
+}
+
+// Standard children every record has (activities, history, sharing, chatter...): not parts of a grant request.
+const SYSTEM_CHILD = /^(ActivityHistory|AttachedContentDocument|CombinedAttachment|ContentDistribution|ContentVersion|DuplicateRecordItem|EmailMessage|Event|FeedComment|FlowRecordRelation|LookedUpFromActivity|NoteAndAttachment|OpenActivity|ProcessInstance|ProcessInstanceHistory|RecordAction|RecordActionHistory|TopicAssignment|Task|CollaborationGroupRecord|EntitySubscription|ProcessException|Attachment|Note)$/;
+const relPath = (field: string) => (field.endsWith("__c") ? `${field.slice(0, -3)}__r` : field.replace(/Id$/, ""));
+
+async function countSafe(c: Client, soql: string): Promise<number | undefined> {
+  try { return (await c.query<never>(soql)).totalSize; } catch { return undefined; }
+}
+async function byTypeSafe(c: Client, soql: string): Promise<Record<string, number> | undefined> {
+  try {
+    const r = await c.query<{ dn: string | null; n: number }>(soql);
+    return Object.fromEntries(r.records.map((x) => [x.dn ?? "(none)", x.n]));
+  } catch { return undefined; }
+}
+
+/** Reads how a request is built: run once the person has chosen the parent object. Counts only, never record contents. */
+export async function mapRequest(c: Client, rootName: string): Promise<RequestMap> {
+  const all = await globalObjects(c);
+  const byName = new Map(all.map((o) => [o.name.toLowerCase(), o]));
+  const root = byName.get(normalizeObjectName(rootName).toLowerCase());
+  if (!root) throw new SfLiveError("not-found", `Salesforce has no object called ${rootName}.`);
+  const rd = await c.get<DescribeFull>(`/services/data/v${API_VERSION}/sobjects/${encodeURIComponent(root.name)}/describe`);
+  const types = (rd.recordTypeInfos ?? []).filter((t) => !t.master && t.active !== false && t.available !== false).map((t) => ({ name: t.name, developerName: t.developerName }));
+  const rootRecords = await countSafe(c, `SELECT COUNT() FROM ${root.name}`);
+  const rootByType = types.length ? await byTypeSafe(c, `SELECT RecordType.DeveloperName dn, COUNT(Id) n FROM ${root.name} GROUP BY RecordType.DeveloperName`) : undefined;
+  const keep = (r: { childSObject: string; relationshipName: string | null }) => {
+    const o = byName.get(r.childSObject.toLowerCase());
+    return Boolean(r.relationshipName && o?.queryable && r.childSObject.endsWith("__c") && !NOT_DATA.test(r.childSObject) && !SYSTEM_CHILD.test(r.childSObject));
+  };
+  const seen = new Set<string>();
+  const rels = (rd.childRelationships ?? []).filter(keep).filter((r) => !seen.has(`${r.childSObject}.${r.field}`) && seen.add(`${r.childSObject}.${r.field}`)).slice(0, 25);
+  const children: MapNode[] = [];
+  for (const r of rels) {
+    const label = byName.get(r.childSObject.toLowerCase())!.label;
+    const records = await countSafe(c, `SELECT COUNT() FROM ${r.childSObject} WHERE ${r.field} != null`);
+    const byType = types.length && records ? await byTypeSafe(c, `SELECT ${relPath(r.field)}.RecordType.DeveloperName dn, COUNT(Id) n FROM ${r.childSObject} WHERE ${r.field} != null GROUP BY ${relPath(r.field)}.RecordType.DeveloperName`) : undefined;
+    // One level further down: an expense's budget allocations, for example.
+    const grand: MapNode[] = [];
+    try {
+      const cd = await c.get<DescribeFull>(`/services/data/v${API_VERSION}/sobjects/${encodeURIComponent(r.childSObject)}/describe`);
+      for (const g of (cd.childRelationships ?? []).filter(keep).filter((g) => g.childSObject !== root.name).slice(0, 10)) {
+        grand.push({ name: g.childSObject, label: byName.get(g.childSObject.toLowerCase())!.label, via: g.field, records: await countSafe(c, `SELECT COUNT() FROM ${g.childSObject} WHERE ${g.field} != null`), children: [] });
+      }
+    } catch { /* a child we may not describe: show it without its own children */ }
+    children.push({ name: r.childSObject, label, via: r.field, records, byType, children: grand });
+  }
+  children.sort((a, b) => (b.records ?? 0) - (a.records ?? 0));
+  const links = rd.fields.filter((f) => f.type === "reference" && f.createable && f.referenceTo?.[0] && !["User", "Group", "RecordType"].includes(f.referenceTo[0]))
+    .map((f) => ({ field: f.name, label: f.label, object: f.referenceTo![0]!, objectLabel: byName.get(f.referenceTo![0]!.toLowerCase())?.label ?? f.referenceTo![0]! }));
+  return {
+    root: { name: root.name, label: root.label, records: rootRecords, types: types.map((t) => ({ ...t, records: rootByType?.[t.developerName] })) },
+    children, links,
+    documents: (rd.childRelationships ?? []).some((r) => r.childSObject === "ContentDocumentLink"),
+  };
+}

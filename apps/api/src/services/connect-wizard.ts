@@ -30,8 +30,8 @@ export async function wizardState(u: SessionUser) {
     const t = (await one<{ slug: string; name: string }>(tx, "select slug, name from tenants where id = $1", [u.tenantId]))!;
     const practiceConnected = Boolean(await one(tx, "select 1 from sim_sf_records where tenant_id = $1 limit 1", [u.tenantId]));
     const cfg = await currentConfig(tx, u.tenantId!);
-    const c = await one<{ my_domain: string; client_id: string; saved_by: string; saved_at: Date; last_test: { ok?: boolean; org?: { name: string; edition: string; sandbox: boolean }; user?: { username?: string }; message?: string; at?: string } | null; request_object: string | null; mapping: unknown; mapping_saved_by: string | null; mapping_saved_at: Date | null }>(tx,
-      "select my_domain, client_id, saved_by, saved_at, last_test, request_object, mapping, mapping_saved_by, mapping_saved_at from connector_credentials where tenant_id = $1 and system = 'salesforce'", [u.tenantId]);
+    const c = await one<{ my_domain: string; client_id: string; saved_by: string; saved_at: Date; last_test: { ok?: boolean; org?: { name: string; edition: string; sandbox: boolean }; user?: { username?: string }; message?: string; at?: string } | null; request_object: string | null; request_parts: string[] | null; mapping: unknown; mapping_saved_by: string | null; mapping_saved_at: Date | null }>(tx,
+      "select my_domain, client_id, saved_by, saved_at, last_test, request_object, request_parts, mapping, mapping_saved_by, mapping_saved_at from connector_credentials where tenant_id = $1 and system = 'salesforce'", [u.tenantId]);
     const snap = c?.request_object ? await latestSnapshot(tx, u.tenantId!, LIVE) : undefined;
     const reqLabel = (snap?.body as unknown as Reading | undefined)?.objects.find((o) => o.name === c?.request_object)?.label;
     return {
@@ -44,6 +44,7 @@ export async function wizardState(u: SessionUser) {
       company: c ? {
         myDomain: c.my_domain, clientIdHint: `…${c.client_id.slice(-6)}`, savedBy: c.saved_by, savedAt: c.saved_at, lastTest: c.last_test ?? undefined,
         requestObject: c.request_object ? { name: c.request_object, label: reqLabel ?? c.request_object } : undefined,
+        parts: c.request_parts ?? undefined,
         mappingSaved: c.mapping ? { by: c.mapping_saved_by, at: c.mapping_saved_at } : undefined,
       } : undefined,
     };
@@ -84,18 +85,49 @@ export async function searchRequests(u: SessionUser, q: string) {
 export async function chooseRequestObject(u: SessionUser, name: string) {
   requireOwner(u, true);
   let reading: Awaited<ReturnType<typeof live.readRequestObject>>;
+  let map: live.RequestMap;
   try {
     const { client, domain } = await liveSession(u);
     reading = await live.readRequestObject(client, domain, name);
+    map = await live.mapRequest(client, reading.requestObject);
   } catch (e) { return fail(e); }
+  // Parts in use (with records) are ticked to start with; the person confirms.
+  const used = map.children.flatMap((c) => [c, ...c.children]).filter((c) => (c.records ?? 0) > 0).map((c) => c.name);
   const hash = snapshotHash(reading);
   await asUser(u, async (tx) => {
     await tx.query("insert into connector_snapshots (tenant_id, system, hash, body, read_by) values ($1,$2,$3,$4,$5) on conflict (tenant_id, system, hash) do update set read_at = now(), read_by = excluded.read_by", [u.tenantId, LIVE, hash, JSON.stringify(reading), u.name]);
     // A different object means the earlier matches no longer apply.
-    await tx.query("update connector_credentials set mapping = case when request_object is distinct from $2 then null else mapping end, request_object = $2 where tenant_id = $1 and system = 'salesforce'", [u.tenantId, reading.requestObject]);
+    await tx.query(`update connector_credentials set mapping = case when request_object is distinct from $2 then null else mapping end,
+      request_parts = case when request_object is distinct from $2 or request_parts is null then $4::text[] else request_parts end,
+      request_object = $2, request_map = $3 where tenant_id = $1 and system = 'salesforce'`, [u.tenantId, reading.requestObject, JSON.stringify(map), used]);
     await record(tx, { tenantId: u.tenantId!, actor: { type: "person", id: u.id, name: u.name, roles: u.roles }, entity: { type: "connector", id: "salesforce" }, action: "connector.salesforce.live-request-object-chosen", data: { object: reading.requestObject, fields: reading.objects[0]!.fields.length, validationRules: reading.validationRules.length } });
   });
-  return { requestObject: { name: reading.requestObject, label: reading.objects[0]!.label } };
+  return { requestObject: { name: reading.requestObject, label: reading.objects[0]!.label }, map };
+}
+
+/** The family of records that makes up a request, and the parts the person said belong to a grant request. */
+export async function requestMapView(u: SessionUser) {
+  requireOwner(u);
+  const c = await asUser(u, (tx) => one<{ request_object: string | null; request_map: live.RequestMap | null; request_parts: string[] | null }>(tx, "select request_object, request_map, request_parts from connector_credentials where tenant_id = $1 and system = 'salesforce'", [u.tenantId]));
+  if (!c?.request_object) throw new HttpError(409, "Choose where your grant requests are kept first.", "no-request-object");
+  if (c.request_map) return { map: c.request_map, parts: c.request_parts ?? [] };
+  // Chosen before the family was read (an earlier version): read it now.
+  const r = await chooseRequestObject(u, c.request_object);
+  const after = await asUser(u, (tx) => one<{ request_parts: string[] | null }>(tx, "select request_parts from connector_credentials where tenant_id = $1 and system = 'salesforce'", [u.tenantId]));
+  return { map: r.map, parts: after?.request_parts ?? [] };
+}
+
+export async function saveParts(u: SessionUser, parts: string[]) {
+  requireOwner(u, true);
+  return asUser(u, async (tx) => {
+    const c = await one<{ request_map: live.RequestMap | null }>(tx, "select request_map from connector_credentials where tenant_id = $1 and system = 'salesforce'", [u.tenantId]);
+    if (!c?.request_map) throw new HttpError(409, "Choose where your grant requests are kept first.");
+    const known = new Set(c.request_map.children.flatMap((x) => [x.name, ...x.children.map((g) => g.name)]));
+    const clean = [...new Set(parts)].filter((p) => known.has(p));
+    await tx.query("update connector_credentials set request_parts = $2 where tenant_id = $1 and system = 'salesforce'", [u.tenantId, clean]);
+    await record(tx, { tenantId: u.tenantId!, actor: { type: "person", id: u.id, name: u.name, roles: u.roles }, entity: { type: "connector", id: "salesforce" }, action: "connector.salesforce.live-request-parts-chosen", data: { parts: clean } });
+    return { map: c.request_map, parts: clean };
+  });
 }
 
 // ─── Step 3: match the details ───────────────────────────────────────────────

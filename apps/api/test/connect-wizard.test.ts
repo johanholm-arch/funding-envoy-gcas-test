@@ -21,10 +21,17 @@ const cookies = () => (d as unknown as { cookies: Record<string, string> }).cook
 
 const f = (name: string, label: string, type: string, more: Record<string, unknown> = {}) => ({ name, label, type, nillable: true, createable: true, defaultedOnCreate: false, externalId: false, ...more });
 const pick = (values: string[]) => ({ picklistValues: values.map((value) => ({ value, active: true })) });
-const OBJECTS: Record<string, { label: string; custom: boolean; fields: ReturnType<typeof f>[]; count: number }> = {
+const OBJECTS: Record<string, { label: string; custom: boolean; fields: ReturnType<typeof f>[]; count: number; children?: { childSObject: string; field: string; relationshipName: string | null }[]; types?: string[] }> = {
   Account: { label: "Account", custom: false, count: 900, fields: [f("Id", "Account ID", "id", { createable: false }), f("Name", "Account Name", "string", { nillable: false }), f("BillingCountry", "Billing Country", "string"), f("OCE__TaxId__c", "Tax ID", "string")] },
   ContentVersion: { label: "Content Version", custom: false, count: 50, fields: [f("Id", "ID", "id", { createable: false }), f("Title", "Title", "string")] },
-  OCE__Meeting__c: { label: "Request", custom: true, count: 14, fields: [
+  OCE__Meeting__c: { label: "Request", custom: true, count: 14, types: ["Speaker_Program", "Medical_Education_Grant"], children: [
+    { childSObject: "OCE__MeetingDetail__c", field: "OCE__Meeting__c", relationshipName: "OCE__MeetingDetails__r" },
+    { childSObject: "OCE__MeetingExpense__c", field: "OCE__Meeting__c", relationshipName: "OCE__MeetingExpenses__r" },
+    { childSObject: "OCE__MeetingAttendee__c", field: "OCE__Meeting__c", relationshipName: "OCE__Attendees__r" },
+    { childSObject: "ContentDocumentLink", field: "LinkedEntityId", relationshipName: "ContentDocumentLinks" },
+    { childSObject: "Task", field: "WhatId", relationshipName: "Tasks" },
+    { childSObject: "OCE__Meeting__History", field: "ParentId", relationshipName: "Histories" },
+  ], fields: [
     f("Id", "Record ID", "id", { createable: false }),
     f("Name", "Title", "string", { nillable: false }),
     f("OCE__Subtype__c", "Subtype", "picklist", { nillable: false, ...pick(["Speaker Program", "Medical Education Grant", "Charitable Donation", "Sponsorship"]) }),
@@ -37,7 +44,12 @@ const OBJECTS: Record<string, { label: string; custom: boolean; fields: ReturnTy
     f("OCE__Comments__c", "Comments", "textarea"),
     f("OCE__FBServedBy__c", "F&B Served by", "picklist", pick(["Venue", "Caterer"])),
   ] },
-  OCE__MeetingExpense__c: { label: "Request Expense", custom: true, count: 30, fields: [f("Id", "ID", "id", { createable: false }), f("OCE__Amount__c", "Amount", "currency")] },
+  OCE__MeetingDetail__c: { label: "Request Detail", custom: true, count: 20, fields: [f("Id", "ID", "id", { createable: false })] },
+  OCE__MeetingAttendee__c: { label: "Request Attendee", custom: true, count: 0, fields: [f("Id", "ID", "id", { createable: false })] },
+  OCE__MeetingExpenseBudgetAllocation__c: { label: "Request Expense Budget Allocation", custom: true, count: 12, fields: [f("Id", "ID", "id", { createable: false })] },
+  Task: { label: "Task", custom: false, count: 99, fields: [f("Id", "ID", "id", { createable: false })] },
+  ContentDocumentLink: { label: "Content Document Link", custom: false, count: 5, fields: [f("Id", "ID", "id", { createable: false })] },
+  OCE__MeetingExpense__c: { label: "Request Expense", custom: true, count: 30, children: [{ childSObject: "OCE__MeetingExpenseBudgetAllocation__c", field: "OCE__MeetingExpense__c", relationshipName: "OCE__Allocations__r" }], fields: [f("Id", "ID", "id", { createable: false }), f("OCE__Amount__c", "Amount", "currency")] },
   OCE__CallSampleRequest__c: { label: "Call Sample Request", custom: true, count: 5, fields: [f("Id", "ID", "id", { createable: false }), f("OCE__Quantity__c", "Quantity", "int")] },
   ENGAGE__ApplicationSettings__c: { label: "Application Settings", custom: true, count: 1, fields: [f("Id", "ID", "id", { createable: false })] },
   OCE__Speaker__c: { label: "Speaker", custom: true, count: 40, fields: [f("Id", "ID", "id", { createable: false })] },
@@ -57,11 +69,19 @@ function standIn(): Promise<number> {
       const q = url.searchParams.get("q") ?? "";
       const m = /SELECT COUNT\(\) FROM (\S+)/.exec(q);
       if (m) return json(200, { totalSize: OBJECTS[m[1]!]?.count ?? 0, records: [] });
+      const g = /COUNT\(Id\) n FROM (\S+)/.exec(q);
+      if (g?.[1] === "OCE__Meeting__c") return json(200, { totalSize: 2, records: [{ dn: "Speaker_Program", n: 9 }, { dn: "Medical_Education_Grant", n: 5 }] });
+      if (g?.[1] === "OCE__MeetingDetail__c") return json(200, { totalSize: 1, records: [{ dn: "Medical_Education_Grant", n: 20 }] });
+      if (g) return json(200, { totalSize: 2, records: [{ dn: "Speaker_Program", n: 25 }, { dn: "Medical_Education_Grant", n: 5 }] });
       return json(200, { records: [{ Id: "00D", Name: "GFMS Sales Demo", OrganizationType: "Enterprise Edition", IsSandbox: false }] });
     }
     if (url.pathname.endsWith("/sobjects")) return json(200, { sobjects: Object.entries(OBJECTS).map(([name, o]) => ({ name, label: o.label, custom: o.custom, queryable: true, createable: true })) });
     const m = /\/sobjects\/([^/]+)\/describe$/.exec(url.pathname);
-    if (m && OBJECTS[m[1]!]) return json(200, { name: m[1], label: OBJECTS[m[1]!]!.label, fields: OBJECTS[m[1]!]!.fields });
+    if (m && OBJECTS[m[1]!]) {
+      const o = OBJECTS[m[1]!]!;
+      return json(200, { name: m[1], label: o.label, fields: o.fields, childRelationships: o.children ?? [],
+        recordTypeInfos: [{ name: "Master", developerName: "Master", master: true, active: true, available: true }, ...(o.types ?? []).map((t) => ({ name: t.replace(/_/g, " "), developerName: t, master: false, active: true, available: true }))] });
+    }
     json(404, [{ errorCode: "NOT_FOUND", message: "not found" }]);
   });
   return new Promise((r) => sf.listen(0, "127.0.0.1", () => r((sf.address() as { port: number }).port)));
@@ -108,6 +128,22 @@ describe("the Connect wizard, with a company's org", () => {
     expect(c.requestObject).toEqual({ name: "OCE__Meeting__c", label: "Request" });
   });
 
+  it("step 2: reads a request as a family of records: its request types, its children and theirs", async () => {
+    const { map, parts } = await d.call("owner", "GET", "/api/connect/salesforce/live/request-map");
+    expect(map.root).toMatchObject({ name: "OCE__Meeting__c", label: "Request", records: 14 });
+    expect(map.root.types).toEqual([{ name: "Speaker Program", developerName: "Speaker_Program", records: 9 }, { name: "Medical Education Grant", developerName: "Medical_Education_Grant", records: 5 }]);
+    // Children, most used first; system children (tasks, history, files links) are left out.
+    expect(map.children.map((x: { name: string }) => x.name)).toEqual(["OCE__MeetingExpense__c", "OCE__MeetingDetail__c", "OCE__MeetingAttendee__c"]);
+    expect(map.children[1]).toMatchObject({ label: "Request Detail", records: 20, byType: { Medical_Education_Grant: 20 } });
+    expect(map.children[0].children[0]).toMatchObject({ name: "OCE__MeetingExpenseBudgetAllocation__c", label: "Request Expense Budget Allocation", records: 12 });
+    expect(map.documents).toBe(true);
+    expect(map.links.map((l: { object: string }) => l.object)).toContain("Account");
+    // Parts with records are ticked to begin with; an empty one is not.
+    expect(parts.sort()).toEqual(["OCE__MeetingDetail__c", "OCE__MeetingExpenseBudgetAllocation__c", "OCE__MeetingExpense__c"]);
+    const saved = await d.call("owner", "POST", "/api/connect/salesforce/live/request-parts", { parts: ["OCE__MeetingDetail__c", "Not_A_Part__c"] });
+    expect(saved.parts).toEqual(["OCE__MeetingDetail__c"]);
+  });
+
   it("step 3: matches what it can, and asks only what it can't", async () => {
     const m = await d.call("owner", "GET", "/api/connect/salesforce/mapping?mode=live");
     const map = Object.fromEntries(m.config.fields.map((x: { fe: string; sf: string }) => [x.fe, x.sf]));
@@ -130,6 +166,12 @@ describe("the Connect wizard, with a company's org", () => {
     // Saving a company org's mapping never puts a draft in the way of publishing the rest of the setup.
     const setup = await d.call("owner", "GET", "/api/studio/setup");
     expect(setup.drafts.map((x: { kind: string }) => x.kind)).not.toContain("connector");
+  });
+
+  it("reads the family on its own when the object was chosen before families were read", async () => {
+    await withContext({ operator: true }, (tx) => tx.query("update connector_credentials set request_map = null where tenant_id = $1", [funder.id]));
+    const { map } = await d.call("owner", "GET", "/api/connect/salesforce/live/request-map");
+    expect(map.root.name).toBe("OCE__Meeting__c");
   });
 
   it("choosing a different object starts the matching again", async () => {

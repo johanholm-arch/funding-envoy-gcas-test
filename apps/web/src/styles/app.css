@@ -572,3 +572,10 @@ mark { background: var(--mark); color: inherit; padding: 1px 0; box-shadow: 0 0 
 .wiz-rows td:first-child { width: 50%; }
 .wiz-rows .select { width: 100%; max-width: 320px; }
 @media (max-width: 640px) { .wiz { padding: 20px 16px 80px; } .wiz-choice { flex-direction: column; align-items: flex-start; } .wiz-rows td { display: block; width: 100% !important; border: 0; padding: 2px 0; } .wiz-rows tr { display: block; padding: 6px 0; border-bottom: 1px solid var(--rule); } }
+.fam { border: 1px solid var(--rule); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.fam-root { display: flex; flex-direction: column; gap: 2px; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+.fam-tree { list-style: none; margin: 0; padding: 0 0 0 18px; border-left: 2px solid var(--rule); display: flex; flex-direction: column; gap: 10px; }
+.fam > .fam-tree { margin-left: 6px; }
+.fam-node { padding-top: 2px; }
+.fam-node > .fam-tree { margin-top: 8px; }
+.fam-files { padding-left: 24px; }

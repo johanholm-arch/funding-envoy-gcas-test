@@ -82,7 +82,7 @@ export function StudioConnect() {
             ? <ConnectCompany data={data} canEdit={canEdit} onDone={async () => { await w.refetch(); }} next={() => go(2)} />
             : <ConnectPractice data={data} canEdit={canEdit} onDone={async () => { await w.refetch(); }} next={() => go(3)} />) : null}
           {step === 2 ? (mode === "company"
-            ? <FindRequests data={data} canEdit={canEdit} onChosen={async () => { await w.refetch(); go(3); }} />
+            ? <FindRequests data={data} canEdit={canEdit} onChosen={async () => { await w.refetch(); }} next={() => go(3)} />
             : <Card title="Where are grant requests kept?"><p>In the practice Salesforce they're kept in <strong>Grant Request</strong>. Nothing to choose.</p><Nav next={() => go(3)} nextLabel="Next: match the details" /></Card>) : null}
           {step === 3 ? <Match mode={mode} canEdit={canEdit} back={() => go(mode === "company" ? 2 : 1)} next={() => go(4)} /> : null}
           {step === 4 ? <Done mode={mode} data={data} back={() => go(3)} /> : null}
@@ -207,7 +207,67 @@ function ConnectPractice({ data, canEdit, onDone, next }: { data: Wizard; canEdi
 
 // ─── 2. Where are grant requests kept? ──────────────────────────────────────
 
-function FindRequests({ data, canEdit, onChosen }: { data: Wizard; canEdit: boolean; onChosen: () => Promise<void> }) {
+function FindRequests({ data, canEdit, onChosen, next }: { data: Wizard; canEdit: boolean; onChosen: () => Promise<void>; next: () => void }) {
+  const [picking, setPicking] = useState(!data.company?.requestObject);
+  if (!picking && data.company?.requestObject) return <RequestFamily canEdit={canEdit} onChange={() => setPicking(true)} next={next} />;
+  return <PickRequestObject data={data} canEdit={canEdit} onChosen={async () => { await onChosen(); setPicking(false); }} onKeep={() => setPicking(false)} />;
+}
+
+interface MapNode { name: string; label: string; via: string; records?: number; byType?: Record<string, number>; children: MapNode[] }
+interface RequestMap { root: { name: string; label: string; records?: number; types: { name: string; developerName: string; records?: number }[] }; children: MapNode[]; links: { field: string; label: string; object: string; objectLabel: string }[]; documents: boolean }
+
+/** The family of records a request is made of, as a picture: the person ticks the parts that belong to a grant request. */
+function RequestFamily({ canEdit, onChange, next }: { canEdit: boolean; onChange: () => void; next: () => void }) {
+  const r = useResource<{ map: RequestMap; parts: string[] }>("/api/connect/salesforce/live/request-map");
+  const [parts, setParts] = useState<string[]>();
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string>();
+  useEffect(() => { if (r.data) setParts(r.data.parts); }, [r.data]);
+  if (r.error) return <Card title="How a request is built"><p className="error-text">{r.error.message}</p></Card>;
+  if (!r.data || !parts) return <Card title="How a request is built"><p className="muted">Reading how a request is built in your Salesforce…</p></Card>;
+  const { map } = r.data;
+  const typeName = (dn: string) => map.root.types.find((t) => t.developerName === dn)?.name ?? dn;
+  async function toggle(name: string, on: boolean) {
+    const nextParts = on ? [...parts!, name] : parts!.filter((p) => p !== name);
+    setParts(nextParts); setSaving(true); setErr(undefined);
+    try { await api.post("/api/connect/salesforce/live/request-parts", { parts: nextParts }); } catch (x) { setErr(errorText(x)); } finally { setSaving(false); }
+  }
+  const usedBy = (n: MapNode) => n.byType && Object.keys(n.byType).length ? ` · used by ${Object.entries(n.byType).filter(([dn]) => dn !== "(none)").map(([dn, k]) => `${typeName(dn)} (${k})`).join(", ")}` : "";
+  const line = (n: MapNode, depth: number) => (
+    <li key={`${n.name}.${n.via}`} className={`fam-node d${depth}`}>
+      <label className="row" style={{ gap: 10, alignItems: "flex-start" }}>
+        <input type="checkbox" checked={parts.includes(n.name)} disabled={!canEdit || saving} onChange={(e) => void toggle(n.name, e.target.checked)} style={{ marginTop: 4 }} />
+        <span className="stack" style={{ gap: 1 }}>
+          <span style={{ fontWeight: 600 }}>{n.label}</span>
+          <span className="small muted">{n.records === undefined ? "Records can't be counted" : n.records ? plural(n.records, "record") : "No records yet"}{usedBy(n)}</span>
+        </span>
+      </label>
+      {n.children.length ? <ul className="fam-tree">{n.children.map((g) => line(g, depth + 1))}</ul> : null}
+    </li>
+  );
+  return (
+    <Card title="This is how a request is built" lead={<>In your Salesforce, a request is a <strong>{map.root.label}</strong> with other records attached to it. Tick the parts that belong to a grant request.</>}>
+      <div className="fam">
+        <div className="fam-root">
+          <span style={{ fontWeight: 600, fontSize: 17 }}>{map.root.label}</span>
+          <span className="small muted">{map.root.records !== undefined ? plural(map.root.records, "record") : ""}</span>
+          {map.root.types.length ? <p className="small">Request types: {map.root.types.map((t) => `${t.name}${t.records !== undefined ? ` (${t.records})` : ""}`).join(" · ")}</p> : <p className="small muted">One kind of request (no request types).</p>}
+          {map.links.length ? <p className="small muted">Linked to: {map.links.map((l) => l.objectLabel).filter((v, i, a) => a.indexOf(v) === i).join(", ")}</p> : null}
+        </div>
+        {map.children.length ? <ul className="fam-tree">{map.children.map((n) => line(n, 1))}</ul> : <p className="small muted">Nothing else is attached to a {map.root.label}.</p>}
+        {map.documents ? <p className="small muted fam-files">Files can be attached to a {map.root.label}.</p> : null}
+      </div>
+      {err ? <p className="error-text" role="alert">{err}</p> : null}
+      <p className="help">{saving ? "Saving…" : "Each tick is saved as you make it. Counts only: FundingEnvoy didn't read what's in the records."}</p>
+      <div className="setup-nav">
+        <button type="button" className="btn quiet" onClick={onChange}>Choose a different object</button>
+        <button type="button" className="btn" onClick={next}>Next: match the details</button>
+      </div>
+    </Card>
+  );
+}
+
+function PickRequestObject({ data, canEdit, onChosen, onKeep }: { data: Wizard; canEdit: boolean; onChosen: () => Promise<void>; onKeep: () => void }) {
   const [cands, setCands] = useState<Candidate[]>();
   const [busy, setBusy] = useState<string>();
   const [err, setErr] = useState<string>();
@@ -240,7 +300,7 @@ function FindRequests({ data, canEdit, onChosen }: { data: Wizard; canEdit: bool
               <span className="small">{c.signals.length ? `Has ${joinWords(c.signals)}` : "Doesn't look like requests"}{c.records !== undefined ? ` · ${plural(c.records, "record")}` : ""}</span>
               <span className="mono help">{c.name}</span>
             </div>
-            {chosen === c.name ? <span className="chip ok">Chosen</span> : canEdit ? <button type="button" className={`btn small ${i === 0 ? "" : "quiet"}`} disabled={Boolean(busy)} onClick={() => void choose(c.name)}>{busy === c.name ? "Reading…" : "This one"}</button> : null}
+            {chosen === c.name ? <span className="row"><span className="chip ok">Chosen</span><button type="button" className="btn small" onClick={onKeep}>Keep it</button></span> : canEdit ? <button type="button" className={`btn small ${i === 0 ? "" : "quiet"}`} disabled={Boolean(busy)} onClick={() => void choose(c.name)}>{busy === c.name ? "Reading…" : "This one"}</button> : null}
           </div>
         ))}
       </div>
@@ -292,6 +352,7 @@ function Match({ mode, canEdit, back, next }: { mode: Mode; canEdit: boolean; ba
 
   return (
     <Card title="Match the details" lead={<>FundingEnvoy matched <strong>{plural(data.matched.length, "of its questions", "of its questions")}</strong> to fields on <strong>{obj.label}</strong> by itself. {open.length ? <>{plural(open.length, "thing needs", "things need")} you.</> : "Nothing needs you."}</>}>
+      {mode === "company" ? <p className="wiz-note small">This step matches the <strong>{obj.label}</strong> itself. The other parts you ticked come next, once you've confirmed this.</p> : null}
       {open.map((n) => (
         <div key={n.id} className="wiz-need">
           <p style={{ fontWeight: 600 }}>{n.title}</p>
