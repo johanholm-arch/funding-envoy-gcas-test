@@ -26,8 +26,8 @@ export async function connectorRoutes(app: FastifyInstance) {
     return r;
   });
   app.post("/api/connect/salesforce/live/read", async (req) => {
-    const b = z.object({ prefixes: z.array(z.string().max(60)).max(5).optional() }).parse(req.body ?? {});
-    return readLive(requireRole(req, [...edit]), b.prefixes ?? []);
+    const b = z.object({ prefixes: z.array(z.string().max(60)).max(5).optional(), objects: z.array(z.string().max(90)).max(20).optional() }).parse(req.body ?? {});
+    return readLive(requireRole(req, [...edit]), b.prefixes ?? [], b.objects ?? []);
   });
   app.post("/api/connect/salesforce/test", async (req) => {
     const b = z.object({ mode: z.enum(["simulated", "live"]), myDomain: z.string().max(120) }).parse(req.body);

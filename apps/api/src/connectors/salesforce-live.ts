@@ -122,7 +122,14 @@ export function normalizePrefix(p: string): string {
   return v;
 }
 
-export async function readOrg(c: Client, myDomain: string, opts: { prefixes?: string[] } = {}) {
+/** An object's API name, as typed, e.g. OCE__Meeting__c. */
+export function normalizeObjectName(n: string): string {
+  const v = n.trim();
+  if (!/^[A-Za-z][A-Za-z0-9_]{0,80}$/.test(v)) throw new SfLiveError("bad-object", `“${v}” isn't an object's API name. It looks like OCE__Meeting__c: you'll find it in Setup, Object Manager.`);
+  return v;
+}
+
+export async function readOrg(c: Client, myDomain: string, opts: { prefixes?: string[]; objects?: string[] } = {}) {
   const t = await testOrg(c);
   const global = await c.get<{ sobjects: GlobalObject[] }>(`/services/data/v${API_VERSION}/sobjects`);
   const names = new Set(global.sobjects.map((o) => o.name));
@@ -133,10 +140,20 @@ export async function readOrg(c: Client, myDomain: string, opts: { prefixes?: st
   // With a prefix, read exactly that app's objects; otherwise guess from the names.
   const prefixes = (opts.prefixes ?? []).map((p) => `${normalizePrefix(p).toLowerCase()}__`);
   const ofApp = custom.filter((o) => prefixes.some((p) => o.name.toLowerCase().startsWith(p)));
-  const matched = prefixes.length
-    ? [...STANDARD.filter((n) => names.has(n)), ...ofApp.map((o) => o.name)]
-    : [...STANDARD.filter((n) => names.has(n)), ...strong.map((o) => o.name), ...weak.map((o) => o.name)];
-  const picked = matched.slice(0, prefixes.length ? 120 : MAX_READ);
+  // Within an app, objects that sound like grants or requests come first, so they are read even in a large app.
+  const rank = (o: GlobalObject) => (STRONG.test(text(o)) ? 0 : WEAK.test(text(o)) ? 1 : 2);
+  const appRanked = [...ofApp].sort((a, b) => rank(a) - rank(b));
+  // Objects asked for by name are always read, first.
+  const byName = new Map(global.sobjects.map((o) => [o.name.toLowerCase(), o.name]));
+  const asked = (opts.objects ?? []).map((n) => normalizeObjectName(n));
+  const missing = asked.filter((n) => !byName.has(n.toLowerCase()));
+  const named = asked.map((n) => byName.get(n.toLowerCase())).filter((n): n is string => Boolean(n));
+  const matched = [...new Set([
+    ...STANDARD.filter((n) => names.has(n)), ...named,
+    ...(prefixes.length ? appRanked.map((o) => o.name) : [...strong.map((o) => o.name), ...weak.map((o) => o.name)]),
+  ])];
+  const cap = prefixes.length ? 120 : MAX_READ;
+  const picked = matched.slice(0, Math.max(cap, STANDARD.length + named.length));
   const objects = [];
   for (const name of picked) {
     const d = await c.get<{ name: string; label: string; fields: DescribeField[] }>(`/services/data/v${API_VERSION}/sobjects/${encodeURIComponent(name)}/describe`);
@@ -168,7 +185,8 @@ export async function readOrg(c: Client, myDomain: string, opts: { prefixes?: st
     objects, validationRules, duplicateRules: [] as { object: string; name: string; description: string }[], flows: [] as { name: string; description: string }[],
     found: {
       totalObjects: global.sobjects.length, customObjects: custom.length, read: picked, prefixes: prefixes.map((p) => p.slice(0, -2).toUpperCase()), appObjects: ofApp.length,
-      notRead: matched.slice(prefixes.length ? 120 : MAX_READ).map((n) => ({ name: n, label: custom.find((o) => o.name === n)?.label ?? n })),
+      asked: named, missing,
+      notRead: matched.slice(picked.length).map((n) => ({ name: n, label: custom.find((o) => o.name === n)?.label ?? n })),
       // Every custom object's name, so a grants app with unexpected names can still be spotted.
       allCustom: custom.map((o) => ({ name: o.name, label: o.label })),
     },

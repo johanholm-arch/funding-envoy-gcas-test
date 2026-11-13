@@ -127,6 +127,11 @@ describe("a real Salesforce org, read-only", () => {
     const r = await d.call("owner", "POST", "/api/connect/salesforce/live/read", { prefixes: ["acme__"] });
     expect(r.objects.map((o: { name: string }) => o.name)).toEqual(["Account", "ContentVersion", "acme__Grant_Request__c", "acme__Invoice__c"]);
     expect(r.found).toMatchObject({ prefixes: ["ACME"], appObjects: 2 });
+    // Objects asked for by name are read even without a prefix; unknown names are reported, not fatal.
+    const byName = await d.call("owner", "POST", "/api/connect/salesforce/live/read", { objects: ["ACME__INVOICE__C", "Nope__c"] });
+    expect(byName.objects.map((o: { name: string }) => o.name)).toContain("acme__Invoice__c");
+    expect(byName.found).toMatchObject({ asked: ["acme__Invoice__c"], missing: ["Nope__c"] });
+    expect((await d.try("owner", "POST", "/api/connect/salesforce/live/read", { objects: ["drop table"] })).status).toBe(400);
     // The full reading can be downloaded: structure only, no secrets.
     const dl = await app.inject({ method: "GET", url: "/api/connect/salesforce/live/reading?download=1", headers: { cookie: cookies().owner! } });
     expect(dl.headers["content-disposition"]).toMatch(/attachment; filename="salesforce-reading-/);

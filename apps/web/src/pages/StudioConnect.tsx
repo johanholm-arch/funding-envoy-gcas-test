@@ -39,7 +39,7 @@ interface View {
 interface Live {
   configured: boolean; myDomain?: string; clientIdHint?: string; savedBy?: string; savedAt?: string;
   lastTest?: { ok: boolean; at: string; error?: string; message?: string; org?: { name: string; edition: string; sandbox: boolean; instance?: string; apiVersion: string }; user?: { username?: string; name?: string }; limits?: { DailyApiRequests: { Max: number; Remaining: number } } };
-  snapshot?: { readBy: string; readAt: string; org: { name: string }; objects: { name: string; label: string; fields: number; custom: boolean }[]; validationRules: { object: string; name: string; description: string; errorMessage: string }[]; found?: { totalObjects: number; customObjects: number; prefixes?: string[]; appObjects?: number; notRead?: { name: string; label: string }[]; allCustom?: { name: string; label: string }[] }; note?: string };
+  snapshot?: { readBy: string; readAt: string; org: { name: string }; objects: { name: string; label: string; fields: number; custom: boolean }[]; validationRules: { object: string; name: string; description: string; errorMessage: string }[]; found?: { totalObjects: number; customObjects: number; prefixes?: string[]; asked?: string[]; missing?: string[]; appObjects?: number; notRead?: { name: string; label: string }[]; allCustom?: { name: string; label: string }[] }; note?: string };
 }
 interface TestResult { org: { name: string; edition: string; apiVersion: string; myDomain: string }; limits: { DailyApiRequests: { Max: number; Remaining: number } }; identity: { integrationUser: string; profile: string; permissionSet: string } }
 interface Trial { ok: boolean; sample: string; payload: Record<string, unknown>; result: { id?: string; success: boolean; note?: string; errors?: { errorCode: string; message: string; fields: string[] }[] } }
@@ -373,6 +373,7 @@ function LiveRead({ live, canEdit, onChanged }: { live: Live; canEdit: boolean; 
   const [err, setErr] = useState<string>();
   const s = live.snapshot;
   const [prefix, setPrefix] = useState(s?.found?.prefixes?.join(", ") ?? "");
+  const [objs, setObjs] = useState(s?.found?.asked?.join(", ") ?? "");
   const [open, setOpen] = useState<string>();
   const [fields, setFields] = useState<SfField[]>();
   const [filter, setFilter] = useState("");
@@ -383,10 +384,12 @@ function LiveRead({ live, canEdit, onChanged }: { live: Live; canEdit: boolean; 
       setFields(r.objects.find((o) => o.name === name)?.fields ?? []); setOpen(name); setFilter("");
     } catch (e) { setErr(errorText(e)); }
   }
-  async function read() {
+  const list = (v: string) => v.split(/[,\s]+/).map((p) => p.trim()).filter(Boolean);
+  async function read(add?: string) {
     setBusy(true); setErr(undefined);
-    const prefixes = prefix.split(/[,\s]+/).map((p) => p.trim()).filter(Boolean);
-    try { await api.post("/api/connect/salesforce/live/read", { prefixes }); toast("Org read"); onChanged(); } catch (e) { setErr(errorText(e)); } finally { setBusy(false); }
+    const objects = [...new Set([...list(objs), ...(add ? [add] : [])])];
+    if (add) setObjs(objects.join(", "));
+    try { await api.post("/api/connect/salesforce/live/read", { prefixes: list(prefix), objects }); toast(add ? `Read ${add}` : "Org read"); onChanged(); } catch (e) { setErr(errorText(e)); } finally { setBusy(false); }
   }
   return (
     <>
@@ -396,6 +399,10 @@ function LiveRead({ live, canEdit, onChanged }: { live: Live; canEdit: boolean; 
             <div className="stack" style={{ gap: 4 }}>
               <label className="label" htmlFor="live-prefix">Your grants app's prefix (optional)</label>
               <input id="live-prefix" className="input mono" style={{ width: 220 }} value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="for example ENGAGE" autoComplete="off" spellCheck={false} />
+            </div>
+            <div className="stack" style={{ gap: 4 }}>
+              <label className="label" htmlFor="live-objects">Objects to read by name (optional)</label>
+              <input id="live-objects" className="input mono" style={{ width: 280 }} value={objs} onChange={(e) => setObjs(e.target.value)} placeholder="for example OCE__Meeting__c" autoComplete="off" spellCheck={false} />
             </div>
             <button type="button" className={`btn ${s ? "quiet" : ""}`} disabled={busy || !live.lastTest?.ok} onClick={() => void read()}>{busy ? "Reading…" : s ? "Read the org again" : "Read the org"}</button>
           </div>
@@ -429,11 +436,17 @@ function LiveRead({ live, canEdit, onChanged }: { live: Live; canEdit: boolean; 
               </section>
             ) : null}
             <p><a className="btn small quiet" href="/api/connect/salesforce/live/reading?download=1">Download the reading</a> <span className="help">A file with every object read, its fields and allowed values. No records and no secrets, so it's safe to send.</span></p>
-            {s.found?.notRead?.length ? <p className="small" style={{ color: "var(--warn)" }}>{s.found.notRead.length} more objects matched but weren't read: {s.found.notRead.map((o) => `${o.label} (${o.name})`).join(", ")}.</p> : null}
+            {s.found?.missing?.length ? <p className="small" style={{ color: "var(--warn)" }}>Not found in the org: {s.found.missing.join(", ")}. Check the spelling in Setup, Object Manager.</p> : null}
+            {s.found?.notRead?.length ? (
+              <details>
+                <summary className="small" style={{ cursor: "pointer", color: "var(--warn)" }}>{s.found.notRead.length} more objects matched but weren't read. Click one to read it.</summary>
+                <div className="chips" style={{ marginTop: 8 }}>{s.found.notRead.map((o) => <button key={o.name} type="button" className="chip sys" style={{ cursor: "pointer", border: 0 }} disabled={busy || !canEdit} onClick={() => void read(o.name)} title={`Read ${o.name}`}>{o.label} · <span className="mono">{o.name}</span></button>)}</div>
+              </details>
+            ) : null}
             {s.found?.allCustom?.length ? (
               <details>
                 <summary className="small" style={{ cursor: "pointer", color: "var(--accent)" }}>All {s.found.allCustom.length} custom objects in the org, to spot the grants app</summary>
-                <table className="connect-table"><tbody>{s.found.allCustom.map((o) => <tr key={o.name}><td className="small">{o.label}</td><td className="mono small">{o.name}</td></tr>)}</tbody></table>
+                <table className="connect-table"><tbody>{s.found.allCustom.map((o) => <tr key={o.name}><td className="small">{o.label}</td><td className="mono small">{o.name}</td><td>{s.objects.some((x) => x.name === o.name) ? <span className="help">Read</span> : canEdit ? <button type="button" className="linkbtn small" disabled={busy} onClick={() => void read(o.name)}>Read it</button> : null}</td></tr>)}</tbody></table>
               </details>
             ) : null}
             {s.validationRules.length ? (
