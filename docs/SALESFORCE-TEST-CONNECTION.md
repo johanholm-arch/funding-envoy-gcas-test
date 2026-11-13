@@ -16,8 +16,8 @@ nothing in Salesforce.
 | C | Salesforce | Create the key for FundingEnvoy (an "External Client App") | 15 min |
 | D | Salesforce | Choose which Salesforce user the key acts as | 5 min |
 | E | Salesforce | Copy the key and its secret, then wait 10 minutes | 15 min |
-| F | FundingEnvoy | Paste them in and test the connection | 5 min |
-| G | FundingEnvoy and Salesforce | Read the org, and find where your grant requests are kept | 15 min |
+| F | FundingEnvoy | Paste them in and connect | 5 min |
+| G | FundingEnvoy | Find your grant requests and match the details | 10 min |
 | H | Both | How to switch it off again | when you want |
 
 Before you start, have two windows open: your FundingEnvoy site and your Salesforce test environment. Keep a
@@ -118,49 +118,33 @@ Your note now holds three things: the **address** (part B), the **consumer key**
 
 ---
 
-## Part F: Connect and test (FundingEnvoy)
+## Part F: Connect (FundingEnvoy)
 
-1. In FundingEnvoy, sign in as **Jane Whitfield** (Halden Pharma).
+1. In FundingEnvoy, sign in as the funder's process owner (for example **Jane Whitfield**, Halden Pharma).
 2. Go to **Studio**, and click **Salesforce** under **Connections** on the left.
-3. Under **1 Connection**, click the box **Your company's org**.
-4. Paste:
-   - the address into **My Domain address**
-   - the key into **Consumer key**
-   - the secret into **Consumer secret**
-5. Click **Save and test connection**.
+3. Choose **Your company's Salesforce**.
+4. Paste the address, the consumer key and the consumer secret, and click **Connect**.
 
-**What success looks like:** under the buttons you see your org's **name and edition**, the word **sandbox**, the
-user it **signed in as** (the one you chose in part D), and **API calls left today**.
+**What success looks like:** "Connected to *your org's name* … as *your username*."
 
-6. **Delete your note** with the secret. FundingEnvoy stores it encrypted and never shows it again.
+5. **Delete your note** with the secret. FundingEnvoy stores it encrypted and never shows it again.
 
-**If you see a red message instead,** look it up in "If something goes wrong" below. Fix it, then click **Test
-connection** again. You don't need to paste everything again; **Change** lets you replace just the part that was
-wrong.
+If you see a red message instead, look it up in "If something goes wrong" below, fix it, and click **Connect** again.
 
 ---
 
-## Part G: Read the org, and find where grant requests are kept
+## Part G: Find your grant requests, and match the details (FundingEnvoy)
 
-**In FundingEnvoy**
+1. Click **Next: find your grant requests**. FundingEnvoy looks through your Salesforce and shows the few places that
+   look most like grant requests, in plain words (for example "Request: has a title, start and end dates, a status, a
+   type and a link to an organization · 14 records").
+2. Click **This one** on the place where a new grant request is created. Not in the list? Use **Search by name**.
+3. **Match the details** shows only what needs you, for example "Which Subtype is each type of grant?" with
+   FundingEnvoy's guesses filled in. Check them and click **These are right**, or change one. Every choice saves as you
+   make it.
+4. Click **Done** to read, in one paragraph, what will happen when a requestor submits.
 
-1. Under **2 Read the org**, click **Read the org**.
-2. FundingEnvoy lists what it read: organizations (**Account**), files (**ContentVersion**), Salesforce's own Grants
-   Management objects if your org has them, and objects whose names suggest grants, with how many fields each has. It
-   also lists the checks Salesforce runs when a record is saved.
-3. Take a **screenshot** of the list.
-
-**In Salesforce** (this tells us exactly which object to connect to next)
-
-4. In **Setup**, click **Object Manager** at the top.
-5. In its search box, try `grant`, then `request`, then `application`, then `funding`. For each object that looks like
-   it holds grant requests, organizations, payees (bank details) or documents, write down its **Label** and its
-   **API Name** (for example `Grant Request` and `vendor__Grant_Request__c`).
-6. In **Quick Find**, type `Installed Packages` and click it. Write down the name of anything that looks like the
-   grants application, and its **Publisher**. That tells us which vendor's app it is.
-
-**Send these back** (to the Claude Code session, or the "Salesforce connector" chat in your Claude project): the
-screenshot from step 3, the object names from step 5, and the package name from step 6. Never the secret.
+Nothing is written to Salesforce in any of these steps.
 
 ---
 

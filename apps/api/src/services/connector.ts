@@ -37,12 +37,14 @@ export interface ConnectorConfig {
   matching: { identifiers: boolean; byName: boolean };
   checkpoints: { organization: boolean; draft: boolean; documents: boolean; submit: boolean };
   events: { status: boolean; comments: boolean };
+  /** Checks the person confirmed in the Connect wizard, by their id (e.g. "values-OCE__Subtype__c"). */
+  confirmed?: string[];
 }
 
-interface FeField { key: string; label: string; kind: string; options?: { value: string; label: string }[]; required: boolean }
-interface Snapshot { hash: string; body: ReturnType<typeof sf.describeOrg>; read_by: string; read_at: Date }
+export interface FeField { key: string; label: string; kind: string; options?: { value: string; label: string }[]; required: boolean }
+export interface Snapshot { hash: string; body: ReturnType<typeof sf.describeOrg>; read_by: string; read_at: Date }
 
-function requireOwner(u: SessionUser, edit = false) {
+export function requireOwner(u: SessionUser, edit = false) {
   const roles = edit ? ["process-owner", "operator"] : ["process-owner", "operator", "compliance-auditor", "coordinator"];
   if (!u.roles.some((r) => roles.includes(r)) && u.kind !== "operator") throw new HttpError(403, edit ? "Only the process owner can change the Salesforce connection." : "This is for the funder's grants team.");
   if (!u.tenantId) throw new HttpError(400, "Choose a funder first.", "no-tenant");
@@ -50,7 +52,7 @@ function requireOwner(u: SessionUser, edit = false) {
 
 // ─── What FundingEnvoy has to offer the mapping ──────────────────────────────
 
-function feFields(cat: Catalogue): FeField[] {
+export function feFields(cat: Catalogue): FeField[] {
   const out = new Map<string, FeField>();
   out.set("request.family", { key: "request.family", label: "Grant family", kind: "enum", required: true, options: cat.families.map((x) => ({ value: x.id, label: x.name })) });
   out.set("request.subtype", { key: "request.subtype", label: "Grant type", kind: "enum", required: true, options: cat.subtypes.map((x) => ({ value: x.id, label: x.name })) });
@@ -62,7 +64,7 @@ function feFields(cat: Catalogue): FeField[] {
   return [...out.values()];
 }
 
-function feDocTypes(cat: Catalogue): { type: string; label: string }[] {
+export function feDocTypes(cat: Catalogue): { type: string; label: string }[] {
   const m = new Map<string, string>();
   for (const s of cat.subtypes) for (const d of s.documents) if (!m.has(d.type)) m.set(d.type, d.label);
   return [...m].map(([type, label]) => ({ type, label }));
@@ -71,30 +73,30 @@ function feDocTypes(cat: Catalogue): { type: string; label: string }[] {
 // ─── Suggestions: how FundingEnvoy's fields and values match the org's ───────
 
 const STOP = new Set(["the", "of", "or", "and", "a", "an", "is", "you", "your", "will", "how", "where", "for", "are", "to", "gx", "c", "id", "mainly", "by", "what", "be", "in", "on"]);
-const HINTS: Record<string, string[]> = {
+export const HINTS: Record<string, string[]> = {
   "title": ["name", "title"], "amount.requested": ["requested", "amount"], "amount.currency": ["currency", "isocode"], "activity.startDate": ["start"], "activity.endDate": ["end"],
-  "activity.location": ["location", "venue"], "activity.format": ["format"], "audience.geography": ["geographic", "coverage"], "purpose": ["purpose"], "therapeuticArea": ["therapeutic"],
-  "provider.name": ["education", "provider"], "provider.accredited": ["accredited"], "audience.expected": ["expected", "learners"], "outcomes.level": ["outcomes", "level"],
-  "learningObjectives": ["learning", "objectives"], "programmeDescription": ["programme", "description"], "request.family": ["family"], "request.subtype": ["grant", "type"],
+  "activity.location": ["location", "venue"], "activity.format": ["format", "delivery"], "audience.geography": ["geographic", "coverage"], "purpose": ["purpose"], "therapeuticArea": ["therapeutic"],
+  "provider.name": ["education", "provider"], "provider.accredited": ["accredited"], "audience.expected": ["expected", "learners", "attendee", "attendees", "count"], "outcomes.level": ["outcomes", "level"],
+  "learningObjectives": ["learning", "objectives"], "programmeDescription": ["programme", "description"], "request.family": ["family"], "request.subtype": ["grant", "type", "subtype"],
 };
 const SYN: Record<string, string[]> = { "person": ["live", "person"], "enduring": ["enduring", "material"], "fr": ["france"], "uk": ["uk"], "us": ["us"], "coi": ["conflict", "interest"], "w9": ["w", "9"], "prospectus": ["agenda", "prospectus"], "nonprofit": ["non", "profit"], "registration": ["registration"], "charitable": ["charitable", "contribution"], "education": ["education", "ime"], "moore": ["moore"] };
 
-function tokens(s: string): string[] {
+export function tokens(s: string): string[] {
   const raw = s.replace(/__c$/i, "").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().split(/[^a-z0-9]+/).filter((t) => t && !STOP.has(t));
   return [...new Set(raw.flatMap((t) => SYN[t] ?? [t]))];
 }
 const compact = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-function jaccard(a: string[], b: string[]) {
+export function jaccard(a: string[], b: string[]) {
   const A = new Set(a), B = new Set(b);
   const inter = [...A].filter((x) => B.has(x)).length;
   return inter ? inter / new Set([...A, ...B]).size : 0;
 }
-const KIND_FITS: Record<string, sf.SfType[]> = {
+export const KIND_FITS: Record<string, sf.SfType[]> = {
   text: ["string", "textarea"], longtext: ["textarea", "string"], number: ["int", "double", "currency"], money: ["currency", "double"], date: ["date", "datetime"], datetime: ["datetime", "date"],
   enum: ["picklist", "string"], multienum: ["string", "textarea"], boolean: ["boolean"], audience: ["textarea", "string"], list: ["textarea", "string"],
 };
 
-function bestValue(feValue: string, feLabel: string, picklist: string[]): { value?: string; score: number } {
+export function bestValue(feValue: string, feLabel: string, picklist: string[]): { value?: string; score: number } {
   let best: { value?: string; score: number } = { score: 0 };
   for (const p of picklist) {
     const exact = compact(p) === compact(feValue) || compact(p) === compact(feLabel);
@@ -172,11 +174,11 @@ export function suggestMapping(snap: Snapshot["body"], cat: Catalogue, current: 
 
 // ─── Studio: connect, read, match, try, check ────────────────────────────────
 
-async function latestSnapshot(tx: Tx, tenantId: string): Promise<Snapshot | undefined> {
-  return one<Snapshot>(tx, "select hash, body, read_by, read_at from connector_snapshots where tenant_id = $1 and system = $2 order by read_at desc limit 1", [tenantId, SYSTEM]);
+export async function latestSnapshot(tx: Tx, tenantId: string, system = SYSTEM): Promise<Snapshot | undefined> {
+  return one<Snapshot>(tx, "select hash, body, read_by, read_at from connector_snapshots where tenant_id = $1 and system = $2 order by read_at desc limit 1", [tenantId, system]);
 }
 
-async function currentConfig(tx: Tx, tenantId: string) {
+export async function currentConfig(tx: Tx, tenantId: string) {
   const rows = await many<{ version: number; status: string; body: ConnectorConfig; signed_name: string | null; signed_at: Date | null }>(tx,
     "select version, status, body, signed_name, signed_at from config_versions where tenant_id = $1 and kind = 'connector' and status in ('draft','published') order by version desc", [tenantId]);
   return { draft: rows.find((r) => r.status === "draft"), published: rows.find((r) => r.status === "published") };

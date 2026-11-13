@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { requireRole } from "../auth.ts";
+import { chooseRequestObject, connectPractice, findRequests, mappingView, saveMapping, searchRequests, wizardState } from "../services/connect-wizard.ts";
 import { liveReading, liveView, readLive, removeCredentials, saveCredentials, testLive } from "../services/connector-live.ts";
 import { connectView, readOrg, saveConfig, simAct, simConsole, testConnection, trialRun, type ConnectorConfig } from "../services/connector.ts";
 
@@ -20,6 +21,26 @@ export async function connectorRoutes(app: FastifyInstance) {
   });
   app.post("/api/connect/salesforce/live/remove", async (req) => removeCredentials(requireRole(req, [...edit])));
   app.post("/api/connect/salesforce/live/test", async (req) => testLive(requireRole(req, [...edit])));
+  // The Connect wizard: connect, find where grant requests live, match the details.
+  app.get("/api/connect/salesforce/wizard", async (req) => wizardState(requireRole(req, [...view])));
+  app.post("/api/connect/salesforce/practice/connect", async (req) => connectPractice(requireRole(req, [...edit])));
+  app.post("/api/connect/salesforce/live/find", async (req) => findRequests(requireRole(req, [...edit])));
+  app.get("/api/connect/salesforce/live/search", async (req) => {
+    const q = z.object({ q: z.string().max(80) }).parse(req.query);
+    return searchRequests(requireRole(req, [...edit]), q.q);
+  });
+  app.post("/api/connect/salesforce/live/choose", async (req) => {
+    const b = z.object({ name: z.string().min(1).max(90) }).parse(req.body);
+    return chooseRequestObject(requireRole(req, [...edit]), b.name);
+  });
+  app.get("/api/connect/salesforce/mapping", async (req) => {
+    const q = z.object({ mode: z.enum(["simulated", "live"]) }).parse(req.query);
+    return mappingView(requireRole(req, [...view]), q.mode);
+  });
+  app.post("/api/connect/salesforce/mapping", async (req) => {
+    const b = z.object({ mode: z.enum(["simulated", "live"]), config: z.record(z.string(), z.unknown()) }).parse(req.body);
+    return saveMapping(requireRole(req, [...edit]), b.mode, b.config as unknown as ConnectorConfig);
+  });
   app.get("/api/connect/salesforce/live/reading", async (req, reply) => {
     const r = await liveReading(requireRole(req, [...view]));
     if ((req.query as { download?: string }).download) reply.header("content-disposition", `attachment; filename="salesforce-reading-${new Date().toISOString().slice(0, 10)}.json"`);

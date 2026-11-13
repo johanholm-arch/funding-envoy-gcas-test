@@ -193,3 +193,97 @@ export async function readOrg(c: Client, myDomain: string, opts: { prefixes?: st
     note,
   };
 }
+
+// ─── For the Connect wizard: find the object grant requests live in, then read it ─────────────────
+
+export interface LiveField { name: string; label: string; type: string; length?: number; required?: boolean; externalId?: boolean; picklist?: string[]; referenceTo?: string; readOnly?: boolean }
+export interface LiveObject { name: string; label: string; fields: LiveField[] }
+
+export async function describeObject(c: Client, name: string, label?: string): Promise<LiveObject> {
+  const d = await c.get<{ name: string; label: string; fields: DescribeField[] }>(`/services/data/v${API_VERSION}/sobjects/${encodeURIComponent(name)}/describe`);
+  return {
+    name, label: label ?? d.label ?? name,
+    fields: d.fields.filter((f) => !f.calculated).map((f) => ({
+      name: f.name, label: f.label, type: TYPE_MAP[f.type] ?? "string", length: f.length || undefined,
+      required: !f.nillable && f.createable && !f.defaultedOnCreate, externalId: f.externalId || undefined,
+      picklist: f.picklistValues?.length ? f.picklistValues.filter((p) => p.active).map((p) => p.value) : undefined,
+      referenceTo: f.referenceTo?.[0], readOnly: !f.createable || undefined,
+    })),
+  };
+}
+
+export async function globalObjects(c: Client): Promise<GlobalObject[]> {
+  return (await c.get<{ sobjects: GlobalObject[] }>(`/services/data/v${API_VERSION}/sobjects`)).sobjects;
+}
+
+const NOT_DATA = /(Share|History|Feed|ChangeEvent|__mdt|__e|__x|__b|Setting|Settings|Log)$/i;
+function nameScore(o: GlobalObject): number {
+  if (!o.queryable || NOT_DATA.test(o.name) || /setting|configuration|staging/i.test(o.label)) return 0;
+  const t = `${o.name.replace(/_/g, " ")} ${o.label}`;
+  let s = 0;
+  if (/grant|funding|award|donation|contribution|sponsor/i.test(t)) s += 3;
+  if (/request|application|proposal/i.test(t)) s += 2;
+  if (/meeting|event|engagement|program/i.test(t)) s += 1;
+  if (o.name === "IndividualApplication") s += 3;
+  if (s && o.custom) s += 0.5;
+  return s;
+}
+
+/** What makes an object look like the place grant requests are kept, in plain words. */
+export function requestSignals(o: LiveObject): string[] {
+  const has = (re: RegExp, types: string[]) => o.fields.some((f) => types.includes(f.type) && re.test(`${f.name} ${f.label}`));
+  const out: string[] = [];
+  if (has(/title|name/i, ["string"])) out.push("a title");
+  if (has(/amount|budget|cost|requested/i, ["currency", "double"])) out.push("an amount");
+  if (has(/start/i, ["date", "datetime"]) && has(/end/i, ["date", "datetime"])) out.push("start and end dates");
+  if (has(/status/i, ["picklist"])) out.push("a status");
+  if (has(/subtype|type|category/i, ["picklist"])) out.push("a type");
+  if (o.fields.some((f) => f.type === "reference" && f.referenceTo === "Account")) out.push("a link to an organization");
+  return out;
+}
+
+/** The objects most likely to hold grant requests, best first, each with what makes it likely and how many records it has. */
+export async function findRequestObjects(c: Client) {
+  const all = await globalObjects(c);
+  const ranked = all.map((o) => ({ o, s: nameScore(o) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 12);
+  const out: { name: string; label: string; signals: string[]; fields: number; records?: number; score: number }[] = [];
+  for (const { o, s } of ranked) {
+    const d = await describeObject(c, o.name, o.label);
+    const signals = requestSignals(d);
+    let records: number | undefined;
+    try { records = (await c.query<never>(`SELECT COUNT() FROM ${o.name}`)).totalSize; } catch { /* no access to count: fine */ }
+    out.push({ name: o.name, label: o.label, signals, fields: d.fields.length, records, score: signals.length * 2 + s });
+  }
+  out.sort((a, b) => b.score - a.score);
+  return { candidates: out.slice(0, 5), totalObjects: all.length };
+}
+
+export async function searchObjects(c: Client, q: string) {
+  const s = q.trim().toLowerCase();
+  if (s.length < 2) return [];
+  return (await globalObjects(c)).filter((o) => o.queryable && !NOT_DATA.test(o.name) && (o.label.toLowerCase().includes(s) || o.name.toLowerCase().includes(s)))
+    .slice(0, 15).map((o) => ({ name: o.name, label: o.label, custom: o.custom }));
+}
+
+/** Reads the chosen object with organizations and files, plus the checks Salesforce runs on the chosen object. */
+export async function readRequestObject(c: Client, myDomain: string, name: string) {
+  const all = await globalObjects(c);
+  const g = all.find((o) => o.name.toLowerCase() === normalizeObjectName(name).toLowerCase());
+  if (!g) throw new SfLiveError("not-found", `Salesforce has no object called ${name}.`);
+  const t = await testOrg(c);
+  const objects = [await describeObject(c, g.name, g.label)];
+  for (const n of ["Account", "ContentVersion"]) if (all.some((o) => o.name === n)) objects.push(await describeObject(c, n, all.find((o) => o.name === n)!.label));
+  let validationRules: { object: string; name: string; description: string; errorMessage: string; errorField?: string }[] = [];
+  let note: string | undefined;
+  try {
+    const vr = await c.query<{ ValidationName: string; Description: string | null; ErrorMessage: string | null; ErrorDisplayField: string | null; EntityDefinition?: { QualifiedApiName: string } }>(
+      `SELECT ValidationName, Description, ErrorMessage, ErrorDisplayField, EntityDefinition.QualifiedApiName FROM ValidationRule WHERE Active = true AND EntityDefinition.QualifiedApiName = '${g.name}'`, true);
+    validationRules = vr.records.map((r) => ({ object: g.name, name: r.ValidationName, description: r.Description ?? "", errorMessage: r.ErrorMessage ?? "", errorField: r.ErrorDisplayField ?? undefined }));
+  } catch (e) {
+    note = `Salesforce's own checks couldn't be read (${(e as Error).message}).`;
+  }
+  return {
+    org: { name: t.org.name, edition: t.org.edition, apiVersion: API_VERSION, namespace: "", myDomain: normalizeDomain(myDomain), licences: 0, sandbox: t.org.sandbox },
+    requestObject: g.name, objects, validationRules, duplicateRules: [] as { object: string; name: string; description: string }[], flows: [] as { name: string; description: string }[], note,
+  };
+}

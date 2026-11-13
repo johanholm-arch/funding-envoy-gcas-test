@@ -85,7 +85,7 @@ export async function removeCredentials(u: SessionUser) {
   });
 }
 
-async function session(u: SessionUser) {
+export async function liveSession(u: SessionUser) {
   const c = await asUser(u, (tx) => one<{ my_domain: string; client_id: string; secret_enc: string }>(tx, "select my_domain, client_id, secret_enc from connector_credentials where tenant_id = $1 and system = $2", [u.tenantId, SYSTEM]));
   if (!c) throw new HttpError(409, "Save the org's My Domain, consumer key and consumer secret first.");
   let secret: string;
@@ -104,7 +104,7 @@ export async function testLive(u: SessionUser) {
   requireOwner(u);
   const at = new Date().toISOString();
   try {
-    const { client } = await session(u);
+    const { client } = await liveSession(u);
     const t = await testOrg(client);
     const result = { ok: true, at, org: t.org, user: t.user, limits: t.limits, calls: client.calls + 1 };
     await noteTest(u, result);
@@ -120,7 +120,7 @@ export async function readLive(u: SessionUser, prefixes: string[] = [], objects:
   requireOwner(u);
   try { prefixes.forEach(normalizePrefix); objects.forEach(normalizeObjectName); } catch (e) { throw new HttpError(400, (e as Error).message, "bad-input"); }
   try {
-    const { client, domain } = await session(u);
+    const { client, domain } = await liveSession(u);
     const body = await readOrg(client, domain, { prefixes, objects });
     const hash = snapshotHash(body);
     await asUser(u, async (tx) => {
