@@ -127,6 +127,12 @@ describe("a real Salesforce org, read-only", () => {
     const r = await d.call("owner", "POST", "/api/connect/salesforce/live/read", { prefixes: ["acme__"] });
     expect(r.objects.map((o: { name: string }) => o.name)).toEqual(["Account", "ContentVersion", "acme__Grant_Request__c", "acme__Invoice__c"]);
     expect(r.found).toMatchObject({ prefixes: ["ACME"], appObjects: 2 });
+    // The full reading can be downloaded: structure only, no secrets.
+    const dl = await app.inject({ method: "GET", url: "/api/connect/salesforce/live/reading?download=1", headers: { cookie: cookies().owner! } });
+    expect(dl.headers["content-disposition"]).toMatch(/attachment; filename="salesforce-reading-/);
+    expect(dl.body).not.toContain(SECRET);
+    const req = dl.json().objects.find((o: { name: string }) => o.name === "acme__Grant_Request__c");
+    expect(req.fields.find((f: { name: string }) => f.name === "Status__c").picklist).toEqual(["Draft"]);
   });
 
   it("explains Salesforce's sign-in refusals in plain words", async () => {

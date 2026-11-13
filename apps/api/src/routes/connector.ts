@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { requireRole } from "../auth.ts";
-import { liveView, readLive, removeCredentials, saveCredentials, testLive } from "../services/connector-live.ts";
+import { liveReading, liveView, readLive, removeCredentials, saveCredentials, testLive } from "../services/connector-live.ts";
 import { connectView, readOrg, saveConfig, simAct, simConsole, testConnection, trialRun, type ConnectorConfig } from "../services/connector.ts";
 
 const view = ["process-owner", "operator", "compliance-auditor", "coordinator"] as const;
@@ -20,6 +20,11 @@ export async function connectorRoutes(app: FastifyInstance) {
   });
   app.post("/api/connect/salesforce/live/remove", async (req) => removeCredentials(requireRole(req, [...edit])));
   app.post("/api/connect/salesforce/live/test", async (req) => testLive(requireRole(req, [...edit])));
+  app.get("/api/connect/salesforce/live/reading", async (req, reply) => {
+    const r = await liveReading(requireRole(req, [...view]));
+    if ((req.query as { download?: string }).download) reply.header("content-disposition", `attachment; filename="salesforce-reading-${new Date().toISOString().slice(0, 10)}.json"`);
+    return r;
+  });
   app.post("/api/connect/salesforce/live/read", async (req) => {
     const b = z.object({ prefixes: z.array(z.string().max(60)).max(5).optional() }).parse(req.body ?? {});
     return readLive(requireRole(req, [...edit]), b.prefixes ?? []);

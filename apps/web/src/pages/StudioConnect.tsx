@@ -8,7 +8,7 @@ import { hasRole, useMe, useToast } from "../lib/app";
 import { fmtDate, plural } from "../lib/format";
 import { useDocumentTitle, useResource } from "../lib/hooks";
 
-interface SfField { name: string; label: string; type: string; required?: boolean; picklist?: string[]; readOnly?: boolean; externalId?: boolean; length?: number }
+interface SfField { name: string; label: string; type: string; required?: boolean; picklist?: string[]; readOnly?: boolean; externalId?: boolean; length?: number; referenceTo?: string }
 interface SfObject { name: string; label: string; fields: SfField[] }
 interface FeField { key: string; label: string; kind: string; required: boolean; options?: { value: string; label: string }[] }
 interface Config {
@@ -373,6 +373,16 @@ function LiveRead({ live, canEdit, onChanged }: { live: Live; canEdit: boolean; 
   const [err, setErr] = useState<string>();
   const s = live.snapshot;
   const [prefix, setPrefix] = useState(s?.found?.prefixes?.join(", ") ?? "");
+  const [open, setOpen] = useState<string>();
+  const [fields, setFields] = useState<SfField[]>();
+  const [filter, setFilter] = useState("");
+  async function showFields(name: string) {
+    if (open === name) { setOpen(undefined); return; }
+    try {
+      const r = await api.get<{ objects: { name: string; fields: SfField[] }[] }>("/api/connect/salesforce/live/reading");
+      setFields(r.objects.find((o) => o.name === name)?.fields ?? []); setOpen(name); setFilter("");
+    } catch (e) { setErr(errorText(e)); }
+  }
   async function read() {
     setBusy(true); setErr(undefined);
     const prefixes = prefix.split(/[,\s]+/).map((p) => p.trim()).filter(Boolean);
@@ -398,8 +408,27 @@ function LiveRead({ live, canEdit, onChanged }: { live: Live; canEdit: boolean; 
             <p className="small">Read {fmtDate(s.readAt)} by {s.readBy}: {s.org.name}. {s.found ? `The org has ${s.found.totalObjects.toLocaleString("en-US")} objects, ${s.found.customObjects} of them custom. ${s.found.prefixes?.length ? `The ${s.found.prefixes.join(", ")} app has ${s.found.appObjects ?? 0}; ` : ""}FundingEnvoy read the ${s.objects.length} below.` : ""}</p>
             <table className="connect-table">
               <thead><tr><th>Object</th><th>API name</th><th>Fields</th></tr></thead>
-              <tbody>{s.objects.map((o) => <tr key={o.name}><td>{o.label}{o.custom ? <span className="chip sys" style={{ marginLeft: 6 }}>Custom</span> : null}</td><td className="mono small">{o.name}</td><td>{o.fields}</td></tr>)}</tbody>
+              <tbody>{s.objects.map((o) => (
+                <tr key={o.name}>
+                  <td>{o.label}{o.custom ? <span className="chip sys" style={{ marginLeft: 6 }}>Custom</span> : null}</td>
+                  <td className="mono small">{o.name}</td>
+                  <td><button type="button" className="linkbtn small" onClick={() => void showFields(o.name)} aria-expanded={open === o.name}>{o.fields} fields</button></td>
+                </tr>
+              ))}</tbody>
             </table>
+            {open && fields ? (
+              <section className="connect-result" aria-label={`Fields of ${open}`}>
+                <div className="row" style={{ justifyContent: "space-between" }}><strong className="small">{open}: {fields.length} fields</strong><button type="button" className="btn small quiet" onClick={() => setOpen(undefined)}>Close</button></div>
+                <input className="input small" placeholder="Filter fields" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter fields" />
+                <table className="connect-table">
+                  <thead><tr><th>Field</th><th>API name</th><th>Type</th><th>Allowed values</th></tr></thead>
+                  <tbody>{fields.filter((f) => !filter || `${f.label} ${f.name}`.toLowerCase().includes(filter.toLowerCase())).map((f) => (
+                    <tr key={f.name}><td className="small">{f.label}{f.required ? <span className="help"> · required</span> : null}{f.externalId ? <span className="help"> · external ID</span> : null}</td><td className="mono small">{f.name}</td><td className="small">{f.type}{f.referenceTo ? ` → ${f.referenceTo}` : ""}</td><td className="small">{f.picklist ? f.picklist.slice(0, 12).join(", ") + (f.picklist.length > 12 ? ` … (${f.picklist.length})` : "") : ""}</td></tr>
+                  ))}</tbody>
+                </table>
+              </section>
+            ) : null}
+            <p><a className="btn small quiet" href="/api/connect/salesforce/live/reading?download=1">Download the reading</a> <span className="help">A file with every object read, its fields and allowed values. No records and no secrets, so it's safe to send.</span></p>
             {s.found?.notRead?.length ? <p className="small" style={{ color: "var(--warn)" }}>{s.found.notRead.length} more objects matched but weren't read: {s.found.notRead.map((o) => `${o.label} (${o.name})`).join(", ")}.</p> : null}
             {s.found?.allCustom?.length ? (
               <details>

@@ -35,6 +35,16 @@ function requireOwner(u: SessionUser) {
 
 const hint = (clientId: string) => `…${clientId.slice(-6)}`;
 
+/** The latest reading in full: every object read, with its fields and allowed values. Structure only, no records or secrets. */
+export async function liveReading(u: SessionUser) {
+  return asUser(u, async (tx) => {
+    const snap = await one<{ hash: string; body: Record<string, unknown>; read_by: string; read_at: Date }>(tx,
+      "select hash, body, read_by, read_at from connector_snapshots where tenant_id = $1 and system = $2 order by read_at desc limit 1", [u.tenantId, SNAPSHOT_SYSTEM]);
+    if (!snap) throw new HttpError(404, "Read the org first.");
+    return { readBy: snap.read_by, readAt: snap.read_at, hash: snap.hash, ...snap.body };
+  });
+}
+
 export async function liveView(u: SessionUser) {
   return asUser(u, async (tx) => {
     const c = await one<{ my_domain: string; client_id: string; saved_by: string; saved_at: Date; last_test: Record<string, unknown> | null }>(tx,
