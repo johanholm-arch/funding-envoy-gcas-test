@@ -30,8 +30,8 @@ export async function wizardState(u: SessionUser) {
     const t = (await one<{ slug: string; name: string }>(tx, "select slug, name from tenants where id = $1", [u.tenantId]))!;
     const practiceConnected = Boolean(await one(tx, "select 1 from sim_sf_records where tenant_id = $1 limit 1", [u.tenantId]));
     const cfg = await currentConfig(tx, u.tenantId!);
-    const c = await one<{ my_domain: string; client_id: string; saved_by: string; saved_at: Date; last_test: { ok?: boolean; org?: { name: string; edition: string; sandbox: boolean }; user?: { username?: string }; message?: string; at?: string } | null; request_object: string | null; request_parts: string[] | null; mapping: unknown; mapping_saved_by: string | null; mapping_saved_at: Date | null }>(tx,
-      "select my_domain, client_id, saved_by, saved_at, last_test, request_object, request_parts, mapping, mapping_saved_by, mapping_saved_at from connector_credentials where tenant_id = $1 and system = 'salesforce'", [u.tenantId]);
+    const c = await one<{ my_domain: string; client_id: string; saved_by: string; saved_at: Date; last_test: { ok?: boolean; org?: { name: string; edition: string; sandbox: boolean }; user?: { username?: string }; message?: string; at?: string } | null; request_object: string | null; request_parts: string[] | null; grant_types: string[] | null; mapping: unknown; mapping_saved_by: string | null; mapping_saved_at: Date | null }>(tx,
+      "select my_domain, client_id, saved_by, saved_at, last_test, request_object, request_parts, grant_types, mapping, mapping_saved_by, mapping_saved_at from connector_credentials where tenant_id = $1 and system = 'salesforce'", [u.tenantId]);
     const snap = c?.request_object ? await latestSnapshot(tx, u.tenantId!, LIVE) : undefined;
     const reqLabel = (snap?.body as unknown as Reading | undefined)?.objects.find((o) => o.name === c?.request_object)?.label;
     return {
@@ -45,6 +45,7 @@ export async function wizardState(u: SessionUser) {
         myDomain: c.my_domain, clientIdHint: `…${c.client_id.slice(-6)}`, savedBy: c.saved_by, savedAt: c.saved_at, lastTest: c.last_test ?? undefined,
         requestObject: c.request_object ? { name: c.request_object, label: reqLabel ?? c.request_object } : undefined,
         parts: c.request_parts ?? undefined,
+        grantTypes: c.grant_types ?? undefined,
         mappingSaved: c.mapping ? { by: c.mapping_saved_by, at: c.mapping_saved_at } : undefined,
       } : undefined,
     };
@@ -99,6 +100,9 @@ export async function chooseRequestObject(u: SessionUser, name: string) {
     // A different object means the earlier matches no longer apply.
     await tx.query(`update connector_credentials set mapping = case when request_object is distinct from $2 then null else mapping end,
       request_parts = case when request_object is distinct from $2 or request_parts is null then $4::text[] else request_parts end,
+      request_forms = case when request_object is distinct from $2 then null else request_forms end,
+      grant_types = case when request_object is distinct from $2 then null else grant_types end,
+      form_excluded = case when request_object is distinct from $2 then null else form_excluded end,
       request_object = $2, request_map = $3 where tenant_id = $1 and system = 'salesforce'`, [u.tenantId, reading.requestObject, JSON.stringify(map), used]);
     await record(tx, { tenantId: u.tenantId!, actor: { type: "person", id: u.id, name: u.name, roles: u.roles }, entity: { type: "connector", id: "salesforce" }, action: "connector.salesforce.live-request-object-chosen", data: { object: reading.requestObject, fields: reading.objects[0]!.fields.length, validationRules: reading.validationRules.length } });
   });
@@ -313,4 +317,71 @@ export async function saveMapping(u: SessionUser, mode: Mode, config: ConnectorC
     });
   }
   return mappingView(u, mode);
+}
+
+// ─── Steps 3 and 4 for a company org: which request types are grants, and their own forms ────────────────────
+
+const GRANTISH_TYPE = /grant|donation|contribution|sponsor|funding|educat|charit/i;
+
+interface FormsRow { request_object: string | null; request_map: live.RequestMap | null; request_parts: string[] | null; request_forms: live.RequestForm[] | null; grant_types: string[] | null; form_excluded: Record<string, string[]> | null }
+
+/** The org's request types, each with its own "New" form. Forms are read from Salesforce once and kept. */
+export async function formsView(u: SessionUser, refresh = false) {
+  requireOwner(u);
+  const load = () => asUser(u, (tx) => one<FormsRow>(tx, "select request_object, request_map, request_parts, request_forms, grant_types, form_excluded from connector_credentials where tenant_id = $1 and system = 'salesforce'", [u.tenantId]));
+  let c = await load();
+  if (!c?.request_object) throw new HttpError(409, "Choose where your grant requests are kept first.", "no-request-object");
+  if (!c.request_map) { await requestMapView(u); c = (await load())!; }
+  if (!c.request_forms || refresh) {
+    let forms: live.RequestForm[];
+    try { const { client } = await liveSession(u); forms = await live.readForms(client, c.request_object!); } catch (e) { return fail(e); }
+    // Types whose names suggest grants start ticked; the person confirms.
+    const guess = c.grant_types ?? forms.map((f) => f.recordType).filter((t): t is NonNullable<typeof t> => Boolean(t && GRANTISH_TYPE.test(t.name))).map((t) => t.developerName);
+    await asUser(u, async (tx) => {
+      // Fields the grants team fills (status, owner, approvals) aren't asked of requestors, unless Salesforce requires them.
+      const staffOnly = /status|owner|approv|reviewer|decision|internal/i;
+      const defaults = Object.fromEntries(forms.map((f) => [f.recordType?.developerName ?? "", f.sections.flatMap((x) => x.fields).filter((x) => !x.required && staffOnly.test(`${x.name} ${x.label}`)).map((x) => x.name)]));
+      await tx.query("update connector_credentials set request_forms = $2, grant_types = $3, form_excluded = coalesce(form_excluded, $4::jsonb) where tenant_id = $1 and system = 'salesforce'", [u.tenantId, JSON.stringify(forms), guess, JSON.stringify(defaults)]);
+      await record(tx, { tenantId: u.tenantId!, actor, entity: { type: "connector", id: "salesforce" }, action: "connector.salesforce.live-forms-read", data: { object: c!.request_object, forms: forms.map((f) => ({ type: f.recordType?.developerName ?? "(one form)", sections: f.sections.length, fields: f.sections.reduce((n, x) => n + x.fields.length, 0) })), by: u.name } });
+    });
+    c = (await load())!;
+  }
+  const map = c.request_map!;
+  const partLabels = new Map(map.children.flatMap((x) => [x, ...x.children]).map((x) => [x.name, x.label]));
+  return {
+    object: { name: map.root.name, label: map.root.label },
+    types: (c.request_forms ?? []).map((f) => ({
+      name: f.recordType?.name ?? map.root.label, developerName: f.recordType?.developerName ?? "",
+      records: f.recordType ? map.root.types.find((t) => t.developerName === f.recordType!.developerName)?.records : map.root.records,
+      grant: f.recordType ? (c!.grant_types ?? []).includes(f.recordType.developerName) : true,
+    })),
+    forms: Object.fromEntries((c.request_forms ?? []).map((f) => [f.recordType?.developerName ?? "", f])),
+    excluded: c.form_excluded ?? {},
+    // Lists on the form that are parts the person ticked in step 2: asked as lists (budget lines, for example).
+    parts: (c.request_parts ?? []).map((p) => ({ name: p, label: partLabels.get(p) ?? p })),
+  };
+}
+
+export async function saveGrantTypes(u: SessionUser, types: string[]) {
+  requireOwner(u, true);
+  const v = await formsView(u);
+  const known = new Set(v.types.map((t) => t.developerName));
+  const clean = [...new Set(types)].filter((t) => known.has(t));
+  await asUser(u, async (tx) => {
+    await tx.query("update connector_credentials set grant_types = $2 where tenant_id = $1 and system = 'salesforce'", [u.tenantId, clean]);
+    await record(tx, { tenantId: u.tenantId!, actor: { type: "person", id: u.id, name: u.name, roles: u.roles }, entity: { type: "connector", id: "salesforce" }, action: "connector.salesforce.live-grant-types-chosen", data: { grantTypes: clean } });
+  });
+  return formsView(u);
+}
+
+/** Fields of one request type's form that requestors are not asked. Required fields are always asked. */
+export async function saveExcluded(u: SessionUser, type: string, fields: string[]) {
+  requireOwner(u, true);
+  const v = await formsView(u);
+  const form = v.forms[type];
+  if (!form) throw new HttpError(404, "No such request type.");
+  const optional = new Set(form.sections.flatMap((s) => s.fields).filter((f) => !f.required).map((f) => f.name));
+  const clean = [...new Set(fields)].filter((f) => optional.has(f));
+  await asUser(u, (tx) => tx.query("update connector_credentials set form_excluded = coalesce(form_excluded, '{}'::jsonb) || jsonb_build_object($2::text, $3::jsonb) where tenant_id = $1 and system = 'salesforce'", [u.tenantId, type, JSON.stringify(clean)]));
+  return formsView(u);
 }

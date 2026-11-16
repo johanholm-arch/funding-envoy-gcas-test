@@ -16,6 +16,7 @@ interface Wizard {
     lastTest?: { ok?: boolean; at?: string; message?: string; org?: { name: string; edition: string; sandbox: boolean }; user?: { username?: string } };
     requestObject?: { name: string; label: string };
     mappingSaved?: { by: string; at: string };
+    parts?: string[]; grantTypes?: string[];
   };
 }
 interface Candidate { name: string; label: string; signals: string[]; fields: number; records?: number }
@@ -29,7 +30,10 @@ interface Mapping {
   setByFundingEnvoy: string[]; notSent: { key: string; label: string; kind: string }[];
 }
 
-const STEPS = ["Connect", "Find your grant requests", "Match the details", "Done"];
+const STEPS: Record<"company" | "practice", string[]> = {
+  company: ["Connect", "Find your grant requests", "Grant types", "Your form", "Done"],
+  practice: ["Connect", "Find your grant requests", "Match the details", "Done"],
+};
 
 export function StudioConnect() {
   useDocumentTitle("Connect to Salesforce");
@@ -43,8 +47,10 @@ export function StudioConnect() {
   const mode = (params.get("with") as Mode | null) ?? (data?.company ? "company" : data?.practice.connected ? "practice" : undefined);
   const connected = mode === "company" ? Boolean(data?.company?.lastTest?.ok) : Boolean(data?.practice.connected);
   const found = mode === "company" ? Boolean(data?.company?.requestObject) : connected;
-  const furthest = !connected ? 1 : !found ? 2 : 3;
-  const step = Math.min(Number(params.get("step")) || furthest, mode === "company" ? 4 : 4);
+  const typesChosen = mode === "company" && Boolean(data?.company?.grantTypes?.length);
+  const furthest = !connected ? 1 : !found ? 2 : typesChosen ? 4 : 3;
+  const last = mode === "company" ? 5 : 4;
+  const step = Math.min(Number(params.get("step")) || furthest, last);
   const go = (s: number, m: Mode | undefined = mode) => { setParams(m ? { with: m, step: String(s) } : {}); window.scrollTo({ top: 0 }); };
 
   if (w.error) return <div className="page narrow"><p className="error-text">{w.error.message}</p></div>;
@@ -55,7 +61,7 @@ export function StudioConnect() {
       <header className="stack" style={{ gap: 6 }}>
         <span className="eyebrow"><Link to="/studio">Studio</Link> · Connections</span>
         <h1 style={{ fontSize: 32 }}>Connect to Salesforce</h1>
-        <p className="muted">Three questions, one at a time. Nothing is written to Salesforce while you do this.</p>
+        <p className="muted">A few questions, one at a time. Nothing is written to Salesforce while you do this.</p>
       </header>
 
       {!mode ? (
@@ -64,8 +70,8 @@ export function StudioConnect() {
         <>
           <div className="row" style={{ justifyContent: "space-between" }}>
             <ol className="wiz-steps" aria-label="Steps">
-              {STEPS.map((label, i) => {
-                const n = i + 1, reachable = n <= Math.max(furthest, step) || (n === 4 && furthest >= 3);
+              {STEPS[mode].map((label, i) => {
+                const n = i + 1, reachable = n <= Math.max(furthest, step) || (n === last && furthest >= last - 1);
                 return (
                   <li key={label}>
                     <button type="button" aria-current={n === step ? "step" : undefined} disabled={!reachable} onClick={() => go(n)}>
@@ -84,8 +90,11 @@ export function StudioConnect() {
           {step === 2 ? (mode === "company"
             ? <FindRequests data={data} canEdit={canEdit} onChosen={async () => { await w.refetch(); }} next={() => go(3)} />
             : <Card title="Where are grant requests kept?"><p>In the practice Salesforce they're kept in <strong>Grant Request</strong>. Nothing to choose.</p><Nav next={() => go(3)} nextLabel="Next: match the details" /></Card>) : null}
-          {step === 3 ? <Match mode={mode} canEdit={canEdit} back={() => go(mode === "company" ? 2 : 1)} next={() => go(4)} /> : null}
-          {step === 4 ? <Done mode={mode} data={data} back={() => go(3)} /> : null}
+          {mode === "company" && step === 3 ? <GrantTypes canEdit={canEdit} back={() => go(2)} next={async () => { await w.refetch(); go(4); }} /> : null}
+          {mode === "company" && step === 4 ? <YourForm canEdit={canEdit} back={() => go(3)} next={() => go(5)} /> : null}
+          {mode === "company" && step === 5 ? <FormsDone back={() => go(4)} /> : null}
+          {mode === "practice" && step === 3 ? <Match mode={mode} canEdit={canEdit} back={() => go(1)} next={() => go(4)} /> : null}
+          {mode === "practice" && step === 4 ? <Done mode={mode} data={data} back={() => go(3)} /> : null}
         </>
       )}
     </div>
@@ -261,7 +270,7 @@ function RequestFamily({ canEdit, onChange, next }: { canEdit: boolean; onChange
       <p className="help">{saving ? "Saving…" : "Each tick is saved as you make it. Counts only: FundingEnvoy didn't read what's in the records."}</p>
       <div className="setup-nav">
         <button type="button" className="btn quiet" onClick={onChange}>Choose a different object</button>
-        <button type="button" className="btn" onClick={next}>Next: match the details</button>
+        <button type="button" className="btn" onClick={next}>Next: grant types</button>
       </div>
     </Card>
   );
@@ -449,6 +458,143 @@ function Done({ mode, data, back }: { mode: Mode; data: Wizard; back: () => void
           {trial ? <p className={trial.ok ? "wiz-ok" : "error-text"}>{trial.ok ? "Salesforce accepted the sample, and it was removed again." : `Salesforce refused it: ${trial.result.errors?.[0]?.message ?? ""}`}</p> : null}
           {data.practice.published && !data.practice.draft ? <p className="help">In use since {fmtDate(data.practice.published.signedAt)}, signed by {data.practice.published.signedName}.</p> : null}
         </div>
+      )}
+      <Nav back={back} nextLabel="" />
+    </Card>
+  );
+}
+
+// ─── Company org, steps 3 to 5: grant types, their own forms, and what will happen ─────────────────────────
+
+interface FormField { name: string; label: string; type: string; required: boolean; picklist?: string[]; referenceTo?: string }
+interface RequestForm { recordType: { name: string; developerName: string } | null; sections: { heading: string; fields: FormField[] }[]; lists: { label: string; object: string }[] }
+interface Forms { object: { name: string; label: string }; types: { name: string; developerName: string; records?: number; grant: boolean }[]; forms: Record<string, RequestForm>; excluded: Record<string, string[]>; parts: { name: string; label: string }[] }
+
+function GrantTypes({ canEdit, back, next }: { canEdit: boolean; back: () => void; next: () => Promise<void> }) {
+  const r = useResource<Forms>("/api/connect/salesforce/live/forms");
+  const [types, setTypes] = useState<string[]>();
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string>();
+  useEffect(() => { if (r.data) setTypes(r.data.types.filter((t) => t.grant).map((t) => t.developerName)); }, [r.data]);
+  if (r.error) return <Card title="Which request types are grants?"><p className="error-text">{r.error.message}</p><Nav back={back} nextLabel="" /></Card>;
+  if (!r.data || !types) return <Card title="Which request types are grants?"><p className="muted">Reading your request types and their forms from Salesforce…</p></Card>;
+  const single = r.data.types.length === 1 && !r.data.types[0]!.developerName;
+  async function save() {
+    setSaving(true); setErr(undefined);
+    try { await api.post("/api/connect/salesforce/live/grant-types", { types }); await next(); } catch (x) { setErr(errorText(x)); } finally { setSaving(false); }
+  }
+  if (single) return (
+    <Card title="Which request types are grants?">
+      <p>Every {r.data.object.label} in your Salesforce uses the same form, so there's nothing to choose.</p>
+      <Nav back={back} next={() => void next()} nextLabel="Next: your form" />
+    </Card>
+  );
+  return (
+    <Card title="Which request types are grants?" lead={<>Your {r.data.object.label} has these types. Tick the ones external organizations apply for as grants. FundingEnvoy ticked the ones whose names suggest grants.</>}>
+      <ul className="wiz-list">
+        {r.data.types.map((t) => (
+          <li key={t.developerName}>
+            <label className="row" style={{ gap: 10 }}>
+              <input type="checkbox" checked={types.includes(t.developerName)} disabled={!canEdit || saving} onChange={(e) => setTypes(e.target.checked ? [...types, t.developerName] : types.filter((x) => x !== t.developerName))} />
+              <span style={{ fontWeight: 600 }}>{t.name}</span>
+            </label>
+            <span className="small muted">{t.records !== undefined ? plural(t.records, "request") : ""}</span>
+          </li>
+        ))}
+      </ul>
+      {err ? <p className="error-text" role="alert">{err}</p> : null}
+      <Nav back={back} next={() => void save()} nextLabel={types.length ? "Next: your form" : "Tick at least one"} busy={saving || !types.length || !canEdit} />
+    </Card>
+  );
+}
+
+const describeType = (f: FormField) => f.picklist ? `choose one of ${f.picklist.length}` : ({ datetime: "date and time", date: "date", currency: "amount", double: "number", int: "number", boolean: "yes or no", textarea: "longer text", reference: "a link to another record" } as Record<string, string>)[f.type] ?? "text";
+
+function YourForm({ canEdit, back, next }: { canEdit: boolean; back: () => void; next: () => void }) {
+  const r = useResource<Forms>("/api/connect/salesforce/live/forms");
+  const [data, setData] = useState<Forms>();
+  const [current, setCurrent] = useState<string>();
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string>();
+  useEffect(() => { if (r.data) setData(r.data); }, [r.data]);
+  if (r.error) return <Card title="Your form"><p className="error-text">{r.error.message}</p><Nav back={back} nextLabel="" /></Card>;
+  if (!data) return <Card title="Your form"><p className="muted">Loading…</p></Card>;
+  const grants = data.types.filter((t) => t.grant);
+  const type = current && grants.some((g) => g.developerName === current) ? current : grants[0]?.developerName ?? "";
+  const form = data.forms[type];
+  const excluded = new Set(data.excluded[type] ?? []);
+  async function toggle(name: string, ask: boolean) {
+    const next = ask ? [...excluded].filter((x) => x !== name) : [...excluded, name];
+    setSaving(true); setErr(undefined);
+    try { setData(await api.post<Forms>("/api/connect/salesforce/live/form-excluded", { type, fields: next })); } catch (x) { setErr(errorText(x)); } finally { setSaving(false); }
+  }
+  const asked = form ? form.sections.flatMap((x) => x.fields).filter((f) => !excluded.has(f.name)).length : 0;
+  const partSet = new Set(data.parts.map((p) => p.name));
+  const lists = form?.lists.filter((l) => partSet.has(l.object)) ?? [];
+  return (
+    <Card title="Your form" lead={<>This is your own “New {data.object.label}” form, read from Salesforce: the same sections, labels and choices. FundingEnvoy will ask requestors these questions and put the answers in the same fields. Untick anything requestors shouldn't fill in.</>}>
+      {grants.length > 1 ? (
+        <div className="seg" role="tablist" aria-label="Grant types">
+          {grants.map((g) => <button key={g.developerName} type="button" role="tab" aria-checked={g.developerName === type} aria-selected={g.developerName === type} onClick={() => setCurrent(g.developerName)}>{g.name}</button>)}
+        </div>
+      ) : null}
+      {!form ? <p className="muted">No form found for this type.</p> : (
+        <>
+          <p className="small"><strong>{grants.find((g) => g.developerName === type)?.name ?? data.object.label}</strong>: {plural(asked, "question")} in {plural(form.sections.length, "section")}.</p>
+          {form.sections.map((sec) => (
+            <section key={sec.heading} className="form-sec">
+              <h3 className="connect-h3">{sec.heading}</h3>
+              <ul className="form-fields">
+                {sec.fields.map((f) => (
+                  <li key={f.name}>
+                    <label className="row" style={{ gap: 10, alignItems: "flex-start" }}>
+                      <input type="checkbox" checked={!excluded.has(f.name)} disabled={!canEdit || saving || f.required} onChange={(e) => void toggle(f.name, e.target.checked)} style={{ marginTop: 4 }} title={f.required ? "Required by Salesforce: always asked" : undefined} />
+                      <span className="stack" style={{ gap: 1 }}>
+                        <span>{f.label}{f.required ? <span className="chip sys" style={{ marginLeft: 6 }}>Required</span> : null}</span>
+                        <span className="small muted">{describeType(f)}{f.picklist ? `: ${f.picklist.slice(0, 6).join(", ")}${f.picklist.length > 6 ? "…" : ""}` : ""}</span>
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+          {lists.length ? <p className="wiz-note small">Also part of this request: {lists.map((l) => l.label).join(", ")}. FundingEnvoy will ask for these as lists, for example one line per expense.</p> : null}
+        </>
+      )}
+      {err ? <p className="error-text" role="alert">{err}</p> : null}
+      <p className="help">{saving ? "Saving…" : "Each choice is saved as you make it. Required fields are always asked."}</p>
+      <Nav back={back} next={next} nextLabel="Next" />
+    </Card>
+  );
+}
+
+function FormsDone({ back }: { back: () => void }) {
+  const r = useResource<Forms>("/api/connect/salesforce/live/forms");
+  const d = r.data;
+  return (
+    <Card title="Done">
+      {!d ? <p className="muted">Loading…</p> : (
+        <>
+          <p>When an organization applies, FundingEnvoy asks your own form's questions and creates a <strong>{d.object.label}</strong> in your Salesforce, in the requestor's name, with the answers in the same fields.</p>
+          <ul className="wiz-list">
+            {d.types.filter((t) => t.grant).map((t) => {
+              const f = d.forms[t.developerName];
+              const n = f ? f.sections.flatMap((s) => s.fields).filter((x) => !(d.excluded[t.developerName] ?? []).includes(x.name)).length : 0;
+              const lists = f?.lists.filter((l) => d.parts.some((p) => p.name === l.object)).map((l) => l.label.toLowerCase()) ?? [];
+              return <li key={t.developerName}><span style={{ fontWeight: 600 }}>{t.name}</span><span className="small muted">{plural(n, "question")}{lists.length ? `, plus ${joinWords(lists)}` : ""}</span></li>;
+            })}
+          </ul>
+          <div className="wiz-note">
+            <p className="small" style={{ fontWeight: 600 }}>Before it's switched on</p>
+            <ol className="small" style={{ margin: 0, paddingLeft: 18 }}>
+              <li>Claude Code turns these forms into FundingEnvoy's questions, and switches on writing to your Salesforce.</li>
+              <li>Your Salesforce admin adds one field, “FundingEnvoy Request ID”, to {d.object.label}, so FundingEnvoy never creates a request twice.</li>
+              <li>Requestors sign in to FundingEnvoy with the same login as your portal.</li>
+            </ol>
+            <p className="small">Nothing has been written to Salesforce.</p>
+          </div>
+        </>
       )}
       <Nav back={back} nextLabel="" />
     </Card>

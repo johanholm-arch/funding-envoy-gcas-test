@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { requireRole } from "../auth.ts";
-import { chooseRequestObject, connectPractice, findRequests, mappingView, requestMapView, saveMapping, saveParts, searchRequests, wizardState } from "../services/connect-wizard.ts";
+import { chooseRequestObject, connectPractice, findRequests, formsView, mappingView, requestMapView, saveExcluded, saveGrantTypes, saveMapping, saveParts, searchRequests, wizardState } from "../services/connect-wizard.ts";
 import { liveReading, liveView, readLive, removeCredentials, saveCredentials, testLive } from "../services/connector-live.ts";
 import { connectView, readOrg, saveConfig, simAct, simConsole, testConnection, trialRun, type ConnectorConfig } from "../services/connector.ts";
 
@@ -37,6 +37,18 @@ export async function connectorRoutes(app: FastifyInstance) {
   app.post("/api/connect/salesforce/live/request-parts", async (req) => {
     const b = z.object({ parts: z.array(z.string().max(90)).max(60) }).parse(req.body);
     return saveParts(requireRole(req, [...edit]), b.parts);
+  });
+  app.get("/api/connect/salesforce/live/forms", async (req) => {
+    const q = z.object({ refresh: z.string().optional() }).parse(req.query);
+    return formsView(requireRole(req, [...view]), Boolean(q.refresh));
+  });
+  app.post("/api/connect/salesforce/live/grant-types", async (req) => {
+    const b = z.object({ types: z.array(z.string().max(90)).max(50) }).parse(req.body);
+    return saveGrantTypes(requireRole(req, [...edit]), b.types);
+  });
+  app.post("/api/connect/salesforce/live/form-excluded", async (req) => {
+    const b = z.object({ type: z.string().max(90), fields: z.array(z.string().max(90)).max(300) }).parse(req.body);
+    return saveExcluded(requireRole(req, [...edit]), b.type, b.fields);
   });
   app.get("/api/connect/salesforce/mapping", async (req) => {
     const q = z.object({ mode: z.enum(["simulated", "live"]) }).parse(req.query);

@@ -290,7 +290,7 @@ export async function readRequestObject(c: Client, myDomain: string, name: strin
 
 // ─── A request as a family of records: the parent, its request types, its children and what it links to ─────────
 
-interface DescribeFull { name: string; label: string; fields: DescribeField[]; childRelationships?: { childSObject: string; field: string; relationshipName: string | null }[]; recordTypeInfos?: { name: string; developerName: string; active?: boolean; available?: boolean; master?: boolean }[] }
+interface DescribeFull { name: string; label: string; fields: DescribeField[]; childRelationships?: { childSObject: string; field: string; relationshipName: string | null }[]; recordTypeInfos?: { name: string; developerName: string; recordTypeId?: string; active?: boolean; available?: boolean; master?: boolean }[] }
 export interface MapNode { name: string; label: string; via: string; records?: number; byType?: Record<string, number>; children: MapNode[] }
 export interface RequestMap {
   root: { name: string; label: string; records?: number; types: { name: string; developerName: string; records?: number }[] };
@@ -352,4 +352,47 @@ export async function mapRequest(c: Client, rootName: string): Promise<RequestMa
     children, links,
     documents: (rd.childRelationships ?? []).some((r) => r.childSObject === "ContentDocumentLink"),
   };
+}
+
+// ─── The org's own "New" form for each request type, read from its page layouts ─────────────────────────────
+
+export interface FormField { name: string; label: string; type: string; required: boolean; picklist?: string[]; referenceTo?: string }
+export interface FormSection { heading: string; fields: FormField[] }
+export interface RequestForm { recordType: { name: string; developerName: string } | null; sections: FormSection[]; lists: { label: string; object: string }[] }
+
+interface LayoutComponent { type: string; value?: string; details?: DescribeField & { label: string } }
+interface LayoutItem { label?: string; required?: boolean; editableForNew?: boolean; placeholder?: boolean; layoutComponents?: LayoutComponent[] }
+interface Layout { id: string; editLayoutSections?: { heading?: string; useHeading?: boolean; layoutRows?: { layoutItems?: LayoutItem[] }[] }[]; relatedLists?: { label: string; sobject: string }[] }
+interface RecordTypeMapping { recordTypeId: string; name: string; developerName?: string; layoutId: string; available?: boolean; master?: boolean; picklistsForRecordType?: { picklistName: string; picklistValues: { value: string; active: boolean }[] }[] }
+
+function buildForm(l: Layout | undefined, rt: RequestForm["recordType"], picks: RecordTypeMapping["picklistsForRecordType"]): RequestForm {
+  const sections: FormSection[] = [];
+  for (const s of l?.editLayoutSections ?? []) {
+    const fields: FormField[] = [];
+    for (const item of (s.layoutRows ?? []).flatMap((r) => r.layoutItems ?? [])) {
+      if (!item.editableForNew || item.placeholder) continue;
+      for (const c of item.layoutComponents ?? []) {
+        if (c.type !== "Field" || !c.value || !c.details) continue;
+        const forType = picks?.find((p) => p.picklistName === c.value)?.picklistValues;
+        const values = (forType ?? c.details.picklistValues ?? []).filter((v) => v.active).map((v) => v.value);
+        fields.push({ name: c.value, label: item.label || c.details.label, type: TYPE_MAP[c.details.type] ?? "string", required: Boolean(item.required), picklist: values.length ? values : undefined, referenceTo: c.details.referenceTo?.[0] });
+      }
+    }
+    if (fields.length) sections.push({ heading: s.useHeading !== false && s.heading ? s.heading : sections.length ? "More details" : "Details", fields });
+  }
+  return { recordType: rt, sections, lists: (l?.relatedLists ?? []).map((r) => ({ label: r.label, object: r.sobject })) };
+}
+
+/** One form per request type: the sections, labels, required fields and dropdown values Salesforce shows on "New". */
+export async function readForms(c: Client, objectName: string): Promise<RequestForm[]> {
+  const name = normalizeObjectName(objectName);
+  const d = await c.get<DescribeFull>(`/services/data/v${API_VERSION}/sobjects/${encodeURIComponent(name)}/describe`);
+  const lay = await c.get<{ layouts?: Layout[]; recordTypeMappings?: RecordTypeMapping[] }>(`/services/data/v${API_VERSION}/sobjects/${encodeURIComponent(name)}/describe/layouts`);
+  const layouts = lay.layouts ?? [];
+  const byId = new Map(layouts.map((l) => [l.id, l]));
+  const maps = (lay.recordTypeMappings ?? []).filter((m) => !m.master && m.available !== false);
+  if (!maps.length) return [buildForm(layouts[0], null, [])];
+  return maps.map((m) => buildForm(byId.get(m.layoutId) ?? layouts[0], {
+    name: m.name, developerName: m.developerName ?? d.recordTypeInfos?.find((x) => x.recordTypeId === m.recordTypeId)?.developerName ?? m.name,
+  }, m.picklistsForRecordType));
 }

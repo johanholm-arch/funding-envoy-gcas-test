@@ -76,6 +76,23 @@ function standIn(): Promise<number> {
       return json(200, { records: [{ Id: "00D", Name: "GFMS Sales Demo", OrganizationType: "Enterprise Edition", IsSandbox: false }] });
     }
     if (url.pathname.endsWith("/sobjects")) return json(200, { sobjects: Object.entries(OBJECTS).map(([name, o]) => ({ name, label: o.label, custom: o.custom, queryable: true, createable: true })) });
+    if (url.pathname.endsWith("/OCE__Meeting__c/describe/layouts")) {
+      const fld = (n: string) => OBJECTS.OCE__Meeting__c!.fields.find((x) => x.name === n)!;
+      const item = (n: string, required = false) => ({ label: fld(n).label, required, editableForNew: true, placeholder: false, layoutComponents: [{ type: "Field", value: n, details: fld(n) }] });
+      const layout = (id: string, extra: unknown[]) => ({ id, relatedLists: [{ label: "Request Expenses", sobject: "OCE__MeetingExpense__c" }, { label: "Request Details", sobject: "OCE__MeetingDetail__c" }], editLayoutSections: [
+        { heading: "Information", useHeading: true, layoutRows: [{ layoutItems: [item("Name", true), item("OCE__Subtype__c", true)] }, { layoutItems: [item("OCE__StartDateTime__c", true), item("OCE__EndDateTime__c", true)] }, { layoutItems: [{ label: "", placeholder: true, editableForNew: false, layoutComponents: [] }] }] },
+        { heading: "Program", useHeading: true, layoutRows: [{ layoutItems: extra }] },
+        { heading: "System Information", useHeading: true, layoutRows: [{ layoutItems: [{ label: "Created By", editableForNew: false, layoutComponents: [{ type: "Field", value: "CreatedById", details: f("CreatedById", "Created By", "reference") }] }] }] },
+      ] });
+      return json(200, {
+        layouts: [layout("00hSP", [item("OCE__FBServedBy__c"), item("OCE__AttendeeCount__c")]), layout("00hMEG", [item("OCE__DeliveryFormat__c"), item("OCE__AttendeeCount__c"), item("OCE__Comments__c"), item("OCE__Status__c")])],
+        recordTypeMappings: [
+          { recordTypeId: "012M", name: "Master", developerName: "Master", layoutId: "00hSP", master: true, available: true },
+          { recordTypeId: "012SP", name: "Speaker Program", developerName: "Speaker_Program", layoutId: "00hSP", available: true, picklistsForRecordType: [{ picklistName: "OCE__Subtype__c", picklistValues: [{ value: "Speaker Program", active: true }] }] },
+          { recordTypeId: "012MEG", name: "Medical Education Grant", developerName: "Medical_Education_Grant", layoutId: "00hMEG", available: true, picklistsForRecordType: [{ picklistName: "OCE__Subtype__c", picklistValues: [{ value: "Medical Education Grant", active: true }, { value: "Retired", active: false }] }] },
+        ],
+      });
+    }
     const m = /\/sobjects\/([^/]+)\/describe$/.exec(url.pathname);
     if (m && OBJECTS[m[1]!]) {
       const o = OBJECTS[m[1]!]!;
@@ -174,11 +191,34 @@ describe("the Connect wizard, with a company's org", () => {
     expect(map.root.name).toBe("OCE__Meeting__c");
   });
 
+  it("steps 3 and 4: shows each request type's own form, read from Salesforce, with nothing to match", async () => {
+    const v = await d.call("owner", "GET", "/api/connect/salesforce/live/forms");
+    expect(v.object).toEqual({ name: "OCE__Meeting__c", label: "Request" });
+    // Types whose names suggest grants start ticked.
+    expect(v.types).toEqual([{ name: "Speaker Program", developerName: "Speaker_Program", records: 9, grant: false }, { name: "Medical Education Grant", developerName: "Medical_Education_Grant", records: 5, grant: true }]);
+    const meg = v.forms.Medical_Education_Grant;
+    expect(meg.sections.map((x: { heading: string }) => x.heading)).toEqual(["Information", "Program"]); // nothing editable in System Information
+    expect(meg.sections[0].fields.map((x: { label: string; required: boolean }) => `${x.label}${x.required ? "*" : ""}`)).toEqual(["Title*", "Subtype*", "Start Date/Time*", "End Date/Time*"]);
+    expect(meg.sections[0].fields[1].picklist).toEqual(["Medical Education Grant"]); // this type's own values; inactive ones left out
+    expect(meg.sections[1].fields.map((x: { name: string }) => x.name)).toEqual(["OCE__DeliveryFormat__c", "OCE__AttendeeCount__c", "OCE__Comments__c", "OCE__Status__c"]);
+    expect(v.excluded.Medical_Education_Grant).toEqual(["OCE__Status__c"]); // the grants team sets the status, not the requestor
+    expect(v.forms.Speaker_Program.sections[1].fields.map((x: { name: string }) => x.name)).toContain("OCE__FBServedBy__c");
+    expect(meg.lists.map((l: { label: string }) => l.label)).toEqual(["Request Expenses", "Request Details"]);
+    const g = await d.call("owner", "POST", "/api/connect/salesforce/live/grant-types", { types: ["Medical_Education_Grant", "Speaker_Program", "Bogus"] });
+    expect(g.types.filter((t: { grant: boolean }) => t.grant).map((t: { developerName: string }) => t.developerName)).toEqual(["Speaker_Program", "Medical_Education_Grant"]);
+    // Required fields can't be left out; others can.
+    const x = await d.call("owner", "POST", "/api/connect/salesforce/live/form-excluded", { type: "Medical_Education_Grant", fields: ["OCE__Comments__c", "Name"] });
+    expect(x.excluded.Medical_Education_Grant).toEqual(["OCE__Comments__c"]); // replaces the default, Status included, as the person chose
+    const w = await d.call("owner", "GET", "/api/connect/salesforce/wizard");
+    expect(w.company.grantTypes.sort()).toEqual(["Medical_Education_Grant", "Speaker_Program"]);
+  });
+
   it("choosing a different object starts the matching again", async () => {
     await d.call("owner", "POST", "/api/connect/salesforce/live/choose", { name: "OCE__MeetingExpense__c" });
     const w = await d.call("owner", "GET", "/api/connect/salesforce/wizard");
     expect(w.company.requestObject.name).toBe("OCE__MeetingExpense__c");
     expect(w.company.mappingSaved).toBeUndefined();
+    expect(w.company.grantTypes).toBeUndefined();
     expect((await d.try("owner", "POST", "/api/connect/salesforce/live/choose", { name: "No_Such__c" })).status).toBe(409);
   });
 });

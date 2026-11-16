@@ -17,7 +17,7 @@ nothing in Salesforce.
 | D | Salesforce | Choose which Salesforce user the key acts as | 5 min |
 | E | Salesforce | Copy the key and its secret, then wait 10 minutes | 15 min |
 | F | FundingEnvoy | Paste them in and connect | 5 min |
-| G | FundingEnvoy | Find your grant requests and match the details | 10 min |
+| G | FundingEnvoy | Find your grant requests, tick the grant types, check your form | 10 min |
 | H | Both | How to switch it off again | when you want |
 
 Before you start, have two windows open: your FundingEnvoy site and your Salesforce test environment. Keep a
@@ -133,18 +133,18 @@ If you see a red message instead, look it up in "If something goes wrong" below,
 
 ---
 
-## Part G: Find your grant requests, and match the details (FundingEnvoy)
+## Part G: Tell FundingEnvoy about your grant requests (FundingEnvoy)
 
-1. Click **Next: find your grant requests**. FundingEnvoy looks through your Salesforce and shows the few places that
-   look most like grant requests, in plain words (for example "Request: has a title, start and end dates, a status, a
-   type and a link to an organization · 14 records").
-2. Click **This one** on the place where a new grant request is created. Not in the list? Use **Search by name**.
-3. **Match the details** shows only what needs you, for example "Which Subtype is each type of grant?" with
-   FundingEnvoy's guesses filled in. Check them and click **These are right**, or change one. Every choice saves as you
-   make it.
-4. Click **Done** to read, in one paragraph, what will happen when a requestor submits.
+1. **Find your grant requests.** FundingEnvoy shows the places in your Salesforce that look most like grant requests.
+   Click **This one** on the one where a new request is created (for example **Request**).
+2. **See how a request is built.** FundingEnvoy shows the request with its types and the records attached to it
+   (expenses, details, speakers...). Untick any part that isn't part of a grant request.
+3. **Grant types.** Tick the request types that organizations apply for as grants.
+4. **Your form.** For each grant type, FundingEnvoy shows your own "New Request" form, read from Salesforce: the same
+   sections, labels and dropdown choices. Untick anything requestors shouldn't fill in. There is nothing to match.
+5. **Done** sums up what will happen when an organization applies.
 
-Nothing is written to Salesforce in any of these steps.
+Every choice saves as you make it, and nothing is written to Salesforce.
 
 ---
 
